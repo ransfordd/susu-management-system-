@@ -135,7 +135,7 @@ class UserTransactionController {
             JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
             JOIN clients cl ON sc.client_id = cl.id
             JOIN users c ON cl.user_id = c.id
-            WHERE 1=1
+            WHERE dc.collection_status = 'collected'
         ";
         
         $susuParams = [];
@@ -236,7 +236,7 @@ class UserTransactionController {
             FROM daily_collections dc
             JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
             JOIN clients cl ON sc.client_id = cl.id
-            WHERE 1=1
+            WHERE dc.collection_status = 'collected'
         ";
         
         $susuParams = [];

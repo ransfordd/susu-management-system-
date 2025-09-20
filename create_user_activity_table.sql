@@ -27,3 +27,4 @@ INSERT INTO user_activity (user_id, activity_type, activity_description, ip_addr
 (1, 'agent_registration', 'Admin registered a new agent', '127.0.0.1', 1, 'agent');
 
 SELECT 'User activity table created successfully!' as status;
+

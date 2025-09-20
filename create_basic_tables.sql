@@ -72,3 +72,4 @@ SELECT 'Basic tables created successfully for traditional banking features!' as 
 
 
 
+

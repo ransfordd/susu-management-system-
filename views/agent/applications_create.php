@@ -17,7 +17,7 @@ include __DIR__ . '/../../includes/header.php';
 		<label class="form-label">Loan Product</label>
 		<select name="loan_product_id" class="form-select">
 			<?php foreach ($products as $p): ?>
-			<option value="<?php echo htmlspecialchars($p['id']); ?>"><?php echo htmlspecialchars($p['product_name']); ?></option>
+			<option value="<?php echo e($p['id']); ?>"><?php echo e($p['product_name']); ?></option>
 			<?php endforeach; ?>
 		</select>
 	</div>

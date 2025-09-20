@@ -10,6 +10,80 @@ class NotificationController {
         $this->pdo = \Database::getConnection();
     }
     
+    public function list() {
+        // Get user from session
+        if (session_status() !== PHP_SESSION_ACTIVE) {
+            session_start();
+        }
+        $userId = $_SESSION['user']['id'] ?? null;
+        
+        if (!$userId) {
+            http_response_code(401);
+            echo json_encode(['success' => false, 'message' => 'Not authenticated']);
+            return;
+        }
+        
+        // Handle different actions
+        $action = $_GET['action'] ?? 'list';
+        
+        switch ($action) {
+            case 'get_recent':
+                $this->getRecentNotifications($userId);
+                break;
+            case 'mark_read':
+                $this->markAsRead($userId);
+                break;
+            default:
+                $this->getAllNotifications($userId);
+                break;
+        }
+    }
+    
+    private function getRecentNotifications($userId) {
+        $stmt = $this->pdo->prepare('
+            SELECT id, notification_type, title, message, is_read, created_at
+            FROM notifications 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC 
+            LIMIT 10
+        ');
+        $stmt->execute([$userId]);
+        $notifications = $stmt->fetchAll();
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true, 'notifications' => $notifications]);
+    }
+    
+    private function getAllNotifications($userId) {
+        $stmt = $this->pdo->prepare('
+            SELECT id, notification_type, title, message, is_read, created_at
+            FROM notifications 
+            WHERE user_id = ? 
+            ORDER BY created_at DESC
+        ');
+        $stmt->execute([$userId]);
+        $notifications = $stmt->fetchAll();
+        
+        // Include the notifications view
+        include __DIR__ . '/../views/shared/notifications.php';
+    }
+    
+    private function markAsRead($userId) {
+        $notificationId = $_POST['notification_id'] ?? null;
+        
+        if ($notificationId) {
+            $stmt = $this->pdo->prepare('
+                UPDATE notifications 
+                SET is_read = 1 
+                WHERE id = ? AND user_id = ?
+            ');
+            $stmt->execute([$notificationId, $userId]);
+        }
+        
+        header('Content-Type: application/json');
+        echo json_encode(['success' => true]);
+    }
+    
     public static function createNotification($userId, $type, $title, $message, $referenceId = null, $referenceType = null) {
         $pdo = \Database::getConnection();
         

@@ -47,7 +47,8 @@ class UserManagementController {
         $pdo = \Database::getConnection();
         $agents = $pdo->query('SELECT id, agent_code FROM agents WHERE status = "active"')->fetchAll();
         
-        include __DIR__ . '/../views/admin/user_create.php';
+        // Use the new enhanced registration form
+        include __DIR__ . '/../views/admin/user_registration_form.php';
     }
     
     private function handleCreate(): void {

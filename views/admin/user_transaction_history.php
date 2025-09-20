@@ -93,7 +93,7 @@ include __DIR__ . '/../../includes/header.php';
     ?>
     <div class="row mb-4">
         <div class="col-12">
-            <?php renderSusuTracker($selectedClient['id'], null, false); ?>
+            <?php renderSusuTracker($selectedClient['id'], null, false, $fromDate, $toDate); ?>
         </div>
     </div>
     <?php endif; ?>

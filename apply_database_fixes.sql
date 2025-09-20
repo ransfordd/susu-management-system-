@@ -26,3 +26,4 @@ CREATE INDEX IF NOT EXISTS idx_notifications_reference ON notifications(referenc
 CREATE INDEX IF NOT EXISTS idx_daily_collections_cycle ON daily_collections(susu_cycle_id);
 
 SELECT 'Database schema fixes applied successfully!' as status;
+

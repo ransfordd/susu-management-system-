@@ -12,7 +12,7 @@ $pdo = Database::getConnection();
 $agentStmt = $pdo->prepare('SELECT a.id FROM agents a WHERE a.user_id = :uid');
 $agentStmt->execute([':uid' => (int)$_SESSION['user']['id']]);
 $agentData = $agentStmt->fetch();
-if (!$agentData) {
+if (!$agentData || !isset($agentData['id'])) {
     echo 'Agent not found. Please contact administrator.';
     exit;
 }

@@ -2,7 +2,7 @@
 // Susu Collection Tracker Component
 // Usage: include this file and call renderSusuTracker($clientId, $cycleId = null)
 
-function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true) {
+function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $fromDate = null, $toDate = null) {
     $pdo = \Database::getConnection();
     
     // Get client details
@@ -21,27 +21,50 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true) {
     }
     
     // Get active Susu cycle for this client
-    $cycleStmt = $pdo->prepare('
+    $cycleQuery = '
         SELECT sc.*, COUNT(dc.id) as collections_made
         FROM susu_cycles sc
-        LEFT JOIN daily_collections dc ON sc.id = dc.susu_cycle_id
-        WHERE sc.client_id = :client_id AND sc.cycle_status = "active"
-        GROUP BY sc.id
-        ORDER BY sc.created_at DESC
-        LIMIT 1
-    ');
-    $cycleStmt->execute([':client_id' => $clientId]);
+        LEFT JOIN daily_collections dc ON sc.id = dc.susu_cycle_id AND dc.collection_status = "collected"
+        WHERE sc.client_id = :client_id AND sc.status = "active"
+    ';
+    
+    $cycleParams = [':client_id' => $clientId];
+    
+    // Add date filtering if provided
+    if ($fromDate && $toDate) {
+        $cycleQuery .= ' AND dc.collection_date BETWEEN :from_date AND :to_date';
+        $cycleParams[':from_date'] = $fromDate;
+        $cycleParams[':to_date'] = $toDate;
+    }
+    
+    $cycleQuery .= ' GROUP BY sc.id ORDER BY sc.created_at DESC LIMIT 1';
+    
+    $cycleStmt = $pdo->prepare($cycleQuery);
+    $cycleStmt->execute($cycleParams);
     $cycle = $cycleStmt->fetch();
     
     // Get collection history for this cycle
-    $collectionsStmt = $pdo->prepare('
+    $collectionsQuery = '
         SELECT dc.*, a.agent_code
         FROM daily_collections dc
         LEFT JOIN agents a ON dc.collected_by = a.id
         WHERE dc.susu_cycle_id = :cycle_id
-        ORDER BY dc.day_number ASC
-    ');
-    $collectionsStmt->execute([':cycle_id' => $cycle['id'] ?? 0]);
+        AND dc.collection_status = "collected"
+    ';
+    
+    $collectionsParams = [':cycle_id' => $cycle['id'] ?? 0];
+    
+    // Add date filtering if provided
+    if ($fromDate && $toDate) {
+        $collectionsQuery .= ' AND dc.collection_date BETWEEN :from_date AND :to_date';
+        $collectionsParams[':from_date'] = $fromDate;
+        $collectionsParams[':to_date'] = $toDate;
+    }
+    
+    $collectionsQuery .= ' ORDER BY dc.day_number ASC';
+    
+    $collectionsStmt = $pdo->prepare($collectionsQuery);
+    $collectionsStmt->execute($collectionsParams);
     $collections = $collectionsStmt->fetchAll();
     
     // Create collection lookup array
@@ -65,21 +88,38 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true) {
                 <div class="col-md-6">
                     <h6>Cycle Information</h6>
                     <p class="mb-1"><strong>Daily Amount:</strong> GHS <?php echo number_format($cycle['daily_amount'], 2); ?></p>
-                    <p class="mb-1"><strong>Collections Made:</strong> <?php echo $cycle['collections_made']; ?> / 31</p>
-                    <p class="mb-1"><strong>Remaining:</strong> <?php echo 31 - $cycle['collections_made']; ?> days</p>
+                    <?php if ($fromDate && $toDate): ?>
+                        <p class="mb-1"><strong>Collections Made (<?php echo date('M j', strtotime($fromDate)); ?> - <?php echo date('M j', strtotime($toDate)); ?>):</strong> <?php echo $cycle['collections_made']; ?></p>
+                        <p class="mb-1"><strong>Date Range:</strong> <?php echo date('M j, Y', strtotime($fromDate)); ?> to <?php echo date('M j, Y', strtotime($toDate)); ?></p>
+                    <?php else: ?>
+                        <p class="mb-1"><strong>Collections Made:</strong> <?php echo $cycle['collections_made']; ?> / 31</p>
+                        <p class="mb-1"><strong>Remaining:</strong> <?php echo 31 - $cycle['collections_made']; ?> days</p>
+                    <?php endif; ?>
                     <p class="mb-0"><strong>Total Collected:</strong> GHS <?php echo number_format($cycle['collections_made'] * $cycle['daily_amount'], 2); ?></p>
                 </div>
                 <div class="col-md-6">
                     <h6>Progress</h6>
                     <div class="progress mb-2" style="height: 25px;">
+                        <?php 
+                        $totalDays = $fromDate && $toDate ? 
+                            (strtotime($toDate) - strtotime($fromDate)) / (60 * 60 * 24) + 1 : 31;
+                        $percentage = ($cycle['collections_made'] / $totalDays) * 100;
+                        ?>
                         <div class="progress-bar bg-success" role="progressbar" 
-                             style="width: <?php echo ($cycle['collections_made'] / 31) * 100; ?>%"
+                             style="width: <?php echo $percentage; ?>%"
                              aria-valuenow="<?php echo $cycle['collections_made']; ?>" 
-                             aria-valuemin="0" aria-valuemax="31">
-                            <?php echo round(($cycle['collections_made'] / 31) * 100, 1); ?>%
+                             aria-valuemin="0" aria-valuemax="<?php echo $totalDays; ?>">
+                            <?php echo round($percentage, 1); ?>%
                         </div>
                     </div>
-                    <small class="text-muted"><?php echo $cycle['collections_made']; ?> of 31 collections completed</small>
+                    <small class="text-muted">
+                        <?php echo $cycle['collections_made']; ?> of <?php echo $totalDays; ?> collections 
+                        <?php if ($fromDate && $toDate): ?>
+                            in selected date range
+                        <?php else: ?>
+                            completed
+                        <?php endif; ?>
+                    </small>
                 </div>
             </div>
 
@@ -268,3 +308,4 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php
 }
 ?>
+

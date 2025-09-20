@@ -5,3 +5,4 @@ use Controllers\ApplicationController;
 
 (new ApplicationController())->list();
 ?>
+

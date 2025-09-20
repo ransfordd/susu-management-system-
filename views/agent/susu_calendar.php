@@ -47,7 +47,7 @@ $cycleStmt = $pdo->prepare('
     SELECT sc.*, COUNT(dc.id) as collections_made
     FROM susu_cycles sc
     LEFT JOIN daily_collections dc ON sc.id = dc.susu_cycle_id
-    WHERE sc.client_id = :client_id AND sc.cycle_status = "active"
+    WHERE sc.client_id = :client_id AND sc.status = "active"
     GROUP BY sc.id
     ORDER BY sc.created_at DESC
     LIMIT 1
@@ -196,3 +196,4 @@ include __DIR__ . '/../../includes/header.php';
 </div>
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
+

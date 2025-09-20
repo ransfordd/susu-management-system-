@@ -144,7 +144,7 @@ class PaymentController {
                         // Create a new Susu cycle for this client
                         $createCycleStmt = $pdo->prepare('
                             INSERT INTO susu_cycles 
-                            (client_id, daily_amount, day_number, cycle_status, start_date, created_at) 
+                            (client_id, daily_amount, day_number, status, start_date, created_at) 
                             VALUES (:client_id, :daily_amount, 1, "active", CURDATE(), NOW())
                         ');
                         $createCycleStmt->execute([

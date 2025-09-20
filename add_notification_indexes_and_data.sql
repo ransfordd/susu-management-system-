@@ -35,3 +35,4 @@ INSERT IGNORE INTO notifications (user_id, notification_type, title, message, re
 (1, 'agent_assignment', 'Agent Assignment', 'New agent has been registered and requires approval.', NULL, 'agent');
 
 SELECT 'Notifications setup completed successfully!' as status;
+

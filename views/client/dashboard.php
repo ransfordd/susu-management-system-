@@ -44,8 +44,11 @@ require_once __DIR__ . '/../shared/susu_tracker.php';
 	</div></div>
 </div>
 <div class="row g-3 mt-2">
-	<div class="col-md-6"><a class="card p-3 text-decoration-none" href="/client_susu_schedule.php">View Susu Schedule</a></div>
-	<div class="col-md-6"><a class="card p-3 text-decoration-none" href="/client_loan_schedule.php">View Loan Schedule</a></div>
+	<div class="col-md-4"><a class="card p-3 text-decoration-none" href="/client_susu_schedule.php">View Susu Schedule</a></div>
+	<div class="col-md-4"><a class="card p-3 text-decoration-none" href="/client_loan_schedule.php">View Loan Schedule</a></div>
+	<div class="col-md-4"><a class="card p-3 text-decoration-none btn btn-primary text-white" href="/client_loan_application.php">
+		<i class="fas fa-file-alt"></i> Apply for Loan
+	</a></div>
 </div>
 <div class="card mt-3 p-3">
 	<div class="d-flex justify-content-between align-items-center">
