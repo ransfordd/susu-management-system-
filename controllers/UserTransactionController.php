@@ -55,7 +55,7 @@ class UserTransactionController {
         if ($clientId !== null && $clientId !== '') {
             $stmt = $pdo->prepare("
                 SELECT c.*, CONCAT(u.first_name, ' ', u.last_name) as client_name,
-                       u.email, u.phone, ag.agent_code, CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name
+                       u.email, u.phone, u.profile_picture, ag.agent_code, CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name
                 FROM clients c
                 JOIN users u ON c.user_id = u.id
                 LEFT JOIN agents ag ON c.agent_id = ag.id
@@ -122,8 +122,10 @@ class UserTransactionController {
         $susuQuery = "
             SELECT 
                 dc.collection_date as transaction_date,
-                dc.collection_time as transaction_time,
+                COALESCE(dc.collection_time, dc.created_at) as transaction_time,
+                dc.created_at,
                 CONCAT(c.first_name, ' ', c.last_name) as client_name,
+                CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
                 dc.collected_amount as amount,
                 'susu_collection' as transaction_type,
                 CONCAT('Susu Collection - Cycle ', sc.cycle_number) as description,
@@ -135,6 +137,8 @@ class UserTransactionController {
             JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
             JOIN clients cl ON sc.client_id = cl.id
             JOIN users c ON cl.user_id = c.id
+            LEFT JOIN agents ag ON cl.agent_id = ag.id
+            LEFT JOIN users ag_u ON ag.user_id = ag_u.id
             WHERE dc.collection_status = 'collected'
         ";
         
@@ -154,12 +158,54 @@ class UserTransactionController {
             $susuQuery .= " AND 1=0"; // Exclude susu collections
         }
         
+        // Get loan payments
+        $loanQuery = "
+            SELECT 
+                lp.payment_date as transaction_date,
+                COALESCE(lp.payment_time, lp.created_at) as transaction_time,
+                lp.created_at,
+                CONCAT(c.first_name, ' ', c.last_name) as client_name,
+                CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
+                lp.amount_paid as amount,
+                'loan_payment' as transaction_type,
+                CONCAT('Loan Payment - ', l.loan_number) as description,
+                lp.receipt_number as reference_number,
+                NULL as collection_id,
+                lp.id as payment_id,
+                NULL as manual_id
+            FROM loan_payments lp
+            JOIN loans l ON lp.loan_id = l.id
+            JOIN clients cl ON l.client_id = cl.id
+            JOIN users c ON cl.user_id = c.id
+            LEFT JOIN agents ag ON cl.agent_id = ag.id
+            LEFT JOIN users ag_u ON ag.user_id = ag_u.id
+            WHERE lp.payment_status = 'completed'
+        ";
+        
+        $loanParams = [];
+        if ($clientId) {
+            $loanQuery .= " AND cl.id = ?";
+            $loanParams[] = $clientId;
+        }
+        if ($fromDate && $toDate) {
+            $loanQuery .= " AND lp.payment_date BETWEEN ? AND ?";
+            $loanParams[] = $fromDate;
+            $loanParams[] = $toDate;
+        }
+        if ($transactionType === 'loan_payment') {
+            // Already filtered by loan payments
+        } elseif ($transactionType !== 'all' && $transactionType !== 'loan_payment') {
+            $loanQuery .= " AND 1=0"; // Exclude loan payments
+        }
+
         // Get manual transactions
         $manualQuery = "
             SELECT 
                 DATE(mt.created_at) as transaction_date,
-                mt.created_at as transaction_time,
+                TIME(mt.created_at) as transaction_time,
+                mt.created_at,
                 CONCAT(c.first_name, ' ', c.last_name) as client_name,
+                CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
                 mt.amount as amount,
                 CASE 
                     WHEN mt.transaction_type = 'deposit' THEN 'manual_deposit'
@@ -174,6 +220,8 @@ class UserTransactionController {
             FROM manual_transactions mt
             JOIN clients cl ON mt.client_id = cl.id
             JOIN users c ON cl.user_id = c.id
+            LEFT JOIN agents ag ON cl.agent_id = ag.id
+            LEFT JOIN users ag_u ON ag.user_id = ag_u.id
             WHERE 1=1
         ";
         
@@ -199,6 +247,12 @@ class UserTransactionController {
         if ($transactionType === 'all' || $transactionType === 'susu_collection') {
             $stmt = $pdo->prepare($susuQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT 50");
             $stmt->execute($susuParams);
+            $allTransactions = array_merge($allTransactions, $stmt->fetchAll());
+        }
+        
+        if ($transactionType === 'all' || $transactionType === 'loan_payment') {
+            $stmt = $pdo->prepare($loanQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT 50");
+            $stmt->execute($loanParams);
             $allTransactions = array_merge($allTransactions, $stmt->fetchAll());
         }
         
@@ -257,6 +311,44 @@ class UserTransactionController {
         $totals['deposit_amount'] += $susuResult['total_amount'];
         $totals['total_amount'] += $susuResult['total_amount'];
         $totals['transaction_count'] += $susuResult['count'];
+        
+        // Get loan payments total
+        $loanQuery = "
+            SELECT 
+                COALESCE(SUM(lp.amount_paid), 0) as total_amount,
+                COUNT(*) as count
+            FROM loan_payments lp
+            JOIN loans l ON lp.loan_id = l.id
+            JOIN clients cl ON l.client_id = cl.id
+            WHERE lp.payment_status = 'completed'
+        ";
+        
+        $loanParams = [];
+        if ($clientId) {
+            $loanQuery .= " AND cl.id = ?";
+            $loanParams[] = $clientId;
+        }
+        if ($fromDate && $toDate) {
+            $loanQuery .= " AND lp.payment_date BETWEEN ? AND ?";
+            $loanParams[] = $fromDate;
+            $loanParams[] = $toDate;
+        }
+        
+        if ($transactionType !== 'all') {
+            if ($transactionType === 'loan_payment') {
+                // Only loan payments
+            } elseif ($transactionType === 'susu_collection') {
+                $loanQuery .= " AND 1=0"; // Exclude loan payments
+            }
+        }
+        
+        $stmt = $pdo->prepare($loanQuery);
+        $stmt->execute($loanParams);
+        $loanResult = $stmt->fetch();
+        
+        $totals['deposit_amount'] += $loanResult['total_amount'];
+        $totals['total_amount'] += $loanResult['total_amount'];
+        $totals['transaction_count'] += $loanResult['count'];
         
         // Get manual transactions total
         $manualQuery = "

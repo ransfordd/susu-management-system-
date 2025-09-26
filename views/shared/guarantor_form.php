@@ -52,7 +52,8 @@ function renderGuarantorForm($loanApplicationId = null, $guarantorData = null, $
                     <label class="form-label">Phone Number <span class="text-danger">*</span></label>
                     <input type="tel" name="guarantor_phone" id="guarantor_phone" class="form-control" 
                            value="<?php echo htmlspecialchars($guarantorData['guarantor_phone'] ?? ''); ?>" 
-                           placeholder="+233XXXXXXXXX" required>
+                           placeholder="0244444444" pattern="[0-9]{10}" minlength="10" maxlength="10" required>
+                    <div class="form-text">Enter 10-digit phone number (e.g., 0244444444)</div>
                 </div>
                 
                 <div class="col-md-6">
@@ -164,7 +165,9 @@ function renderGuarantorForm($loanApplicationId = null, $guarantorData = null, $
                 <div class="col-md-6">
                     <label class="form-label">Work Phone</label>
                     <input type="tel" name="guarantor_work_phone" id="guarantor_work_phone" class="form-control" 
-                           value="<?php echo htmlspecialchars($guarantorData['guarantor_work_phone'] ?? ''); ?>">
+                           value="<?php echo htmlspecialchars($guarantorData['guarantor_work_phone'] ?? ''); ?>"
+                           placeholder="0244444444" pattern="[0-9]{10}" minlength="10" maxlength="10">
+                    <div class="form-text">Enter 10-digit phone number (e.g., 0244444444)</div>
                 </div>
             </div>
 
@@ -219,6 +222,22 @@ function renderGuarantorForm($loanApplicationId = null, $guarantorData = null, $
                     <label class="form-label">Account Number</label>
                     <input type="text" name="guarantor_account_number" id="guarantor_account_number" class="form-control" 
                            value="<?php echo htmlspecialchars($guarantorData['guarantor_account_number'] ?? ''); ?>">
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Ghana Card Number <span class="text-danger">*</span></label>
+                    <input type="text" name="guarantor_ghana_card_number" id="guarantor_ghana_card_number" class="form-control" 
+                           value="<?php echo htmlspecialchars($guarantorData['guarantor_ghana_card_number'] ?? ''); ?>" 
+                           placeholder="GHA-123456789-1" pattern="GHA-[0-9]{9}-[0-9]" required>
+                    <div class="form-text">Format: GHA-123456789-1</div>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">TIN (Tax Identification Number)</label>
+                    <input type="text" name="guarantor_tin" id="guarantor_tin" class="form-control" 
+                           value="<?php echo htmlspecialchars($guarantorData['guarantor_tin'] ?? ''); ?>" 
+                           placeholder="C1234567890" pattern="[A-Z][0-9]{10}">
+                    <div class="form-text">Format: C1234567890 (if applicable)</div>
                 </div>
                 
                 <div class="col-md-6">
@@ -294,6 +313,57 @@ function renderGuarantorForm($loanApplicationId = null, $guarantorData = null, $
                 </div>
             </div>
 
+            <!-- Ghana Banking Compliance -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <h6 class="text-primary border-bottom pb-2">Ghana Banking Compliance</h6>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">PEP (Politically Exposed Person) Status</label>
+                    <select name="guarantor_pep_status" id="guarantor_pep_status" class="form-select" required>
+                        <option value="">Select Status</option>
+                        <option value="no" <?php echo ($guarantorData['guarantor_pep_status'] ?? '') === 'no' ? 'selected' : ''; ?>>No - Not a PEP</option>
+                        <option value="yes" <?php echo ($guarantorData['guarantor_pep_status'] ?? '') === 'yes' ? 'selected' : ''; ?>>Yes - Politically Exposed Person</option>
+                        <option value="family" <?php echo ($guarantorData['guarantor_pep_status'] ?? '') === 'family' ? 'selected' : ''; ?>>Family Member of PEP</option>
+                        <option value="close_associate" <?php echo ($guarantorData['guarantor_pep_status'] ?? '') === 'close_associate' ? 'selected' : ''; ?>>Close Associate of PEP</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Source of Wealth</label>
+                    <select name="guarantor_source_of_wealth" id="guarantor_source_of_wealth" class="form-select" required>
+                        <option value="">Select Source</option>
+                        <option value="salary" <?php echo ($guarantorData['guarantor_source_of_wealth'] ?? '') === 'salary' ? 'selected' : ''; ?>>Salary/Employment</option>
+                        <option value="business" <?php echo ($guarantorData['guarantor_source_of_wealth'] ?? '') === 'business' ? 'selected' : ''; ?>>Business Income</option>
+                        <option value="investment" <?php echo ($guarantorData['guarantor_source_of_wealth'] ?? '') === 'investment' ? 'selected' : ''; ?>>Investment Returns</option>
+                        <option value="inheritance" <?php echo ($guarantorData['guarantor_source_of_wealth'] ?? '') === 'inheritance' ? 'selected' : ''; ?>>Inheritance</option>
+                        <option value="pension" <?php echo ($guarantorData['guarantor_source_of_wealth'] ?? '') === 'pension' ? 'selected' : ''; ?>>Pension</option>
+                        <option value="other" <?php echo ($guarantorData['guarantor_source_of_wealth'] ?? '') === 'other' ? 'selected' : ''; ?>>Other</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Anti-Money Laundering (AML) Risk Rating</label>
+                    <select name="guarantor_aml_risk" id="guarantor_aml_risk" class="form-select" required>
+                        <option value="">Select Risk Level</option>
+                        <option value="low" <?php echo ($guarantorData['guarantor_aml_risk'] ?? '') === 'low' ? 'selected' : ''; ?>>Low Risk</option>
+                        <option value="medium" <?php echo ($guarantorData['guarantor_aml_risk'] ?? '') === 'medium' ? 'selected' : ''; ?>>Medium Risk</option>
+                        <option value="high" <?php echo ($guarantorData['guarantor_aml_risk'] ?? '') === 'high' ? 'selected' : ''; ?>>High Risk</option>
+                    </select>
+                </div>
+                
+                <div class="col-md-6">
+                    <label class="form-label">Know Your Customer (KYC) Status</label>
+                    <select name="guarantor_kyc_status" id="guarantor_kyc_status" class="form-select" required>
+                        <option value="">Select Status</option>
+                        <option value="completed" <?php echo ($guarantorData['guarantor_kyc_status'] ?? '') === 'completed' ? 'selected' : ''; ?>>KYC Completed</option>
+                        <option value="pending" <?php echo ($guarantorData['guarantor_kyc_status'] ?? '') === 'pending' ? 'selected' : ''; ?>>KYC Pending</option>
+                        <option value="failed" <?php echo ($guarantorData['guarantor_kyc_status'] ?? '') === 'failed' ? 'selected' : ''; ?>>KYC Failed</option>
+                    </select>
+                </div>
+            </div>
+
             <!-- Guarantor Declaration -->
             <div class="row mb-4">
                 <div class="col-12">
@@ -306,11 +376,16 @@ function renderGuarantorForm($loanApplicationId = null, $guarantorData = null, $
                         <label class="form-check-label" for="guarantor_declaration">
                             I, the guarantor, hereby declare that:
                             <ul class="mt-2">
-                                <li>All information provided is true and accurate</li>
-                                <li>I understand my obligations as a guarantor</li>
-                                <li>I am financially capable of fulfilling the guarantee</li>
-                                <li>I consent to credit checks and verification processes</li>
+                                <li>All information provided is true and accurate to the best of my knowledge</li>
+                                <li>I understand my obligations as a guarantor under Ghanaian law</li>
+                                <li>I am financially capable of fulfilling the guarantee obligations</li>
+                                <li>I consent to credit checks, verification processes, and background investigations</li>
                                 <li>I will be liable for loan repayment if the borrower defaults</li>
+                                <li>I am not a politically exposed person (PEP) or related to any PEP</li>
+                                <li>My source of wealth is legitimate and verifiable</li>
+                                <li>I consent to the bank's Anti-Money Laundering (AML) and Know Your Customer (KYC) procedures</li>
+                                <li>I understand that providing false information may result in legal consequences</li>
+                                <li>I authorize the bank to verify all provided information with relevant authorities</li>
                             </ul>
                             <span class="text-danger">*</span>
                         </label>

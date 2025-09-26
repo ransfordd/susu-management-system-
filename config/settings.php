@@ -1,6 +1,6 @@
 <?php
 return [
-	'app_name' => 'Enhanced Susu System',
+	'app_name' => 'The Determiners Susu System',
 	'timezone' => 'Africa/Accra',
 	'csrf_token_key' => 'csrf_token',
 	'session_name' => 'susu_session',

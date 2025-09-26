@@ -13,14 +13,54 @@ $pdo = Database::getConnection();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create') {
     try {
+        $pdo->beginTransaction();
+        
         // Create loan application
         $applicationNumber = 'LA' . date('Ymd') . rand(1000, 9999);
         
+        // Handle file uploads
+        $uploadedFiles = [];
+        $uploadDir = '/assets/documents/loan_applications/' . $applicationNumber . '/';
+        $uploadPath = $_SERVER['DOCUMENT_ROOT'] . $uploadDir;
+        
+        if (!is_dir($uploadPath)) {
+            mkdir($uploadPath, 0755, true);
+        }
+        
+        // Process file uploads
+        $fileFields = ['ghana_card_front', 'ghana_card_back', 'proof_of_income', 'additional_documents'];
+        foreach ($fileFields as $field) {
+            if (isset($_FILES[$field]) && $_FILES[$field]['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES[$field];
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'application/pdf'];
+                
+                if (in_array($file['type'], $allowedTypes)) {
+                    $maxSize = 5 * 1024 * 1024; // 5MB
+                    if ($file['size'] <= $maxSize) {
+                        $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                        $fileName = $field . '_' . time() . '_' . uniqid() . '.' . $fileExtension;
+                        $filePath = $uploadPath . $fileName;
+                        
+                        if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                            $uploadedFiles[$field] = $uploadDir . $fileName;
+                        }
+                    }
+                }
+            }
+        }
+        
+        // Insert comprehensive loan application
         $stmt = $pdo->prepare("
             INSERT INTO loan_applications (
                 client_id, loan_product_id, application_number, 
-                requested_amount, requested_term_months, purpose, application_status, applied_date, created_at
-            ) VALUES (?, ?, ?, ?, ?, ?, 'pending', CURDATE(), NOW())
+                requested_amount, requested_term_months, purpose, 
+                guarantor_name, guarantor_phone, guarantor_email, guarantor_relationship,
+                guarantor_occupation, guarantor_income, guarantor_address,
+                employment_status, employer_name, monthly_income,
+                existing_loans, credit_history, additional_notes,
+                ghana_card_front, ghana_card_back, proof_of_income, additional_documents,
+                application_status, applied_date, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'pending', CURDATE(), NOW())
         ");
         
         $stmt->execute([
@@ -29,14 +69,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_GET['action'] ?? '') === 'create
             $applicationNumber,
             $_POST['requested_amount'],
             $_POST['requested_term_months'],
-            $_POST['purpose']
+            $_POST['purpose'],
+            $_POST['guarantor_name'] ?? null,
+            $_POST['guarantor_phone'] ?? null,
+            $_POST['guarantor_email'] ?? null,
+            $_POST['guarantor_relationship'] ?? null,
+            $_POST['guarantor_occupation'] ?? null,
+            $_POST['guarantor_income'] ?? null,
+            $_POST['guarantor_address'] ?? null,
+            $_POST['employment_status'] ?? null,
+            $_POST['employer_name'] ?? null,
+            $_POST['monthly_income'] ?? null,
+            $_POST['existing_loans'] ?? null,
+            $_POST['credit_history'] ?? null,
+            $_POST['additional_notes'] ?? null,
+            $uploadedFiles['ghana_card_front'] ?? null,
+            $uploadedFiles['ghana_card_back'] ?? null,
+            $uploadedFiles['proof_of_income'] ?? null,
+            $uploadedFiles['additional_documents'] ?? null
         ]);
         
+        $pdo->commit();
         $_SESSION['success'] = 'Loan application created successfully!';
         header('Location: /admin_applications.php');
         exit;
         
     } catch (Exception $e) {
+        $pdo->rollBack();
         $_SESSION['error'] = 'Error creating loan application: ' . $e->getMessage();
     }
 }

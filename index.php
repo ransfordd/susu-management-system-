@@ -17,16 +17,28 @@ if ($action === 'logout') {
 }
 
 if ($action === 'home') {
-	include __DIR__ . '/home.php';
+	include __DIR__ . '/homepage.php';
 	exit;
 }
 
+if ($action === 'dashboard') {
+	if (Auth\isAuthenticated()) {
+		(new DashboardController())->index();
+		exit;
+	} else {
+		header('Location: /login.php');
+		exit;
+	}
+}
+
+// If user is authenticated, redirect to dashboard
 if (Auth\isAuthenticated()) {
-	(new DashboardController())->index();
+	header('Location: /index.php?action=dashboard');
 	exit;
 }
 
-header('Location: /login.php');
+// Show homepage for non-authenticated users
+include __DIR__ . '/homepage.php';
 ?>
 
 

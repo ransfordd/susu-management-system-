@@ -72,12 +72,26 @@ include __DIR__ . '/../../includes/header.php';
         </div>
         <div class="card-body">
             <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-2">
+                    <div class="text-center">
+                        <?php if ($selectedClient['profile_picture']): ?>
+                            <img src="<?php echo htmlspecialchars($selectedClient['profile_picture']); ?>" 
+                                 alt="Profile Picture" class="img-thumbnail" 
+                                 style="width: 100px; height: 100px; object-fit: cover;"
+                                 onerror="this.src='/assets/images/default-avatar.png'">
+                        <?php else: ?>
+                            <img src="/assets/images/default-avatar.png" 
+                                 alt="Default Avatar" class="img-thumbnail" 
+                                 style="width: 100px; height: 100px; object-fit: cover;">
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <div class="col-md-5">
                     <p><strong>Name:</strong> <?php echo htmlspecialchars($selectedClient['client_name'] ?? ''); ?></p>
                     <p><strong>Email:</strong> <?php echo htmlspecialchars($selectedClient['email'] ?? ''); ?></p>
                     <p><strong>Phone:</strong> <?php echo htmlspecialchars($selectedClient['phone'] ?? ''); ?></p>
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-5">
                     <p><strong>Client Code:</strong> <?php echo htmlspecialchars($selectedClient['client_code'] ?? ''); ?></p>
                     <p><strong>Agent:</strong> <?php echo htmlspecialchars($selectedClient['agent_name'] ?? 'N/A'); ?></p>
                     <p><strong>Agent Code:</strong> <?php echo htmlspecialchars($selectedClient['agent_code'] ?? 'N/A'); ?></p>
@@ -168,15 +182,49 @@ include __DIR__ . '/../../includes/header.php';
                             <th>Date</th>
                             <th>Type</th>
                             <th>Amount</th>
-                            <th>Description</th>
-                            <th>Reference</th>
+                            <th>Agent Name</th>
+                            <th>Client Name</th>
                             <th>Actions</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php foreach ($transactions as $transaction): ?>
                         <tr>
-                            <td><?php echo date('M d, Y H:i', strtotime($transaction['transaction_date'])); ?></td>
+                            <td><?php 
+                                // Fix time display - handle different time formats
+                                $transactionTime = $transaction['transaction_time'];
+                                $transactionDate = $transaction['transaction_date'];
+                                
+                                // If transaction_time is null or empty, try to extract time from created_at
+                                if (empty($transactionTime) || $transactionTime === '00:00:00' || $transactionTime === null) {
+                                    // Try to get time from created_at if available
+                                    if (isset($transaction['created_at']) && !empty($transaction['created_at'])) {
+                                        $createdAt = new DateTime($transaction['created_at']);
+                                        $transactionTime = $createdAt->format('H:i:s');
+                                    } else {
+                                        $transactionTime = '12:00:00'; // Default to noon
+                                    }
+                                }
+                                
+                                // Combine date and time properly
+                                $dateTime = $transactionDate . ' ' . $transactionTime;
+                                $timestamp = strtotime($dateTime);
+                                
+                                // Only display if we have a valid timestamp
+                                if ($timestamp && $timestamp > 0) {
+                                    // Apply timezone conversion (UTC to Africa/Accra + 4 hours)
+                                    $date = new DateTime($dateTime, new DateTimeZone('UTC'));
+                                    $date->modify('+4 hours'); // Apply 4-hour offset
+                                    $date->setTimezone(new DateTimeZone('Africa/Accra'));
+                                    echo $date->format('M d, Y H:i');
+                                } else {
+                                    // Apply timezone conversion for date only
+                                    $date = new DateTime($transactionDate, new DateTimeZone('UTC'));
+                                    $date->modify('+4 hours'); // Apply 4-hour offset
+                                    $date->setTimezone(new DateTimeZone('Africa/Accra'));
+                                    echo $date->format('M d, Y');
+                                }
+                            ?></td>
                             <td>
                                 <span class="badge bg-<?php 
                                     echo match($transaction['transaction_type']) {
@@ -193,8 +241,17 @@ include __DIR__ . '/../../includes/header.php';
                                 </span>
                             </td>
                             <td>GHS <?php echo number_format($transaction['amount'], 2); ?></td>
-                            <td><?php echo htmlspecialchars($transaction['description'] ?? ''); ?></td>
-                            <td><?php echo htmlspecialchars($transaction['reference_number'] ?? ''); ?></td>
+                            <td>
+                                <?php 
+                                $agentName = $transaction['agent_name'] ?? 'N/A';
+                                if ($agentName && $agentName !== 'N/A' && !empty(trim($agentName))) {
+                                    echo htmlspecialchars($agentName);
+                                } else {
+                                    echo '<span class="text-muted">N/A</span>';
+                                }
+                                ?>
+                            </td>
+                            <td><?php echo htmlspecialchars($transaction['client_name'] ?? 'N/A'); ?></td>
                             <td>
                                 <a href="/admin_user_transactions.php?action=print&transaction_id=<?php echo $transaction['collection_id'] ?? $transaction['payment_id'] ?? $transaction['manual_id']; ?>" 
                                    class="btn btn-sm btn-outline-primary" target="_blank">

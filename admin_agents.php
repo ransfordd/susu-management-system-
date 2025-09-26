@@ -31,6 +31,15 @@ switch ($action) {
     case 'delete':
         $controller->delete($_GET['id'] ?? 0);
         break;
+    case 'assign_client':
+        $controller->assignClient();
+        break;
+    case 'remove_client':
+        $controller->removeClient();
+        break;
+    case 'impersonate':
+        $controller->impersonate();
+        break;
     default:
         $controller->index();
         break;

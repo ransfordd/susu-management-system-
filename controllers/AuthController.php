@@ -55,7 +55,7 @@ class AuthController {
 		}
 		try {
 			$pdo = \Database::getConnection();
-			$stmt = $pdo->prepare('SELECT id, username, email, password_hash, role, first_name, last_name FROM users WHERE (username = :u1 OR email = :u2) AND status = "active" LIMIT 1');
+			$stmt = $pdo->prepare('SELECT id, username, email, password_hash, role, first_name, last_name, profile_picture FROM users WHERE (username = :u1 OR email = :u2) AND status = "active" LIMIT 1');
 			$stmt->execute([':u1' => $usernameOrEmail, ':u2' => $usernameOrEmail]);
 			$user = $stmt->fetch();
 		} catch (\Throwable $e) {
@@ -83,6 +83,7 @@ class AuthController {
 			'email' => $user['email'],
 			'role' => $user['role'],
 			'name' => $user['first_name'] . ' ' . $user['last_name'],
+			'profile_picture' => $user['profile_picture'],
 		];
 		$_SESSION['login_attempts'] = 0;
 		
@@ -101,6 +102,32 @@ class AuthController {
 
 	public function logout(): void {
 		\Auth\startSessionIfNeeded();
+		
+		// Check if admin is impersonating someone
+		if (isset($_SESSION['impersonating']) && $_SESSION['impersonating'] === true && isset($_SESSION['original_admin'])) {
+			// Return to original admin session
+			$_SESSION['user'] = $_SESSION['original_admin'];
+			unset($_SESSION['impersonating']);
+			unset($_SESSION['original_admin']);
+			
+			// Log the end of impersonation (if table exists)
+			if (isset($_SESSION['user']['id'])) {
+				try {
+					ActivityLogger::logActivity(
+						$_SESSION['user']['id'],
+						'impersonation_end',
+						'Admin ended impersonation and returned to admin account',
+						$_SERVER['REMOTE_ADDR'] ?? 'unknown'
+					);
+				} catch (\Exception $e) {
+					// Table doesn't exist, continue without logging
+					error_log('ActivityLogger failed: ' . $e->getMessage());
+				}
+			}
+			
+			header('Location: /index.php');
+			exit;
+		}
 		
 		// Log logout activity before destroying session
 		if (isset($_SESSION['user']['id']) && isset($_SESSION['user']['username'])) {

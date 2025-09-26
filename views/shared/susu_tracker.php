@@ -20,27 +20,22 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
         return;
     }
     
-    // Get active Susu cycle for this client
+    // Get active Susu cycle for this client (or any cycle if no active one)
     $cycleQuery = '
-        SELECT sc.*, COUNT(dc.id) as collections_made
+        SELECT sc.*, 
+               COUNT(CASE WHEN dc.collection_status = "collected" THEN dc.id END) as collections_made
         FROM susu_cycles sc
-        LEFT JOIN daily_collections dc ON sc.id = dc.susu_cycle_id AND dc.collection_status = "collected"
-        WHERE sc.client_id = :client_id AND sc.status = "active"
+        LEFT JOIN daily_collections dc ON sc.id = dc.susu_cycle_id
+        WHERE sc.client_id = :client_id
+        GROUP BY sc.id 
+        ORDER BY 
+            CASE WHEN sc.status = "active" THEN 0 ELSE 1 END,
+            sc.created_at DESC 
+        LIMIT 1
     ';
     
-    $cycleParams = [':client_id' => $clientId];
-    
-    // Add date filtering if provided
-    if ($fromDate && $toDate) {
-        $cycleQuery .= ' AND dc.collection_date BETWEEN :from_date AND :to_date';
-        $cycleParams[':from_date'] = $fromDate;
-        $cycleParams[':to_date'] = $toDate;
-    }
-    
-    $cycleQuery .= ' GROUP BY sc.id ORDER BY sc.created_at DESC LIMIT 1';
-    
     $cycleStmt = $pdo->prepare($cycleQuery);
-    $cycleStmt->execute($cycleParams);
+    $cycleStmt->execute([':client_id' => $clientId]);
     $cycle = $cycleStmt->fetch();
     
     // Get collection history for this cycle
@@ -61,16 +56,53 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
         $collectionsParams[':to_date'] = $toDate;
     }
     
-    $collectionsQuery .= ' ORDER BY dc.day_number ASC';
+    $collectionsQuery .= ' ORDER BY dc.collection_date ASC';
     
     $collectionsStmt = $pdo->prepare($collectionsQuery);
     $collectionsStmt->execute($collectionsParams);
     $collections = $collectionsStmt->fetchAll();
     
-    // Create collection lookup array
+    // Calculate collections_in_range based on actual filtered collections
+    $collections_in_range = count($collections);
+    
+    // Create collection lookup array - use day_number from database
     $collectionLookup = [];
+    
     foreach ($collections as $collection) {
-        $collectionLookup[$collection['day_number']] = $collection;
+        $dayNumber = (int)$collection['day_number'];
+        
+        // Ensure day number is within 1-31 range
+        if ($dayNumber >= 1 && $dayNumber <= 31) {
+            $collectionLookup[$dayNumber] = $collection;
+        }
+    }
+    
+    // If date filters are applied, we need to adjust the display logic
+    $isDateFiltered = $fromDate && $toDate;
+    
+    // Create a proper day mapping based on the cycle start date
+    $visualDayMapping = [];
+    
+    if ($cycle) {
+        $cycleStartDate = $cycle['start_date'];
+        
+        // FIXED: Use collections directly without strict date validation
+        // The day_number in the database is already correct
+        foreach ($collections as $collection) {
+            $dayNumber = (int)$collection['day_number'];
+            
+            // Ensure day number is within 1-31 range
+            if ($dayNumber >= 1 && $dayNumber <= 31) {
+                $visualDayMapping[$dayNumber] = $collection;
+            }
+        }
+        
+        // Update collections_made count in the cycle if it's incorrect
+        if ($cycle['collections_made'] != count($visualDayMapping)) {
+            $updateStmt = $pdo->prepare('UPDATE susu_cycles SET collections_made = ? WHERE id = ?');
+            $updateStmt->execute([count($visualDayMapping), $cycle['id']]);
+            $cycle['collections_made'] = count($visualDayMapping);
+        }
     }
     ?>
 
@@ -87,33 +119,54 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
             <div class="row mb-4">
                 <div class="col-md-6">
                     <h6>Cycle Information</h6>
+                    <p class="mb-1"><strong>Status:</strong> 
+                        <span class="badge bg-<?php echo $cycle['status'] === 'active' ? 'success' : ($cycle['status'] === 'completed' ? 'info' : 'warning'); ?>">
+                            <?php echo ucfirst($cycle['status']); ?>
+                        </span>
+                    </p>
                     <p class="mb-1"><strong>Daily Amount:</strong> GHS <?php echo number_format($cycle['daily_amount'], 2); ?></p>
                     <?php if ($fromDate && $toDate): ?>
-                        <p class="mb-1"><strong>Collections Made (<?php echo date('M j', strtotime($fromDate)); ?> - <?php echo date('M j', strtotime($toDate)); ?>):</strong> <?php echo $cycle['collections_made']; ?></p>
+                        <p class="mb-1"><strong>Collections Made (<?php echo date('M j', strtotime($fromDate)); ?> - <?php echo date('M j', strtotime($toDate)); ?>):</strong> <?php echo $collections_in_range; ?></p>
                         <p class="mb-1"><strong>Date Range:</strong> <?php echo date('M j, Y', strtotime($fromDate)); ?> to <?php echo date('M j, Y', strtotime($toDate)); ?></p>
+                        <p class="mb-1"><strong>Total Collections:</strong> <?php echo $collections_in_range; ?> / 31</p>
                     <?php else: ?>
                         <p class="mb-1"><strong>Collections Made:</strong> <?php echo $cycle['collections_made']; ?> / 31</p>
                         <p class="mb-1"><strong>Remaining:</strong> <?php echo 31 - $cycle['collections_made']; ?> days</p>
                     <?php endif; ?>
-                    <p class="mb-0"><strong>Total Collected:</strong> GHS <?php echo number_format($cycle['collections_made'] * $cycle['daily_amount'], 2); ?></p>
+                    <p class="mb-0"><strong>Total Collected:</strong> GHS <?php 
+                        $totalCollected = $fromDate && $toDate ? 
+                            ($collections_in_range * $cycle['daily_amount']) : 
+                            ($cycle['collections_made'] * $cycle['daily_amount']);
+                        echo number_format($totalCollected, 2); 
+                    ?></p>
                 </div>
                 <div class="col-md-6">
                     <h6>Progress</h6>
                     <div class="progress mb-2" style="height: 25px;">
                         <?php 
-                        $totalDays = $fromDate && $toDate ? 
-                            (strtotime($toDate) - strtotime($fromDate)) / (60 * 60 * 24) + 1 : 31;
-                        $percentage = ($cycle['collections_made'] / $totalDays) * 100;
+                        if ($fromDate && $toDate) {
+                            // For date-filtered view, calculate progress based on the filtered range
+                            $totalDays = (strtotime($toDate) - strtotime($fromDate)) / (60 * 60 * 24) + 1;
+                            $displayCount = $collections_in_range;
+                            
+                            // Calculate percentage based on filtered range
+                            $percentage = $totalDays > 0 ? ($displayCount / $totalDays) * 100 : 0;
+                        } else {
+                            // For full cycle view, show progress against 31-day cycle
+                            $totalDays = 31;
+                            $displayCount = $cycle['collections_made'];
+                            $percentage = ($displayCount / $totalDays) * 100;
+                        }
                         ?>
                         <div class="progress-bar bg-success" role="progressbar" 
                              style="width: <?php echo $percentage; ?>%"
-                             aria-valuenow="<?php echo $cycle['collections_made']; ?>" 
+                             aria-valuenow="<?php echo $displayCount; ?>" 
                              aria-valuemin="0" aria-valuemax="<?php echo $totalDays; ?>">
                             <?php echo round($percentage, 1); ?>%
                         </div>
                     </div>
                     <small class="text-muted">
-                        <?php echo $cycle['collections_made']; ?> of <?php echo $totalDays; ?> collections 
+                        <?php echo $displayCount; ?> of <?php echo $totalDays; ?> collections 
                         <?php if ($fromDate && $toDate): ?>
                             in selected date range
                         <?php else: ?>
@@ -126,11 +179,17 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
             <!-- Susu Collection Grid -->
             <div class="row mb-3">
                 <div class="col-12">
-                    <h6>Collection Days (31-Day Cycle)</h6>
+                    <h6>Collection Days (31-Day Cycle)
+                        <?php if ($isDateFiltered): ?>
+                            <small class="text-muted">- Filtered View (<?php echo date('M j', strtotime($fromDate)); ?> to <?php echo date('M j', strtotime($toDate)); ?>)</small>
+                        <?php endif; ?>
+                    </h6>
                     <div class="susu-grid">
                         <?php for ($day = 1; $day <= 31; $day++): ?>
                             <?php 
-                            $collection = $collectionLookup[$day] ?? null;
+                            // Always use the visual day mapping which is now corrected
+                            $collection = $visualDayMapping[$day] ?? null;
+                            
                             $isCollected = $collection !== null;
                             $collectionDate = $collection ? date('M j', strtotime($collection['collection_date'])) : '';
                             ?>
@@ -308,4 +367,3 @@ document.addEventListener('DOMContentLoaded', function() {
 <?php
 }
 ?>
-

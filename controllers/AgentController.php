@@ -27,6 +27,57 @@ class AgentController {
         
         include __DIR__ . '/../views/admin/agent_list.php';
     }
+    
+    public function impersonate(): void {
+        requireRole(['business_admin']);
+        $agentId = (int)($_GET['id'] ?? 0);
+        
+        if ($agentId === 0) {
+            header('Location: /admin_agents.php');
+            exit;
+        }
+        
+        $pdo = \Database::getConnection();
+        
+        // Get the agent user to impersonate
+        $agent = $pdo->prepare('
+            SELECT u.* 
+            FROM users u 
+            JOIN agents a ON u.id = a.user_id 
+            WHERE a.id = :id AND u.role = "agent"
+        ');
+        $agent->execute([':id' => $agentId]);
+        $agent = $agent->fetch();
+        
+        if (!$agent) {
+            header('Location: /admin_agents.php?error=' . urlencode('Agent not found'));
+            exit;
+        }
+        
+        // Store original admin session
+        $_SESSION['original_admin'] = $_SESSION['user'];
+        
+        // Set impersonated user session
+        $_SESSION['user'] = $agent;
+        $_SESSION['impersonating'] = true;
+        
+        // Log the impersonation (if table exists)
+        try {
+            $stmt = $pdo->prepare('INSERT INTO user_activities (user_id, activity_type, description, ip_address) VALUES (?, ?, ?, ?)');
+            $stmt->execute([
+                $_SESSION['original_admin']['id'],
+                'impersonation',
+                'Admin impersonated agent: ' . $agent['username'],
+                $_SERVER['REMOTE_ADDR'] ?? 'unknown'
+            ]);
+        } catch (\PDOException $e) {
+            // Table doesn't exist, continue without logging
+            error_log('user_activities table not found: ' . $e->getMessage());
+        }
+        
+        header('Location: /index.php');
+        exit;
+    }
 
     public function create(): void {
         requireRole(['business_admin']);
@@ -111,6 +162,29 @@ class AgentController {
             exit;
         }
         
+        // Get assigned clients
+        $assignedClientsStmt = $pdo->prepare("
+            SELECT c.id, c.client_code, u.first_name, u.last_name, u.email, u.phone, c.daily_deposit_amount, c.status, c.created_at
+            FROM clients c
+            JOIN users u ON c.user_id = u.id
+            WHERE c.agent_id = ?
+            ORDER BY u.first_name, u.last_name
+        ");
+        $assignedClientsStmt->execute([$id]);
+        $assignedClients = $assignedClientsStmt->fetchAll();
+        
+        // Get unassigned clients (clients without an agent or with inactive agents)
+        $unassignedClientsStmt = $pdo->prepare("
+            SELECT c.id, c.client_code, u.first_name, u.last_name, u.email, u.phone, c.daily_deposit_amount, c.status, c.created_at
+            FROM clients c
+            JOIN users u ON c.user_id = u.id
+            LEFT JOIN agents a ON c.agent_id = a.id
+            WHERE c.agent_id IS NULL OR a.status = 'inactive'
+            ORDER BY u.first_name, u.last_name
+        ");
+        $unassignedClientsStmt->execute();
+        $unassignedClients = $unassignedClientsStmt->fetchAll();
+        
         include __DIR__ . '/../views/admin/agent_edit.php';
     }
 
@@ -135,11 +209,11 @@ class AgentController {
             ");
             
             $userStmt->execute([
-                $_POST['username'],
-                $_POST['email'],
-                $_POST['first_name'],
-                $_POST['last_name'],
-                $_POST['phone'],
+                $_POST['username'] ?? '',
+                $_POST['email'] ?? '',
+                $_POST['first_name'] ?? '',
+                $_POST['last_name'] ?? '',
+                $_POST['phone'] ?? '',
                 $id
             ]);
             
@@ -151,8 +225,8 @@ class AgentController {
             ");
             
             $agentStmt->execute([
-                $_POST['commission_rate'],
-                $_POST['status'],
+                $_POST['commission_rate'] ?? 5.0,
+                $_POST['status'] ?? 'active',
                 $id
             ]);
             
@@ -203,6 +277,104 @@ class AgentController {
             $pdo->rollBack();
             $_SESSION['error'] = 'Error deleting agent: ' . $e->getMessage();
             header('Location: /admin_agents.php');
+            exit;
+        }
+    }
+
+    public function assignClient(): void {
+        requireRole(['business_admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /admin_agents.php');
+            exit;
+        }
+        
+        $agentId = (int)($_POST['agent_id'] ?? 0);
+        $clientId = (int)($_POST['client_id'] ?? 0);
+        
+        if ($agentId === 0 || $clientId === 0) {
+            $_SESSION['error'] = 'Invalid agent or client ID';
+            header('Location: /admin_agents.php?action=edit&id=' . $agentId);
+            exit;
+        }
+        
+        $pdo = \Database::getConnection();
+        
+        try {
+            $pdo->beginTransaction();
+            
+            // Check if agent exists and is active
+            $agentStmt = $pdo->prepare("SELECT id FROM agents WHERE id = ? AND status = 'active'");
+            $agentStmt->execute([$agentId]);
+            if (!$agentStmt->fetch()) {
+                throw new Exception('Agent not found or inactive');
+            }
+            
+            // Check if client exists
+            $clientStmt = $pdo->prepare("SELECT id FROM clients WHERE id = ?");
+            $clientStmt->execute([$clientId]);
+            if (!$clientStmt->fetch()) {
+                throw new Exception('Client not found');
+            }
+            
+            // Assign client to agent
+            $assignStmt = $pdo->prepare("UPDATE clients SET agent_id = ? WHERE id = ?");
+            $assignStmt->execute([$agentId, $clientId]);
+            
+            $pdo->commit();
+            
+            $_SESSION['success'] = 'Client assigned to agent successfully!';
+            header('Location: /admin_agents.php?action=edit&id=' . $agentId);
+            exit;
+            
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $_SESSION['error'] = 'Error assigning client: ' . $e->getMessage();
+            header('Location: /admin_agents.php?action=edit&id=' . $agentId);
+            exit;
+        }
+    }
+
+    public function removeClient(): void {
+        requireRole(['business_admin']);
+        
+        if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+            header('Location: /admin_agents.php');
+            exit;
+        }
+        
+        $agentId = (int)($_POST['agent_id'] ?? 0);
+        $clientId = (int)($_POST['client_id'] ?? 0);
+        
+        if ($agentId === 0 || $clientId === 0) {
+            $_SESSION['error'] = 'Invalid agent or client ID';
+            header('Location: /admin_agents.php?action=edit&id=' . $agentId);
+            exit;
+        }
+        
+        $pdo = \Database::getConnection();
+        
+        try {
+            $pdo->beginTransaction();
+            
+            // Remove client from agent (set agent_id to NULL)
+            $removeStmt = $pdo->prepare("UPDATE clients SET agent_id = NULL WHERE id = ? AND agent_id = ?");
+            $removeStmt->execute([$clientId, $agentId]);
+            
+            if ($removeStmt->rowCount() === 0) {
+                throw new Exception('Client not found or not assigned to this agent');
+            }
+            
+            $pdo->commit();
+            
+            $_SESSION['success'] = 'Client removed from agent successfully!';
+            header('Location: /admin_agents.php?action=edit&id=' . $agentId);
+            exit;
+            
+        } catch (Exception $e) {
+            $pdo->rollBack();
+            $_SESSION['error'] = 'Error removing client: ' . $e->getMessage();
+            header('Location: /admin_agents.php?action=edit&id=' . $agentId);
             exit;
         }
     }

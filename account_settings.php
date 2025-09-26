@@ -332,37 +332,63 @@ function deleteDocument($pdo, $userId, $documentId) {
 include __DIR__ . '/includes/header.php';
 ?>
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h4>Account Settings</h4>
-    <a href="/index.php" class="btn btn-outline-primary">
-        <i class="fas fa-arrow-left"></i> Back to Dashboard
-    </a>
+<!-- Modern Account Settings Header -->
+<div class="settings-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="page-title-section">
+                <h2 class="page-title">
+                    <i class="fas fa-user-cog text-primary me-2"></i>
+                    Account Settings
+                </h2>
+                <p class="page-subtitle">Manage your profile, documents, and account preferences</p>
+            </div>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="/index.php" class="btn btn-light">
+                <i class="fas fa-arrow-left"></i> Back to Dashboard
+            </a>
+        </div>
+    </div>
 </div>
 
+<!-- Modern Alerts -->
 <?php if (isset($successMessage)): ?>
-    <div class="alert alert-success alert-dismissible fade show" role="alert">
-        <i class="fas fa-check-circle"></i> <?php echo $successMessage; ?>
+    <div class="modern-alert alert-success">
+        <div class="alert-content">
+            <i class="fas fa-check-circle"></i>
+            <span><?php echo $successMessage; ?></span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
 
 <?php if (isset($errorMessage)): ?>
-    <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle"></i> <?php echo $errorMessage; ?>
+    <div class="modern-alert alert-danger">
+        <div class="alert-content">
+            <i class="fas fa-exclamation-circle"></i>
+            <span><?php echo $errorMessage; ?></span>
+        </div>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 <?php endif; ?>
 
-<div class="row">
+<div class="row g-4">
     <!-- Profile Picture Section -->
     <div class="col-md-4">
-        <div class="card">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-user-circle"></i> Profile Picture
-                </h5>
+        <div class="modern-card">
+            <div class="card-header-modern">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                    <div class="header-text">
+                        <h5 class="header-title">Profile Picture</h5>
+                        <p class="header-subtitle">Update your profile photo</p>
+                    </div>
+                </div>
             </div>
-            <div class="card-body text-center">
+            <div class="card-body-modern text-center">
                 <div class="mb-3">
                     <img src="<?php echo $userData['profile_picture'] ?: '/assets/images/default-avatar.png'; ?>" 
                          alt="Profile Picture" class="img-thumbnail rounded-circle" 
@@ -395,13 +421,19 @@ include __DIR__ . '/includes/header.php';
     <!-- Account Information -->
     <div class="col-md-8">
         <!-- Personal Information -->
-        <div class="card mb-4">
-            <div class="card-header">
-                <h5 class="mb-0">
-                    <i class="fas fa-user"></i> Personal Information
-                </h5>
+        <div class="modern-card mb-4">
+            <div class="card-header-modern">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-user"></i>
+                    </div>
+                    <div class="header-text">
+                        <h5 class="header-title">Personal Information</h5>
+                        <p class="header-subtitle">Update your personal details</p>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
+            <div class="card-body-modern">
                 <form method="POST">
                     <input type="hidden" name="action" value="update_profile">
                     
@@ -556,7 +588,8 @@ include __DIR__ . '/includes/header.php';
             </div>
         </div>
 
-        <!-- Next of Kin Information -->
+        <!-- Next of Kin Information (Only for Clients) -->
+        <?php if ($userData['role'] === 'client'): ?>
         <div class="card mb-4">
             <div class="card-header">
                 <h5 class="mb-0">
@@ -615,6 +648,7 @@ include __DIR__ . '/includes/header.php';
                 </form>
             </div>
         </div>
+        <?php endif; ?>
 
         <!-- Document Upload -->
         <div class="card mb-4">
@@ -843,5 +877,320 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 </script>
+
+<style>
+/* Account Settings Page Styles */
+.settings-header {
+	background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+	color: white;
+	padding: 2rem;
+	border-radius: 15px;
+	margin-bottom: 2rem;
+}
+
+.page-title-section {
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2rem;
+	font-weight: 700;
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+}
+
+.page-subtitle {
+	font-size: 1.1rem;
+	opacity: 0.9;
+	margin-bottom: 0;
+	color: white !important;
+}
+
+/* Modern Alerts */
+.modern-alert {
+	border-radius: 10px;
+	border: none;
+	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+	margin-bottom: 1.5rem;
+	padding: 1rem 1.5rem;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+}
+
+.modern-alert.alert-success {
+	background: linear-gradient(135deg, #d4edda 0%, #c3e6cb 100%);
+	color: #155724;
+	border-left: 4px solid #28a745;
+}
+
+.modern-alert.alert-danger {
+	background: linear-gradient(135deg, #f8d7da 0%, #f5c6cb 100%);
+	color: #721c24;
+	border-left: 4px solid #dc3545;
+}
+
+.alert-content {
+	display: flex;
+	align-items: center;
+	gap: 0.75rem;
+}
+
+.alert-content i {
+	font-size: 1.2rem;
+}
+
+/* Modern Cards */
+.modern-card {
+	background: white;
+	border-radius: 15px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+	overflow: hidden;
+	transition: all 0.3s ease;
+	border: none;
+}
+
+.modern-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.card-header-modern {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	padding: 1.5rem;
+	border-bottom: 1px solid #e9ecef;
+}
+
+.header-content {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.header-icon {
+	font-size: 1.5rem;
+	color: #6f42c1;
+	background: rgba(111, 66, 193, 0.1);
+	padding: 0.75rem;
+	border-radius: 10px;
+	width: 50px;
+	height: 50px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.header-text {
+	flex: 1;
+}
+
+.header-title {
+	font-size: 1.2rem;
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+	color: #2c3e50;
+}
+
+.header-subtitle {
+	font-size: 0.9rem;
+	color: #6c757d;
+	margin-bottom: 0;
+}
+
+.card-body-modern {
+	padding: 2rem;
+}
+
+/* Form Styling */
+.form-label {
+	font-weight: 600;
+	color: #2c3e50;
+	margin-bottom: 0.5rem;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.form-control, .form-select {
+	border: 2px solid #e9ecef;
+	border-radius: 10px;
+	padding: 0.75rem 1rem;
+	font-size: 1rem;
+	transition: all 0.3s ease;
+	background: #f8f9fa;
+}
+
+.form-control:focus, .form-select:focus {
+	border-color: #6f42c1;
+	background: white;
+	box-shadow: 0 0 0 3px rgba(111, 66, 193, 0.1);
+	outline: none;
+}
+
+.form-text {
+	font-size: 0.85rem;
+	color: #6c757d;
+	margin-top: 0.25rem;
+}
+
+/* Profile Picture */
+.img-thumbnail {
+	border-radius: 50%;
+	border: 3px solid #e9ecef;
+	transition: all 0.3s ease;
+}
+
+.img-thumbnail:hover {
+	border-color: #6f42c1;
+	transform: scale(1.05);
+}
+
+/* Buttons */
+.btn {
+	border-radius: 10px;
+	font-weight: 600;
+	transition: all 0.3s ease;
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.btn-primary {
+	background: linear-gradient(135deg, #6f42c1 0%, #5a32a3 100%);
+	border: none;
+}
+
+.btn-primary:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(111, 66, 193, 0.3);
+	background: linear-gradient(135deg, #5a32a3 0%, #4a2a8a 100%);
+}
+
+.btn-warning {
+	background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);
+	border: none;
+	color: white;
+}
+
+.btn-warning:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(255, 193, 7, 0.3);
+	background: linear-gradient(135deg, #e0a800 0%, #d39e00 100%);
+	color: white;
+}
+
+.btn-outline-danger {
+	border: 2px solid #dc3545;
+	color: #dc3545;
+}
+
+.btn-outline-danger:hover {
+	background: #dc3545;
+	border-color: #dc3545;
+	color: white;
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(220, 53, 69, 0.3);
+}
+
+.btn-outline-primary {
+	border: 2px solid #007bff;
+	color: #007bff;
+}
+
+.btn-outline-primary:hover {
+	background: #007bff;
+	border-color: #007bff;
+	color: white;
+	transform: translateY(-2px);
+	box-shadow: 0 8px 25px rgba(0, 123, 255, 0.3);
+}
+
+/* Document Table */
+.table {
+	border-radius: 10px;
+	overflow: hidden;
+}
+
+.table thead th {
+	background: #f8f9fa;
+	border: none;
+	font-weight: 600;
+	color: #6c757d;
+}
+
+.table tbody td {
+	border: none;
+	border-bottom: 1px solid #f1f3f4;
+}
+
+.table tbody tr:hover {
+	background: #f8f9fa;
+}
+
+/* Badges */
+.badge {
+	border-radius: 20px;
+	padding: 0.5rem 0.75rem;
+	font-size: 0.8rem;
+	font-weight: 600;
+}
+
+/* Empty State */
+.text-muted.text-center.py-3 {
+	padding: 3rem 1rem;
+}
+
+.text-muted.text-center.py-3 i {
+	color: #dee2e6;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+	.settings-header {
+		padding: 1.5rem;
+		text-align: center;
+	}
+	
+	.page-title {
+		font-size: 1.5rem;
+		justify-content: center;
+	}
+	
+	.card-body-modern {
+		padding: 1.5rem;
+	}
+	
+	.header-content {
+		flex-direction: column;
+		text-align: center;
+		gap: 0.5rem;
+	}
+	
+	.header-icon {
+		margin: 0 auto;
+	}
+}
+
+/* Animation */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(20px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.modern-card {
+	animation: fadeInUp 0.6s ease-out;
+}
+
+.modern-alert {
+	animation: fadeInUp 0.4s ease-out;
+}
+</style>
 
 <?php include __DIR__ . '/includes/footer.php'; ?>

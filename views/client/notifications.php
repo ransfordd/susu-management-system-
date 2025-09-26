@@ -119,8 +119,12 @@ include __DIR__ . '/../../includes/header.php';
                                     </span>
                                     <br>
                                     <small class="text-muted">
-                                        <?php echo date('M j, Y', strtotime($notification['created_at'])); ?><br>
-                                        <?php echo date('g:i A', strtotime($notification['created_at'])); ?>
+                                        <?php 
+                                        // Timezone conversion already applied in controller, just format the date
+                                        $date = new DateTime($notification['created_at']);
+                                        echo $date->format('M j, Y'); 
+                                        ?><br>
+                                        <?php echo $date->format('g:i A'); ?>
                                     </small>
                                 </div>
                             </div>

@@ -19,6 +19,15 @@ $stmt = $pdo->prepare('
 $stmt->execute();
 $notifications = $stmt->fetchAll();
 
+// Apply timezone conversion to each notification
+foreach ($notifications as &$notification) {
+    $notificationTime = $notification['created_at'];
+    $date = new DateTime($notificationTime, new DateTimeZone('UTC'));
+    $date->modify('+4 hours'); // Apply 4-hour offset
+    $date->setTimezone(new DateTimeZone('Africa/Accra'));
+    $notification['created_at'] = $date->format('Y-m-d H:i:s');
+}
+
 // Mark admin notifications as read
 if (!empty($notifications)) {
     $unreadIds = array_column(array_filter($notifications, function($n) { return !$n['is_read']; }), 'id');
@@ -116,8 +125,12 @@ include __DIR__ . '/../../includes/header.php';
                                     </span>
                                     <br>
                                     <small class="text-muted">
-                                        <?php echo date('M j, Y', strtotime($notification['created_at'])); ?><br>
-                                        <?php echo date('g:i A', strtotime($notification['created_at'])); ?>
+                                        <?php 
+                                        // Timezone conversion already applied above, just format the date
+                                        $date = new DateTime($notification['created_at']);
+                                        echo $date->format('M j, Y'); 
+                                        ?><br>
+                                        <?php echo $date->format('g:i A'); ?>
                                     </small>
                                 </div>
                             </div>

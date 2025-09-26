@@ -179,6 +179,17 @@ class UserManagementController {
             ORDER BY u.first_name, u.last_name
         ')->fetchAll();
         
+        // Debug logging
+        error_log("UserManagementController::edit() - About to include view with user: " . $user['username']);
+        error_log("UserManagementController::edit() - User ID: " . $user['id']);
+        
+        // Explicitly pass user data to avoid variable conflicts
+        $editUser = $user;
+        $editAgentData = $agentData;
+        $editClientData = $clientData;
+        $editAgentStats = $agentStats;
+        $editAgents = $agents;
+        
         include __DIR__ . '/../views/admin/user_edit.php';
     }
     
@@ -199,21 +210,111 @@ class UserManagementController {
             $lastName = trim($_POST['last_name'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
             $status = $_POST['status'] ?? 'active';
+            $dateOfBirth = $_POST['date_of_birth'] ?? null;
+            $gender = $_POST['gender'] ?? null;
+            $maritalStatus = $_POST['marital_status'] ?? null;
+            $nationality = $_POST['nationality'] ?? null;
+            $residentialAddress = trim($_POST['residential_address'] ?? '');
+            $city = trim($_POST['city'] ?? '');
+            $region = $_POST['region'] ?? null;
+            $postalCode = trim($_POST['postal_code'] ?? '');
+            
+            // Handle profile picture upload
+            $profilePicturePath = null;
+            if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['profile_picture'];
+                $allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
+                
+                if (in_array($file['type'], $allowedTypes)) {
+                    $maxSize = 2 * 1024 * 1024; // 2MB
+                    if ($file['size'] <= $maxSize) {
+                        $uploadDir = '/assets/images/profiles/';
+                        $uploadPath = $_SERVER['DOCUMENT_ROOT'] . $uploadDir;
+                        
+                        if (!is_dir($uploadPath)) {
+                            mkdir($uploadPath, 0755, true);
+                        }
+                        
+                        $fileExtension = pathinfo($file['name'], PATHINFO_EXTENSION);
+                        $fileName = 'user_' . $userId . '_' . time() . '.' . $fileExtension;
+                        $filePath = $uploadPath . $fileName;
+                        
+                        if (move_uploaded_file($file['tmp_name'], $filePath)) {
+                            $profilePicturePath = $uploadDir . $fileName;
+                            
+                            // Remove old profile picture if exists
+                            $stmt = $pdo->prepare('SELECT profile_picture FROM users WHERE id = ?');
+                            $stmt->execute([$userId]);
+                            $oldPicture = $stmt->fetchColumn();
+                            
+                            if ($oldPicture && file_exists($_SERVER['DOCUMENT_ROOT'] . $oldPicture)) {
+                                unlink($_SERVER['DOCUMENT_ROOT'] . $oldPicture);
+                            }
+                        }
+                    }
+                }
+            }
             
             // Update user basic info
-            $stmt = $pdo->prepare('UPDATE users SET first_name = :f, last_name = :l, phone = :ph, status = :s WHERE id = :id');
-            $stmt->execute([
-                ':f' => $firstName,
-                ':l' => $lastName,
-                ':ph' => $phone,
-                ':s' => $status,
-                ':id' => $userId
-            ]);
+            $updateFields = [
+                'first_name' => $firstName,
+                'last_name' => $lastName,
+                'phone_number' => $phone,
+                'status' => $status,
+                'date_of_birth' => $dateOfBirth,
+                'gender' => $gender,
+                'marital_status' => $maritalStatus,
+                'nationality' => $nationality,
+                'residential_address' => $residentialAddress,
+                'city' => $city,
+                'region' => $region,
+                'postal_code' => $postalCode
+            ];
+            
+            if ($profilePicturePath) {
+                $updateFields['profile_picture'] = $profilePicturePath;
+            }
+            
+            $setClause = implode(', ', array_map(function($key) {
+                return $key . ' = :' . $key;
+            }, array_keys($updateFields)));
+            
+            $stmt = $pdo->prepare("UPDATE users SET {$setClause} WHERE id = :id");
+            $updateFields['id'] = $userId;
+            $stmt->execute($updateFields);
             
             // Update password if provided
             if (!empty($_POST['password'])) {
                 $stmt = $pdo->prepare('UPDATE users SET password_hash = :p WHERE id = :id');
                 $stmt->execute([':p' => password_hash($_POST['password'], PASSWORD_DEFAULT), ':id' => $userId]);
+            }
+            
+            // Update next of kin information for clients
+            $user = $pdo->prepare('SELECT role FROM users WHERE id = :id');
+            $user->execute([':id' => $userId]);
+            $user = $user->fetch();
+            
+            if ($user['role'] === 'client') {
+                $nextOfKinName = trim($_POST['next_of_kin_name'] ?? '');
+                $nextOfKinRelationship = $_POST['next_of_kin_relationship'] ?? null;
+                $nextOfKinPhone = trim($_POST['next_of_kin_phone'] ?? '');
+                $nextOfKinEmail = trim($_POST['next_of_kin_email'] ?? '');
+                $nextOfKinAddress = trim($_POST['next_of_kin_address'] ?? '');
+                
+                $stmt = $pdo->prepare('
+                    UPDATE users 
+                    SET next_of_kin_name = :name, next_of_kin_relationship = :relationship, 
+                        next_of_kin_phone = :phone, next_of_kin_email = :email, next_of_kin_address = :address
+                    WHERE id = :id
+                ');
+                $stmt->execute([
+                    ':name' => $nextOfKinName,
+                    ':relationship' => $nextOfKinRelationship,
+                    ':phone' => $nextOfKinPhone,
+                    ':email' => $nextOfKinEmail,
+                    ':address' => $nextOfKinAddress,
+                    ':id' => $userId
+                ]);
             }
             
             // Update role-specific data

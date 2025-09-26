@@ -39,7 +39,7 @@ class SystemSettingsController {
         
         try {
             $settings = [
-                'app_name' => $_POST['app_name'] ?? 'Susu System',
+                'app_name' => $_POST['app_name'] ?? 'The Determiners Susu System',
                 'currency' => $_POST['currency'] ?? 'GHS',
                 'default_interest_rate' => (float)($_POST['default_interest_rate'] ?? 24.0),
                 'max_loan_amount' => (float)($_POST['max_loan_amount'] ?? 10000.0),

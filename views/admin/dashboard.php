@@ -89,22 +89,36 @@ if ($collectionsToday < 100) {
 
 include __DIR__ . '/../../includes/header.php';
 ?>
-<div class="d-flex justify-content-between align-items-center mb-3">
-	<h4>Business Admin Dashboard</h4>
-	<div>
-		<a href="/views/admin/notifications.php" class="btn btn-outline-info me-2">
-			<i class="fas fa-bell"></i> Activity Notifications
-		</a>
-		<a href="/index.php?action=logout" class="btn btn-outline-light">Logout</a>
+
+<!-- Welcome Section -->
+<div class="welcome-section mb-4">
+	<div class="row align-items-center">
+		<div class="col-md-8">
+			<h2 class="welcome-title">
+				Welcome back, <?php echo htmlspecialchars($_SESSION['user']['name'] ?? 'Admin'); ?>!
+			</h2>
+			<p class="welcome-subtitle text-muted">The Determiners - Business Administrator Dashboard</p>
+		</div>
+		<div class="col-md-4 text-end">
+			<div class="quick-actions">
+				<a href="/views/admin/notifications.php" class="btn btn-light me-2">
+					<i class="fas fa-bell"></i> Notifications
+				</a>
+				<a href="/index.php?action=logout" class="btn btn-light">
+					<i class="fas fa-sign-out-alt"></i> Logout
+				</a>
+			</div>
+		</div>
 	</div>
 </div>
 
 <!-- System Alerts -->
 <?php if (!empty($alerts)): ?>
-<div class="row mb-3">
+<div class="row mb-4">
 	<div class="col-12">
 		<?php foreach ($alerts as $alert): ?>
-		<div class="alert alert-<?php echo e($alert['type']); ?> alert-dismissible fade show" role="alert">
+		<div class="alert alert-<?php echo e($alert['type']); ?> alert-dismissible fade show modern-alert" role="alert">
+			<i class="fas fa-exclamation-triangle me-2"></i>
 			<?php echo e($alert['message']); ?>
 			<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 		</div>
@@ -114,84 +128,184 @@ include __DIR__ . '/../../includes/header.php';
 <?php endif; ?>
 
 <!-- Key Metrics -->
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Total Clients</div>
-			<div class="h4 text-primary"><?php echo e(number_format($totalClients)); ?></div>
+<div class="row mb-4">
+	<div class="col-12">
+		<h4 class="section-title">
+			<i class="fas fa-chart-bar text-primary me-2"></i>
+			Key Metrics
+		</h4>
+	</div>
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-primary">
+			<div class="stat-icon">
+				<i class="fas fa-users"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($totalClients); ?></h3>
+				<p class="stat-label">Total Clients</p>
+				<small class="stat-sublabel">Active clients in system</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Active Agents</div>
-			<div class="h4 text-success"><?php echo e(number_format($totalAgents)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-success">
+			<div class="stat-icon">
+				<i class="fas fa-user-tie"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($totalAgents); ?></h3>
+				<p class="stat-label">Active Agents</p>
+				<small class="stat-sublabel">Field agents collecting</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Active Loans</div>
-			<div class="h4 text-info"><?php echo e(number_format($activeLoans)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-info">
+			<div class="stat-icon">
+				<i class="fas fa-money-bill-wave"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($activeLoans); ?></h3>
+				<p class="stat-label">Active Loans</p>
+				<small class="stat-sublabel">Loans currently active</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Pending Applications</div>
-			<div class="h4 text-warning"><?php echo e(number_format($pendingApplications)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-warning">
+			<div class="stat-icon">
+				<i class="fas fa-file-alt"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($pendingApplications); ?></h3>
+				<p class="stat-label">Pending Applications</p>
+				<small class="stat-sublabel">Awaiting review</small>
+			</div>
 		</div>
 	</div>
 </div>
 
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Portfolio Value</div>
-			<div class="h4 text-success">GHS <?php echo e(number_format($portfolioValue,2)); ?></div>
+<!-- Financial Overview -->
+<div class="row mb-4">
+	<div class="col-12">
+		<h4 class="section-title">
+			<i class="fas fa-chart-line text-success me-2"></i>
+			Financial Overview
+		</h4>
+	</div>
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-success">
+			<div class="stat-icon">
+				<i class="fas fa-wallet"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number">GHS <?php echo number_format($portfolioValue, 2); ?></h3>
+				<p class="stat-label">Portfolio Value</p>
+				<small class="stat-sublabel">Total active loan value</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Collections Today</div>
-			<div class="h4 text-primary">GHS <?php echo e(number_format($collectionsToday,2)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-primary">
+			<div class="stat-icon">
+				<i class="fas fa-calendar-day"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number">GHS <?php echo number_format($collectionsToday, 2); ?></h3>
+				<p class="stat-label">Collections Today</p>
+				<small class="stat-sublabel">Susu + Loan payments</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Overdue Loans</div>
-			<div class="h4 text-danger"><?php echo e(number_format($overdueLoans)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-danger">
+			<div class="stat-icon">
+				<i class="fas fa-exclamation-triangle"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($overdueLoans); ?></h3>
+				<p class="stat-label">Overdue Loans</p>
+				<small class="stat-sublabel">Requires attention</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Collection Rate</div>
-			<div class="h4 text-info"><?php echo e(number_format(($collectionsToday / max($totalClients * 20, 1)) * 100, 1)); ?>%</div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-info">
+			<div class="stat-icon">
+				<i class="fas fa-percentage"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format(($collectionsToday / max($totalClients * 20, 1)) * 100, 1); ?>%</h3>
+				<p class="stat-label">Collection Rate</p>
+				<small class="stat-sublabel">Today's efficiency</small>
+			</div>
 		</div>
 	</div>
 </div>
 
-<!-- Financial Metrics -->
-<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3 mb-4">
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Total Deposits</div>
-			<div class="h4 text-success">GHS <?php echo e(number_format($totalDeposits,2)); ?></div>
+<!-- System Revenue -->
+<div class="row mb-4">
+	<div class="col-12">
+		<h4 class="section-title">
+			<i class="fas fa-dollar-sign text-warning me-2"></i>
+			System Revenue
+		</h4>
+	</div>
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-success">
+			<div class="stat-icon">
+				<i class="fas fa-arrow-down"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number">GHS <?php echo number_format($totalDeposits, 2); ?></h3>
+				<p class="stat-label">Total Deposits</p>
+				<small class="stat-sublabel">All Susu collections</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Total Withdrawals</div>
-			<div class="h4 text-warning">GHS <?php echo e(number_format($totalWithdrawals,2)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-warning">
+			<div class="stat-icon">
+				<i class="fas fa-arrow-up"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number">GHS <?php echo number_format($totalWithdrawals, 2); ?></h3>
+				<p class="stat-label">Total Withdrawals</p>
+				<small class="stat-sublabel">Susu payouts</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">System Revenue</div>
-			<div class="h4 text-info">GHS <?php echo e(number_format($systemRevenue,2)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-info">
+			<div class="stat-icon">
+				<i class="fas fa-chart-pie"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number">GHS <?php echo number_format($systemRevenue, 2); ?></h3>
+				<p class="stat-label">System Revenue</p>
+				<small class="stat-sublabel">Interest + Commission</small>
+			</div>
 		</div>
 	</div>
-	<div class="col">
-		<div class="card p-3 text-center">
-			<div class="text-muted small">Daily Completed Cycles</div>
-			<div class="h4 text-primary"><?php echo e(number_format($dailyCompletedCycles)); ?></div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<div class="stat-card stat-card-primary">
+			<div class="stat-icon">
+				<i class="fas fa-check-double"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($dailyCompletedCycles); ?></h3>
+				<p class="stat-label">Completed Cycles</p>
+				<small class="stat-sublabel">Today's completions</small>
+			</div>
 		</div>
 	</div>
 </div>
@@ -251,90 +365,192 @@ include __DIR__ . '/../../includes/header.php';
 	</div>
 </div>
 
-<!-- Management Sections -->
+<!-- Management Actions -->
 <div class="row mb-4">
-	<div class="col-md-6">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">User Management</h6>
-			</div>
-			<div class="card-body">
-				<div class="d-grid gap-2">
-					<a href="/admin_users.php" class="btn btn-outline-primary">Manage Users</a>
-					<a href="/admin_users.php?action=create" class="btn btn-outline-success">Add New User</a>
-					<a href="/admin_agents.php" class="btn btn-outline-info">Manage Agents</a>
-					<a href="/admin_agents.php?action=create" class="btn btn-outline-warning">Add New Agent</a>
-				</div>
-			</div>
-		</div>
+	<div class="col-12">
+		<h4 class="section-title">
+			<i class="fas fa-cogs text-info me-2"></i>
+			Management Actions
+		</h4>
 	</div>
-	<div class="col-md-6">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">System Settings</h6>
+	
+	<!-- Client Management -->
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_clients.php" class="action-card action-card-primary">
+			<div class="action-icon">
+				<i class="fas fa-users"></i>
 			</div>
-			<div class="card-body">
-				<div class="d-grid gap-2">
-					<a href="/admin_settings.php" class="btn btn-outline-secondary">System Configuration</a>
-					<a href="/admin_holidays.php" class="btn btn-outline-warning">Holiday Management</a>
-					<a href="/notifications_send.php" class="btn btn-outline-info">Send Notifications</a>
-				</div>
+			<div class="action-content">
+				<h5>Client Management</h5>
+				<p>Manage client accounts and information</p>
 			</div>
-		</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_agents.php" class="action-card action-card-success">
+			<div class="action-icon">
+				<i class="fas fa-user-tie"></i>
+			</div>
+			<div class="action-content">
+				<h5>Agent Management</h5>
+				<p>Manage field agents and their assignments</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_applications.php" class="action-card action-card-warning">
+			<div class="action-icon">
+				<i class="fas fa-file-alt"></i>
+			</div>
+			<div class="action-content">
+				<h5>Loan Applications</h5>
+				<p>Review and process loan applications</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
 	</div>
 </div>
 
+<!-- System Management -->
 <div class="row mb-4">
-	<div class="col-md-6">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">Loan Management</h6>
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_products.php" class="action-card action-card-info">
+			<div class="action-icon">
+				<i class="fas fa-box"></i>
 			</div>
-			<div class="card-body">
-				<div class="d-grid gap-2">
-					<a href="/admin_products.php" class="btn btn-outline-primary">Loan Products</a>
-					<a href="/admin_applications.php" class="btn btn-outline-warning">Review Applications</a>
-					<a href="/admin_loan_applications.php?action=create" class="btn btn-outline-success">Create Application</a>
-					<a href="/admin_analytics.php" class="btn btn-outline-info">Portfolio Analytics</a>
-				</div>
+			<div class="action-content">
+				<h5>Loan Products</h5>
+				<p>Manage loan products and terms</p>
 			</div>
-		</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
 	</div>
-	<div class="col-md-6">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">Reports & Analytics</h6>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_transactions.php" class="action-card action-card-secondary">
+			<div class="action-icon">
+				<i class="fas fa-exchange-alt"></i>
 			</div>
-			<div class="card-body">
-					<div class="d-grid gap-2">
-						<a href="/admin_reports.php" class="btn btn-outline-dark">Financial Reports</a>
-						<a href="/admin_transactions.php" class="btn btn-outline-danger">Manage Transactions</a>
-						<a href="/admin_agent_reports.php" class="btn btn-outline-info">Agent Reports</a>
-						<a href="/admin_agent_commissions.php" class="btn btn-outline-dark">Agent Commissions</a>
-						<a href="/admin_user_transactions.php" class="btn btn-outline-danger">User Transactions</a>
-						<a href="/admin_manual_transactions.php" class="btn btn-outline-info">Manual Transactions</a>
-						<a href="/admin_loan_penalties.php" class="btn btn-outline-dark">Loan Penalties</a>
-						<a href="/admin_account_types.php" class="btn btn-outline-danger">Account Types</a>
-						<a href="/admin_auto_transfers.php" class="btn btn-outline-info">Auto Transfers</a>
-						<a href="/admin_statements.php" class="btn btn-outline-dark">Account Statements</a>
-						<a href="/admin_interest.php" class="btn btn-outline-danger">Interest Management</a>
-						<a href="/admin_security.php" class="btn btn-outline-info">Security Center</a>
-					</div>
+			<div class="action-content">
+				<h5>Transaction Management</h5>
+				<p>Manage all system transactions</p>
 			</div>
-		</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_settings.php" class="action-card action-card-dark">
+			<div class="action-icon">
+				<i class="fas fa-cog"></i>
+			</div>
+			<div class="action-content">
+				<h5>System Settings</h5>
+				<p>Configure system parameters</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+</div>
+
+<!-- Reports & Analytics -->
+<div class="row mb-4">
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_reports.php" class="action-card action-card-primary">
+			<div class="action-icon">
+				<i class="fas fa-chart-bar"></i>
+			</div>
+			<div class="action-content">
+				<h5>Financial Reports</h5>
+				<p>Generate comprehensive financial reports</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_revenue.php" class="action-card action-card-success">
+			<div class="action-icon">
+				<i class="fas fa-chart-line"></i>
+			</div>
+			<div class="action-content">
+				<h5>Revenue Dashboard</h5>
+				<p>Comprehensive revenue analysis and reporting</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_agent_reports.php" class="action-card action-card-info">
+			<div class="action-icon">
+				<i class="fas fa-user-chart"></i>
+			</div>
+			<div class="action-content">
+				<h5>Agent Reports</h5>
+				<p>Agent performance and analytics</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
+	</div>
+	
+	<div class="col-lg-4 col-md-6 mb-3">
+		<a href="/admin_user_transactions.php" class="action-card action-card-info">
+			<div class="action-icon">
+				<i class="fas fa-history"></i>
+			</div>
+			<div class="action-content">
+				<h5>User Transactions</h5>
+				<p>View individual user transaction history</p>
+			</div>
+			<div class="action-arrow">
+				<i class="fas fa-chevron-right"></i>
+			</div>
+		</a>
 	</div>
 </div>
 
 <!-- Recent Activity -->
-<div class="row">
-	<div class="col-md-8">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">Recent Transactions</h6>
+<div class="row mb-4">
+	<div class="col-12">
+		<h4 class="section-title">
+			<i class="fas fa-clock text-info me-2"></i>
+			Recent Activity
+		</h4>
+	</div>
+	<div class="col-lg-8 mb-3">
+		<div class="activity-card">
+			<div class="activity-header">
+				<h5 class="activity-title">
+					<i class="fas fa-exchange-alt text-primary me-2"></i>
+					Recent Transactions
+				</h5>
 			</div>
-			<div class="card-body">
+			<div class="activity-content">
 				<div class="table-responsive">
-					<table class="table table-sm">
+					<table class="table table-sm modern-table">
 						<thead>
 							<tr>
 								<th>Type</th>
@@ -347,11 +563,16 @@ include __DIR__ . '/../../includes/header.php';
 						<tbody>
 							<?php foreach ($recent as $r): ?>
 							<tr>
-								<td><span class="badge bg-<?php echo $r['type'] === 'susu' ? 'primary' : 'success'; ?>"><?php echo e(ucfirst($r['type'])); ?></span></td>
+								<td>
+									<span class="badge bg-<?php echo $r['type'] === 'susu' ? 'primary' : 'success'; ?>">
+										<i class="fas fa-<?php echo $r['type'] === 'susu' ? 'piggy-bank' : 'money-bill-wave'; ?> me-1"></i>
+										<?php echo e(ucfirst($r['type'])); ?>
+									</span>
+								</td>
 								<td><?php echo e($r['client_name'] ?? 'N/A'); ?></td>
-								<td><?php echo e($r['ref']); ?></td>
+								<td><code><?php echo e($r['ref']); ?></code></td>
 								<td><?php echo e(date('M j, H:i', strtotime($r['ts']))); ?></td>
-								<td>GHS <?php echo e(number_format($r['amount'],2)); ?></td>
+								<td><strong>GHS <?php echo e(number_format($r['amount'],2)); ?></strong></td>
 							</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -360,22 +581,27 @@ include __DIR__ . '/../../includes/header.php';
 			</div>
 		</div>
 	</div>
-	<div class="col-md-4">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">Recent Applications</h6>
+	<div class="col-lg-4 mb-3">
+		<div class="activity-card">
+			<div class="activity-header">
+				<h5 class="activity-title">
+					<i class="fas fa-file-alt text-warning me-2"></i>
+					Recent Applications
+				</h5>
 			</div>
-			<div class="card-body">
+			<div class="activity-content">
 				<?php foreach ($recentApplications as $app): ?>
-				<div class="d-flex justify-content-between align-items-center mb-2 p-2 border rounded">
-					<div>
-						<div class="fw-bold"><?php echo e($app['client_name']); ?></div>
-						<div class="small text-muted"><?php echo e($app['product_name']); ?></div>
-						<div class="small">GHS <?php echo e(number_format($app['requested_amount'],2)); ?></div>
+				<div class="application-item">
+					<div class="application-content">
+						<div class="application-name"><?php echo e($app['client_name']); ?></div>
+						<div class="application-product"><?php echo e($app['product_name']); ?></div>
+						<div class="application-amount">GHS <?php echo e(number_format($app['requested_amount'],2)); ?></div>
 					</div>
-					<span class="badge bg-<?php echo $app['application_status'] === 'approved' ? 'success' : ($app['application_status'] === 'pending' ? 'warning' : 'danger'); ?>">
-						<?php echo e(ucfirst($app['application_status'])); ?>
-					</span>
+					<div class="application-status">
+						<span class="badge bg-<?php echo $app['application_status'] === 'approved' ? 'success' : ($app['application_status'] === 'pending' ? 'warning' : 'danger'); ?>">
+							<?php echo e(ucfirst($app['application_status'])); ?>
+						</span>
+					</div>
 				</div>
 				<?php endforeach; ?>
 			</div>
@@ -383,224 +609,37 @@ include __DIR__ . '/../../includes/header.php';
 	</div>
 </div>
 
-<!-- Account Activity Section -->
-<div class="row mt-4">
-	<div class="col-12">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">Account Activity - All Users</h6>
-			</div>
-			<div class="card-body">
-				<div class="table-responsive">
-					<table class="table table-sm">
-						<thead>
-							<tr>
-								<th>User</th>
-								<th>Role</th>
-								<th>Activity</th>
-								<th>Amount</th>
-								<th>Time</th>
-								<th>Status</th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php 
-							// Get comprehensive account activities
-							$activities = $pdo->query("
-								(SELECT 
-									CONCAT(u.first_name, ' ', u.last_name) as user_name,
-									u.role,
-									'Collection' as activity,
-									dc.collected_amount as amount,
-									dc.collection_time as activity_time,
-									'Completed' as status
-								FROM daily_collections dc
-								JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
-								JOIN clients c ON sc.client_id = c.id
-								JOIN users u ON c.user_id = u.id
-								WHERE dc.collection_date >= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
-								ORDER BY dc.collection_time DESC LIMIT 10)
-								
-								UNION ALL
-								
-								(SELECT 
-									CONCAT(u.first_name, ' ', u.last_name) as user_name,
-									u.role,
-									'Loan Payment' as activity,
-									lp.amount_paid as amount,
-									CONCAT(lp.payment_date, ' 12:00:00') as activity_time,
-									'Completed' as status
-								FROM loan_payments lp
-								JOIN loans l ON lp.loan_id = l.id
-								JOIN clients c ON l.client_id = c.id
-								JOIN users u ON c.user_id = u.id
-								WHERE lp.payment_date >= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
-								ORDER BY lp.payment_date DESC LIMIT 10)
-								
-								UNION ALL
-								
-								(SELECT 
-									CONCAT(u.first_name, ' ', u.last_name) as user_name,
-									u.role,
-									'Loan Application' as activity,
-									la.requested_amount as amount,
-									CONCAT(la.applied_date, ' 10:00:00') as activity_time,
-									la.application_status as status
-								FROM loan_applications la
-								JOIN clients c ON la.client_id = c.id
-								JOIN users u ON c.user_id = u.id
-								WHERE la.applied_date >= DATE_SUB(CURDATE(), INTERVAL 3 DAY)
-								ORDER BY la.applied_date DESC LIMIT 10)
-								
-								ORDER BY activity_time DESC LIMIT 20
-							")->fetchAll();
-							
-							foreach ($activities as $activity): ?>
-							<tr>
-								<td><?php echo htmlspecialchars($activity['user_name']); ?></td>
-								<td>
-									<span class="badge bg-<?php echo $activity['role'] === 'client' ? 'primary' : ($activity['role'] === 'agent' ? 'success' : 'warning'); ?>">
-										<?php echo htmlspecialchars(ucfirst($activity['role'])); ?>
-									</span>
-								</td>
-								<td><?php echo htmlspecialchars($activity['activity']); ?></td>
-								<td>GHS <?php echo number_format($activity['amount'], 2); ?></td>
-								<td><?php echo date('M j, g:i A', strtotime($activity['activity_time'])); ?></td>
-								<td>
-									<span class="badge bg-<?php echo $activity['status'] === 'Completed' ? 'success' : ($activity['status'] === 'pending' ? 'warning' : 'info'); ?>">
-										<?php echo htmlspecialchars($activity['status']); ?>
-									</span>
-								</td>
-							</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
-				</div>
-			</div>
-		</div>
-	</div>
-</div>
 
 <!-- User Activity Log -->
 <div class="row mt-4">
 	<div class="col-12">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">
-					<i class="fas fa-history"></i> User Activity Log (Last 7 Days)
-				</h6>
-			</div>
-			<div class="card-body">
-				<div class="table-responsive">
-					<table class="table table-sm">
-						<thead>
-							<tr>
-								<th>User</th>
-								<th>Role</th>
-								<th>Activity</th>
-								<th>Description</th>
-								<th>IP Address</th>
-								<th>Time</th>
-							</tr>
-						</thead>
-						<tbody>
-							<?php 
-							// Get user activities from the last 7 days
-							require_once __DIR__ . '/../../controllers/ActivityLogger.php';
-							$userActivities = \Controllers\ActivityLogger::getUserActivities(null, 50);
-							
-							foreach ($userActivities as $activity): ?>
-							<tr>
-								<td>
-									<strong><?php echo htmlspecialchars($activity['first_name'] . ' ' . $activity['last_name']); ?></strong>
-									<br><small class="text-muted">@<?php echo htmlspecialchars($activity['username']); ?></small>
-								</td>
-								<td>
-									<span class="badge bg-<?php echo $activity['role'] === 'client' ? 'primary' : ($activity['role'] === 'agent' ? 'success' : 'warning'); ?>">
-										<?php echo htmlspecialchars(ucfirst($activity['role'])); ?>
-									</span>
-								</td>
-								<td>
-									<?php 
-									$iconClass = 'fas fa-circle text-primary';
-									$badgeClass = 'bg-primary';
-									
-									switch ($activity['activity_type']) {
-										case 'login':
-											$iconClass = 'fas fa-sign-in-alt text-success';
-											$badgeClass = 'bg-success';
-											break;
-										case 'logout':
-											$iconClass = 'fas fa-sign-out-alt text-danger';
-											$badgeClass = 'bg-danger';
-											break;
-										case 'password_change':
-											$iconClass = 'fas fa-key text-warning';
-											$badgeClass = 'bg-warning';
-											break;
-										case 'profile_update':
-											$iconClass = 'fas fa-user-edit text-info';
-											$badgeClass = 'bg-info';
-											break;
-										case 'payment_made':
-											$iconClass = 'fas fa-money-bill-wave text-success';
-											$badgeClass = 'bg-success';
-											break;
-										case 'loan_application':
-											$iconClass = 'fas fa-file-alt text-warning';
-											$badgeClass = 'bg-warning';
-											break;
-										case 'loan_approval':
-											$iconClass = 'fas fa-check-circle text-success';
-											$badgeClass = 'bg-success';
-											break;
-										case 'loan_rejection':
-											$iconClass = 'fas fa-times-circle text-danger';
-											$badgeClass = 'bg-danger';
-											break;
-										case 'susu_collection':
-											$iconClass = 'fas fa-hand-holding-usd text-primary';
-											$badgeClass = 'bg-primary';
-											break;
-										case 'cycle_completion':
-											$iconClass = 'fas fa-check-double text-success';
-											$badgeClass = 'bg-success';
-											break;
-										case 'agent_assignment':
-											$iconClass = 'fas fa-user-plus text-info';
-											$badgeClass = 'bg-info';
-											break;
-										case 'client_registration':
-											$iconClass = 'fas fa-user-plus text-primary';
-											$badgeClass = 'bg-primary';
-											break;
-										case 'agent_registration':
-											$iconClass = 'fas fa-user-tie text-success';
-											$badgeClass = 'bg-success';
-											break;
-									}
-									?>
-									<i class="<?php echo $iconClass; ?>"></i>
-									<span class="badge <?php echo $badgeClass; ?> ms-2">
-										<?php echo htmlspecialchars(ucfirst(str_replace('_', ' ', $activity['activity_type']))); ?>
-									</span>
-								</td>
-								<td><?php echo htmlspecialchars($activity['activity_description']); ?></td>
-								<td>
-									<small class="text-muted"><?php echo htmlspecialchars($activity['ip_address'] ?? 'Unknown'); ?></small>
-								</td>
-								<td>
-									<small class="text-muted">
-										<?php echo date('M j, Y', strtotime($activity['created_at'])); ?><br>
-										<?php echo date('g:i A', strtotime($activity['created_at'])); ?>
-									</small>
-								</td>
-							</tr>
-							<?php endforeach; ?>
-						</tbody>
-					</table>
+		<div class="modern-card">
+			<div class="card-header-modern">
+				<div class="header-content">
+					<div class="header-icon">
+						<i class="fas fa-history"></i>
+					</div>
+					<div class="header-text">
+						<h5 class="header-title">User Activity Log</h5>
+						<p class="header-subtitle">View detailed user activities with advanced filtering</p>
+					</div>
+					<div class="header-actions">
+						<a href="/admin_user_activity_log.php" class="btn btn-primary">
+							<i class="fas fa-external-link-alt me-1"></i>View Full Log
+						</a>
+					</div>
 				</div>
 			</div>
+			<div class="card-body-modern">
+				<div class="text-center py-4">
+					<i class="fas fa-history fa-3x text-muted mb-3"></i>
+					<h6>Detailed User Activity Tracking</h6>
+					<p class="text-muted">Monitor user activities, login sessions, and system interactions</p>
+					<a href="/admin_user_activity_log.php" class="btn btn-outline-primary">
+						<i class="fas fa-eye me-1"></i>View Activity Log
+					</a>
+									</div>
+									</div>
 		</div>
 	</div>
 </div>
@@ -608,30 +647,57 @@ include __DIR__ . '/../../includes/header.php';
 <!-- Agent Performance -->
 <div class="row mt-4">
 	<div class="col-12">
-		<div class="card">
-			<div class="card-header">
-				<h6 class="mb-0">Agent Performance (Last 30 Days)</h6>
+		<div class="modern-card">
+			<div class="card-header-modern">
+				<div class="header-content">
+					<div class="header-icon">
+						<i class="fas fa-chart-line"></i>
+					</div>
+					<div class="header-text">
+						<h5 class="header-title">Agent Performance</h5>
+						<p class="header-subtitle">Performance metrics for the last 30 days</p>
+					</div>
+				</div>
 			</div>
-			<div class="card-body">
+			<div class="card-body-modern">
 				<div class="table-responsive">
-					<table class="table table-sm">
+					<table class="modern-table">
 						<thead>
 							<tr>
-								<th>Agent Code</th>
-								<th>Agent Name</th>
-								<th>Clients</th>
-								<th>Loans Managed</th>
-								<th>Collections</th>
+								<th><i class="fas fa-id-badge me-1"></i>Agent Code</th>
+								<th><i class="fas fa-user-tie me-1"></i>Agent Name</th>
+								<th><i class="fas fa-users me-1"></i>Clients</th>
+								<th><i class="fas fa-file-alt me-1"></i>Loans Managed</th>
+								<th><i class="fas fa-money-bill-wave me-1"></i>Collections</th>
 							</tr>
 						</thead>
 						<tbody>
 							<?php foreach ($agentPerformance as $agent): ?>
 							<tr>
-								<td><?php echo e($agent['agent_code']); ?></td>
-								<td><?php echo e($agent['agent_name']); ?></td>
-								<td><?php echo e($agent['client_count']); ?></td>
-								<td><?php echo e($agent['loans_managed']); ?></td>
-								<td>GHS <?php echo e(number_format($agent['total_collections'],2)); ?></td>
+								<td>
+									<span class="agent-code"><?php echo e($agent['agent_code']); ?></span>
+								</td>
+								<td>
+									<div class="agent-name"><?php echo e($agent['agent_name']); ?></div>
+								</td>
+								<td>
+									<span class="metric-value clients-count">
+										<i class="fas fa-users me-1"></i>
+										<?php echo e($agent['client_count']); ?>
+									</span>
+								</td>
+								<td>
+									<span class="metric-value loans-count">
+										<i class="fas fa-file-alt me-1"></i>
+										<?php echo e($agent['loans_managed']); ?>
+									</span>
+								</td>
+								<td>
+									<span class="amount-value collections-amount">
+										<i class="fas fa-money-bill-wave me-1"></i>
+										GHS <?php echo e(number_format($agent['total_collections'],2)); ?>
+									</span>
+								</td>
 							</tr>
 							<?php endforeach; ?>
 						</tbody>
@@ -641,6 +707,703 @@ include __DIR__ . '/../../includes/header.php';
 		</div>
 	</div>
 </div>
+<style>
+/* Welcome Section */
+.welcome-section {
+	background: linear-gradient(135deg, #6f42c1 0%, #e83e8c 100%);
+	color: white;
+	padding: 2rem;
+	border-radius: 15px;
+	margin-bottom: 2rem;
+}
+
+.welcome-title {
+	font-size: 1.5rem;
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+}
+
+.welcome-subtitle {
+	font-size: 1.1rem;
+	margin-bottom: 0;
+	color: white !important;
+}
+
+/* Welcome Section Buttons */
+.welcome-section .btn {
+	background: rgba(255, 255, 255, 0.9);
+	color: #333;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	font-weight: 600;
+	transition: all 0.3s ease;
+}
+
+.welcome-section .btn:hover {
+	background: white;
+	color: #333;
+	transform: translateY(-2px);
+	box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+/* Modern Alerts */
+.modern-alert {
+	border-radius: 10px;
+	border: none;
+	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+/* Statistics Cards */
+.stat-card {
+	background: white;
+	border-radius: 15px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+	transition: all 0.3s ease;
+	height: 100%;
+	display: flex;
+	align-items: center;
+	position: relative;
+	overflow: hidden;
+}
+
+.stat-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.stat-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+}
+
+.stat-card-primary::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+.stat-card-success::before { background: linear-gradient(90deg, #28a745, #20c997); }
+.stat-card-info::before { background: linear-gradient(90deg, #17a2b8, #6f42c1); }
+.stat-card-warning::before { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+.stat-card-danger::before { background: linear-gradient(90deg, #dc3545, #e83e8c); }
+
+.stat-icon {
+	font-size: 2.5rem;
+	margin-right: 1rem;
+	opacity: 0.8;
+}
+
+.stat-card-primary .stat-icon { color: #667eea; }
+.stat-card-success .stat-icon { color: #28a745; }
+.stat-card-info .stat-icon { color: #17a2b8; }
+.stat-card-warning .stat-icon { color: #ffc107; }
+.stat-card-danger .stat-icon { color: #dc3545; }
+
+.stat-content {
+	flex: 1;
+}
+
+.stat-number {
+	font-size: 1.4rem;
+	font-weight: 700;
+	margin-bottom: 0.25rem;
+	color: #2c3e50;
+}
+
+.stat-label {
+	font-size: 0.9rem;
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+	color: #6c757d;
+}
+
+.stat-sublabel {
+	font-size: 0.8rem;
+	color: #adb5bd;
+}
+
+/* Section Titles */
+.section-title {
+	font-size: 1.5rem;
+	font-weight: 600;
+	margin-bottom: 1rem;
+	color: #2c3e50;
+}
+
+/* Action Cards */
+.action-card {
+	background: white;
+	border-radius: 15px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+	transition: all 0.3s ease;
+	text-decoration: none;
+	color: inherit;
+	display: flex;
+	align-items: center;
+	height: 100%;
+	position: relative;
+	overflow: hidden;
+}
+
+.action-card:hover {
+	transform: translateY(-5px);
+	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+	text-decoration: none;
+	color: inherit;
+}
+
+.action-card::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 4px;
+}
+
+.action-card-primary::before { background: linear-gradient(90deg, #667eea, #764ba2); }
+.action-card-success::before { background: linear-gradient(90deg, #28a745, #20c997); }
+.action-card-warning::before { background: linear-gradient(90deg, #ffc107, #fd7e14); }
+.action-card-info::before { background: linear-gradient(90deg, #17a2b8, #6f42c1); }
+.action-card-secondary::before { background: linear-gradient(90deg, #6c757d, #495057); }
+.action-card-dark::before { background: linear-gradient(90deg, #343a40, #212529); }
+
+.action-icon {
+	font-size: 2rem;
+	margin-right: 1rem;
+	opacity: 0.8;
+}
+
+.action-card-primary .action-icon { color: #667eea; }
+.action-card-success .action-icon { color: #28a745; }
+.action-card-warning .action-icon { color: #ffc107; }
+.action-card-info .action-icon { color: #17a2b8; }
+.action-card-secondary .action-icon { color: #6c757d; }
+.action-card-dark .action-icon { color: #343a40; }
+
+.action-content {
+	flex: 1;
+}
+
+.action-content h5 {
+	font-size: 1.1rem;
+	font-weight: 600;
+	margin-bottom: 0.5rem;
+	color: #2c3e50;
+}
+
+.action-content p {
+	font-size: 0.9rem;
+	color: #6c757d;
+	margin-bottom: 0;
+}
+
+.action-arrow {
+	font-size: 1.2rem;
+	color: #adb5bd;
+	transition: all 0.3s ease;
+}
+
+.action-card:hover .action-arrow {
+	color: #667eea;
+	transform: translateX(5px);
+}
+
+/* Activity Cards */
+.activity-card {
+	background: white;
+	border-radius: 15px;
+	padding: 1.5rem;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+	height: 100%;
+}
+
+.activity-header {
+	margin-bottom: 1rem;
+}
+
+.activity-title {
+	font-size: 1.2rem;
+	font-weight: 600;
+	margin-bottom: 0;
+	color: #2c3e50;
+}
+
+.activity-content {
+	padding: 0;
+}
+
+/* Modern Table */
+.modern-table {
+	border: none;
+}
+
+.modern-table thead th {
+	border: none;
+	background: #f8f9fa;
+	color: #6c757d;
+	font-weight: 600;
+	font-size: 0.9rem;
+	padding: 0.75rem;
+}
+
+.modern-table tbody td {
+	border: none;
+	padding: 0.75rem;
+	border-bottom: 1px solid #f1f3f4;
+}
+
+.modern-table tbody tr:hover {
+	background: #f8f9fa;
+}
+
+/* Application Items */
+.application-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 1rem;
+	background: #f8f9fa;
+	border-radius: 10px;
+	margin-bottom: 0.75rem;
+	transition: all 0.3s ease;
+}
+
+.application-item:hover {
+	background: #e9ecef;
+	transform: translateX(5px);
+}
+
+.application-content {
+	flex: 1;
+}
+
+.application-name {
+	font-weight: 600;
+	color: #2c3e50;
+	margin-bottom: 0.25rem;
+}
+
+.application-product {
+	font-size: 0.9rem;
+	color: #6c757d;
+	margin-bottom: 0.25rem;
+}
+
+.application-amount {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #28a745;
+}
+
+.application-status {
+	margin-left: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+	.welcome-section {
+		padding: 1.5rem;
+		text-align: center;
+	}
+	
+	.welcome-title {
+		font-size: 1.5rem;
+	}
+	
+	.stat-card {
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+	
+	.stat-icon {
+		font-size: 2rem;
+		margin-right: 0.75rem;
+	}
+	
+	.stat-number {
+		font-size: 1.5rem;
+	}
+	
+	.action-card {
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+	
+	.action-icon {
+		font-size: 1.5rem;
+		margin-right: 0.75rem;
+	}
+	
+	.activity-card {
+		padding: 1rem;
+		margin-bottom: 1rem;
+	}
+	
+	.application-item {
+		padding: 0.75rem;
+		margin-bottom: 0.5rem;
+	}
+}
+
+/* Animation */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.stat-card, .action-card, .activity-card {
+	animation: fadeInUp 0.6s ease-out;
+}
+
+.stat-card:nth-child(1) { animation-delay: 0.1s; }
+.stat-card:nth-child(2) { animation-delay: 0.2s; }
+.stat-card:nth-child(3) { animation-delay: 0.3s; }
+.stat-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* Enhanced Card Styling */
+.card {
+	border: none;
+	border-radius: 15px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+	transition: all 0.3s ease;
+}
+
+.card:hover {
+	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.card-header {
+	background: #f8f9fa;
+	border-bottom: 1px solid #e9ecef;
+	border-radius: 15px 15px 0 0 !important;
+}
+
+/* Badge Enhancements */
+.badge {
+	font-size: 0.75rem;
+	padding: 0.5rem 0.75rem;
+	border-radius: 20px;
+}
+
+/* Code Styling */
+code {
+	background: #f8f9fa;
+	color: #e83e8c;
+	padding: 0.25rem 0.5rem;
+	border-radius: 4px;
+	font-size: 0.85rem;
+}
+
+/* Enhanced Table Styling */
+.modern-table {
+	background: white;
+	border-radius: 10px;
+	overflow: hidden;
+	box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+}
+
+.modern-table thead {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.modern-table thead th {
+	border: none;
+	padding: 1rem 0.75rem;
+	font-weight: 600;
+	color: #495057;
+	font-size: 0.9rem;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.modern-table tbody tr {
+	border-bottom: 1px solid #f8f9fa;
+	transition: all 0.3s ease;
+}
+
+.modern-table tbody tr:hover {
+	background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
+	transform: translateY(-1px);
+	box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.modern-table tbody td {
+	padding: 1rem 0.75rem;
+	border: none;
+	vertical-align: middle;
+}
+
+/* User Info Styling */
+.user-info {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.user-info strong {
+	font-weight: 600;
+	color: #2c3e50;
+	font-size: 0.95rem;
+}
+
+.user-info small {
+	font-size: 0.8rem;
+	color: #6c757d;
+}
+
+/* Role Badge Styling */
+.role-badge {
+	display: inline-flex;
+	align-items: center;
+	padding: 0.4rem 0.8rem;
+	border-radius: 20px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.role-badge.role-client {
+	background: linear-gradient(135deg, #007bff, #0056b3);
+	color: white;
+}
+
+.role-badge.role-agent {
+	background: linear-gradient(135deg, #28a745, #1e7e34);
+	color: white;
+}
+
+.role-badge.role-business_admin {
+	background: linear-gradient(135deg, #ffc107, #e0a800);
+	color: #212529;
+}
+
+/* Activity Info Styling */
+.activity-info {
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.activity-badge {
+	padding: 0.3rem 0.6rem;
+	border-radius: 15px;
+	font-size: 0.75rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.activity-badge.bg-success {
+	background: linear-gradient(135deg, #28a745, #20c997) !important;
+	color: white;
+}
+
+.activity-badge.bg-danger {
+	background: linear-gradient(135deg, #dc3545, #c82333) !important;
+	color: white;
+}
+
+.activity-badge.bg-warning {
+	background: linear-gradient(135deg, #ffc107, #fd7e14) !important;
+	color: #212529;
+}
+
+.activity-badge.bg-info {
+	background: linear-gradient(135deg, #17a2b8, #138496) !important;
+	color: white;
+}
+
+.activity-badge.bg-primary {
+	background: linear-gradient(135deg, #007bff, #0056b3) !important;
+	color: white;
+}
+
+/* Description Text */
+.description-text {
+	font-size: 0.9rem;
+	color: #495057;
+	line-height: 1.4;
+}
+
+/* IP Address */
+.ip-address {
+	font-family: 'Courier New', monospace;
+	font-size: 0.8rem;
+	color: #6c757d;
+	background: #f8f9fa;
+	padding: 0.25rem 0.5rem;
+	border-radius: 5px;
+}
+
+/* Date Time */
+.date-time {
+	display: flex;
+	flex-direction: column;
+	gap: 0.25rem;
+}
+
+.date-value {
+	font-size: 0.9rem;
+	font-weight: 600;
+	color: #2c3e50;
+}
+
+.time-value {
+	font-size: 0.8rem;
+	color: #6c757d;
+}
+
+/* Amount Value */
+.amount-value {
+	font-weight: 700;
+	color: #28a745;
+	font-size: 0.95rem;
+}
+
+/* Agent Code */
+.agent-code {
+	font-family: 'Courier New', monospace;
+	font-weight: 700;
+	color: #007bff;
+	background: rgba(0, 123, 255, 0.1);
+	padding: 0.4rem 0.8rem;
+	border-radius: 8px;
+	font-size: 0.9rem;
+}
+
+/* Agent Name */
+.agent-name {
+	font-weight: 600;
+	color: #2c3e50;
+	font-size: 0.95rem;
+}
+
+/* Metric Value */
+.metric-value {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	font-weight: 600;
+	color: #495057;
+	font-size: 0.9rem;
+}
+
+.metric-value.clients-count {
+	color: #007bff;
+}
+
+.metric-value.loans-count {
+	color: #28a745;
+}
+
+.collections-amount {
+	color: #28a745 !important;
+	font-weight: 700;
+}
+
+/* Status Badge */
+.status-badge {
+	display: inline-flex;
+	align-items: center;
+	gap: 0.5rem;
+	padding: 0.4rem 0.8rem;
+	border-radius: 20px;
+	font-size: 0.8rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+}
+
+.status-badge.status-completed {
+	background: linear-gradient(135deg, #28a745, #20c997);
+	color: white;
+}
+
+.status-badge.status-pending {
+	background: linear-gradient(135deg, #ffc107, #fd7e14);
+	color: #212529;
+}
+
+.status-badge.status-approved {
+	background: linear-gradient(135deg, #28a745, #20c997);
+	color: white;
+}
+
+.status-badge.status-rejected {
+	background: linear-gradient(135deg, #dc3545, #c82333);
+	color: white;
+}
+
+/* Modern Card Enhancements */
+.modern-card {
+	background: white;
+	border-radius: 15px;
+	box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+	overflow: hidden;
+	transition: all 0.3s ease;
+	border: none;
+}
+
+.modern-card:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.card-header-modern {
+	background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+	padding: 1.5rem;
+	border-bottom: 1px solid #e9ecef;
+}
+
+.header-content {
+	display: flex;
+	align-items: center;
+	gap: 1rem;
+}
+
+.header-icon {
+	font-size: 1.5rem;
+	color: #6f42c1;
+	background: rgba(111, 66, 193, 0.1);
+	padding: 0.75rem;
+	border-radius: 10px;
+	width: 50px;
+	height: 50px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.header-text {
+	flex: 1;
+}
+
+.header-title {
+	font-size: 1.2rem;
+	font-weight: 600;
+	margin-bottom: 0.25rem;
+	color: #2c3e50;
+}
+
+.header-subtitle {
+	font-size: 0.9rem;
+	color: #6c757d;
+	margin-bottom: 0;
+}
+
+.card-body-modern {
+	padding: 2rem;
+}
+</style>
+
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
 
 

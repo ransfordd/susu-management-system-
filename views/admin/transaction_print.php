@@ -43,11 +43,33 @@
                                 <table class="table table-sm">
                                     <tr>
                                         <td><strong>Date:</strong></td>
-                                        <td><?php echo date('F d, Y', strtotime($transaction['collection_date'] ?? $transaction['created_at'] ?? $transaction['payment_date'] ?? 'now')); ?></td>
+                                        <td><?php 
+                                            $dateField = $transaction['collection_date'] ?? $transaction['payment_date'] ?? date('Y-m-d', strtotime($transaction['created_at'] ?? 'now'));
+                                            // Set timezone to Africa/Accra
+                                            $timezone = 'Africa/Accra';
+                                            $date = new DateTime($dateField, new DateTimeZone('UTC'));
+                                            $date->setTimezone(new DateTimeZone($timezone));
+                                            echo $date->format('F d, Y');
+                                        ?></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Time:</strong></td>
-                                        <td><?php echo date('H:i:s', strtotime($transaction['collection_time'] ?? $transaction['created_at'] ?? $transaction['payment_date'] ?? 'now')); ?></td>
+                                        <td><?php 
+                                            $timeField = $transaction['collection_time'] ?? $transaction['payment_time'] ?? $transaction['created_at'];
+                                            if ($timeField && $timeField !== '00:00:00') {
+                                                // Set timezone to Africa/Accra
+                                                $timezone = 'Africa/Accra';
+                                                $date = new DateTime($timeField, new DateTimeZone('UTC'));
+                                                $date->setTimezone(new DateTimeZone($timezone));
+                                                echo $date->format('H:i:s');
+                                            } else {
+                                                // Set timezone to Africa/Accra
+                                                $timezone = 'Africa/Accra';
+                                                $date = new DateTime($transaction['created_at'] ?? 'now', new DateTimeZone('UTC'));
+                                                $date->setTimezone(new DateTimeZone($timezone));
+                                                echo $date->format('H:i:s');
+                                            }
+                                        ?></td>
                                     </tr>
                                     <tr>
                                         <td><strong>Type:</strong></td>

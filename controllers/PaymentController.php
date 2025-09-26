@@ -45,6 +45,12 @@ class PaymentController {
             $paymentMethod = $input['payment_method'] ?? 'cash';
             $notes = $input['notes'] ?? '';
             $receiptNumber = $input['receipt_number'] ?? '';
+            
+            // Mobile money fields
+            $mobileMoneyProvider = $input['mobile_money_provider'] ?? '';
+            $mobileMoneyPhone = $input['mobile_money_phone'] ?? '';
+            $mobileMoneyTransactionId = $input['mobile_money_transaction_id'] ?? '';
+            $mobileMoneyReference = $input['mobile_money_reference'] ?? '';
 
             // Get agent ID
             $agentRow = $pdo->prepare('SELECT a.id FROM agents a WHERE a.user_id = :uid');
@@ -78,9 +84,11 @@ class PaymentController {
                 if ($susuAmount > 0) {
                     // Find active Susu cycle for this client
                     $cycleStmt = $pdo->prepare('
-                        SELECT sc.id, sc.daily_amount, COALESCE(sc.day_number, 1) as day_number 
+                        SELECT sc.id, sc.daily_amount, COALESCE(MAX(dc.day_number), 0) + 1 as day_number 
                         FROM susu_cycles sc 
+                        LEFT JOIN daily_collections dc ON dc.susu_cycle_id = sc.id
                         WHERE sc.client_id = :client_id AND sc.status = "active" 
+                        GROUP BY sc.id, sc.daily_amount
                         ORDER BY sc.created_at DESC LIMIT 1
                     ');
                     $cycleStmt->execute([':client_id' => $clientId]);
@@ -90,6 +98,16 @@ class PaymentController {
                         // Generate receipt number if not provided
                         if (empty($receiptNumber)) {
                             $receiptNumber = 'SUSU-' . date('YmdHis') . '-' . str_pad($clientId, 3, '0', STR_PAD_LEFT);
+                        }
+
+                        // Prepare notes with mobile money info if applicable
+                        $collectionNotes = $notes;
+                        if ($paymentMethod === 'mobile_money' && !empty($mobileMoneyProvider)) {
+                            $mobileMoneyInfo = "Mobile Money: {$mobileMoneyProvider}, Phone: {$mobileMoneyPhone}, Transaction ID: {$mobileMoneyTransactionId}";
+                            if (!empty($mobileMoneyReference)) {
+                                $mobileMoneyInfo .= ", Reference: {$mobileMoneyReference}";
+                            }
+                            $collectionNotes = $notes ? "{$notes} | {$mobileMoneyInfo}" : $mobileMoneyInfo;
                         }
 
                         // Record daily collection
@@ -107,7 +125,7 @@ class PaymentController {
                             ':amount' => $susuAmount,
                             ':agent_id' => $agentId,
                             ':receipt' => $receiptNumber,
-                            ':notes' => $notes
+                            ':notes' => $collectionNotes
                         ]);
 
                         $results[] = "Susu collection recorded: GHS " . number_format($susuAmount, 2);
@@ -174,7 +192,7 @@ class PaymentController {
                             ':amount' => $susuAmount,
                             ':agent_id' => $agentId,
                             ':receipt' => $receiptNumber,
-                            ':notes' => $notes
+                            ':notes' => $collectionNotes
                         ]);
 
                         $results[] = "Susu collection recorded (new cycle created): GHS " . number_format($susuAmount, 2);
@@ -245,13 +263,23 @@ class PaymentController {
                         $interestPayment = $loanAmount - $principalPayment;
                         $totalDue = $loanDetails['monthly_payment'];
                         
+                        // Prepare notes with mobile money info if applicable
+                        $loanPaymentNotes = $notes;
+                        if ($paymentMethod === 'mobile_money' && !empty($mobileMoneyProvider)) {
+                            $mobileMoneyInfo = "Mobile Money: {$mobileMoneyProvider}, Phone: {$mobileMoneyPhone}, Transaction ID: {$mobileMoneyTransactionId}";
+                            if (!empty($mobileMoneyReference)) {
+                                $mobileMoneyInfo .= ", Reference: {$mobileMoneyReference}";
+                            }
+                            $loanPaymentNotes = $notes ? "{$notes} | {$mobileMoneyInfo}" : $mobileMoneyInfo;
+                        }
+
                         // Record loan payment
                         $paymentStmt = $pdo->prepare('
                             INSERT INTO loan_payments 
                             (loan_id, payment_number, due_date, principal_amount, interest_amount, total_due, 
-                             amount_paid, payment_date, payment_status, collected_by, payment_method, receipt_number, notes) 
+                             amount_paid, payment_date, payment_time, payment_status, collected_by, payment_method, receipt_number, notes) 
                             VALUES (:loan_id, :payment_number, :due_date, :principal_amount, :interest_amount, :total_due,
-                                    :amount_paid, :payment_date, "paid", :collected_by, :payment_method, :receipt_number, :notes)
+                                    :amount_paid, :payment_date, NOW(), "paid", :collected_by, :payment_method, :receipt_number, :notes)
                         ');
                         $paymentStmt->execute([
                             ':loan_id' => $loan['id'],
@@ -265,7 +293,7 @@ class PaymentController {
                             ':collected_by' => $agentId,
                             ':payment_method' => $paymentMethod,
                             ':receipt_number' => $receiptNumber,
-                            ':notes' => $notes
+                            ':notes' => $loanPaymentNotes
                         ]);
 
                         // Update loan balance

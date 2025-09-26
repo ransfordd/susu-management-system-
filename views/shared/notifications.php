@@ -17,6 +17,13 @@ include __DIR__ . '/../../includes/header.php';
 			<div>
 				<strong><?php echo e($n['title']); ?></strong>
 				<div class="small text-muted"><?php echo e($n['message']); ?></div>
+				<div class="small text-muted">
+					<?php 
+					// Timezone conversion already applied in controller, just format the date
+					$date = new DateTime($n['created_at']);
+					echo $date->format('M j, Y g:i A'); 
+					?>
+				</div>
 			</div>
 			<button class="btn btn-sm btn-outline-secondary" onclick="markRead(<?php echo e($n['id']); ?>)"><?php echo $n['is_read'] ? 'Read' : 'Mark Read'; ?></button>
 		</a>
@@ -24,7 +31,21 @@ include __DIR__ . '/../../includes/header.php';
 </div>
 <script>
 function markRead(id){
-	fetch('/notifications_mark.php',{method:'POST', headers:{'Content-Type':'application/x-www-form-urlencoded'}, body: new URLSearchParams({id})}).then(()=>location.reload());
+	fetch('/notifications.php?action=mark_read',{
+		method:'POST', 
+		headers:{'Content-Type':'application/x-www-form-urlencoded'}, 
+		body: new URLSearchParams({notification_id: id})
+	}).then(response => response.json())
+	.then(data => {
+		if(data.success) {
+			location.reload();
+		} else {
+			alert('Error marking notification as read');
+		}
+	}).catch(error => {
+		console.error('Error:', error);
+		alert('Error marking notification as read');
+	});
 }
 </script>
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

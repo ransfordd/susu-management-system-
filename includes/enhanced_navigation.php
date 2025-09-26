@@ -4,8 +4,31 @@
 
 function renderEnhancedNavigation($userRole, $currentPage = '') {
     $user = $_SESSION['user'] ?? null;
-    $userName = $user ? $user['first_name'] . ' ' . $user['last_name'] : 'User';
+    
+    // Get user name with fallbacks
+    if ($user) {
+        $firstName = trim($user['first_name'] ?? '');
+        $lastName = trim($user['last_name'] ?? '');
+        
+        if ($firstName && $lastName) {
+            $userName = $firstName . ' ' . $lastName;
+        } elseif ($firstName) {
+            $userName = $firstName;
+        } elseif ($lastName) {
+            $userName = $lastName;
+        } elseif (isset($user['username'])) {
+            $userName = $user['username'];
+        } else {
+            $userName = 'User';
+        }
+    } else {
+        $userName = 'User';
+    }
     $userAvatar = $user && isset($user['profile_picture']) ? $user['profile_picture'] : '/assets/images/default-avatar.png';
+    
+    // Check if admin is impersonating
+    $isImpersonating = isset($_SESSION['impersonating']) && $_SESSION['impersonating'] === true;
+    $originalAdmin = $_SESSION['original_admin'] ?? null;
     
     // Define navigation items based on user role
     $navigationItems = getNavigationItems($userRole);
@@ -18,7 +41,7 @@ function renderEnhancedNavigation($userRole, $currentPage = '') {
         <a class="navbar-brand d-flex align-items-center" href="/index.php">
             <img src="/assets/images/company-logo.png" alt="Company Logo" height="40" class="me-2" 
                  onerror="this.src='/assets/images/default-logo.png'">
-            <span class="fw-bold">Susu System</span>
+            <span class="fw-bold">The Determiners Susu System</span>
         </a>
 
         <!-- Mobile Toggle Button -->
@@ -112,9 +135,35 @@ function renderEnhancedNavigation($userRole, $currentPage = '') {
                        id="userProfileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                         <img src="<?php echo $userAvatar; ?>" alt="Profile" class="rounded-circle me-2" 
                              width="32" height="32" style="object-fit: cover;">
-                        <span class="d-none d-md-inline"><?php echo htmlspecialchars($userName); ?></span>
+                        <span class="d-none d-md-inline">
+                            <?php echo htmlspecialchars($userName); ?>
+                            <?php if ($isImpersonating): ?>
+                                <span class="badge bg-warning text-dark ms-1" title="Impersonating">
+                                    <i class="fas fa-user-secret"></i>
+                                </span>
+                            <?php endif; ?>
+                        </span>
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userProfileDropdown">
+                        <?php if ($isImpersonating && $originalAdmin): ?>
+                        <li>
+                            <div class="dropdown-header bg-warning text-dark">
+                                <div class="d-flex align-items-center">
+                                    <i class="fas fa-user-secret me-2"></i>
+                                    <div>
+                                        <div class="fw-bold">Impersonating</div>
+                                        <small>Logged in as: <?php echo htmlspecialchars($userName); ?></small>
+                                    </div>
+                                </div>
+                            </div>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-warning" href="/index.php?action=logout">
+                                <i class="fas fa-arrow-left me-2"></i> Return to Admin
+                            </a>
+                        </li>
+                        <li><hr class="dropdown-divider"></li>
+                        <?php endif; ?>
                         <li>
                             <div class="dropdown-header">
                                 <div class="d-flex align-items-center">
@@ -379,11 +428,13 @@ function getNotificationIcon(type) {
 }
 
 function formatTime(dateString) {
+    // Server already applies timezone conversion, so we can use the timestamp directly
     const date = new Date(dateString);
     const now = new Date();
     const diff = now - date;
     
-    if (diff < 60000) return 'Just now';
+    if (diff < 10000) return 'Just now';
+    if (diff < 60000) return Math.floor(diff / 1000) + 's ago';
     if (diff < 3600000) return Math.floor(diff / 60000) + 'm ago';
     if (diff < 86400000) return Math.floor(diff / 3600000) + 'h ago';
     return Math.floor(diff / 86400000) + 'd ago';
