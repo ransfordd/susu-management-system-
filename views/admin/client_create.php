@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/functions.php';
 
 use function Auth\requireRole;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 
 include __DIR__ . '/../../includes/header.php';
 ?>
@@ -107,11 +107,45 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
+                        <label class="form-label">Deposit Type <span class="text-danger">*</span></label>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="deposit_type" id="fixed_amount" 
+                                   value="fixed_amount" checked onchange="toggleDepositFields()">
+                            <label class="form-check-label" for="fixed_amount">
+                                Fixed Daily Amount
+                            </label>
+                        </div>
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="deposit_type" id="flexible_amount" 
+                                   value="flexible_amount" onchange="toggleDepositFields()">
+                            <label class="form-check-label" for="flexible_amount">
+                                Flexible Daily Amount
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="row">
+                <div class="col-md-6" id="fixed_amount_fields">
+                    <div class="mb-3">
                         <label class="form-label">Daily Deposit Amount <span class="text-danger">*</span></label>
                         <div class="input-group">
                             <span class="input-group-text">GHS</span>
                             <input type="number" class="form-control" name="daily_deposit_amount" 
                                    value="20.00" step="0.01" min="0" required>
+                        </div>
+                        <div class="form-text">Client will pay this fixed amount every day</div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6" id="flexible_amount_fields" style="display: none;">
+                    <div class="mb-3">
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Flexible Daily Amount</strong><br>
+                            Client can deposit any amount each day (minimum GHS 10.00).<br>
+                            Commission will be calculated as: Total Amount ÷ Total Days
                         </div>
                     </div>
                 </div>
@@ -327,4 +361,37 @@ include __DIR__ . '/../../includes/header.php';
 }
 </style>
 
+<script>
+function toggleDepositFields() {
+    const fixedAmount = document.getElementById('fixed_amount');
+    const flexibleAmount = document.getElementById('flexible_amount');
+    const fixedFields = document.getElementById('fixed_amount_fields');
+    const flexibleFields = document.getElementById('flexible_amount_fields');
+    const dailyAmountInput = document.querySelector('input[name="daily_deposit_amount"]');
+    
+    if (fixedAmount.checked) {
+        fixedFields.style.display = 'block';
+        flexibleFields.style.display = 'none';
+        dailyAmountInput.required = true;
+    } else if (flexibleAmount.checked) {
+        fixedFields.style.display = 'none';
+        flexibleFields.style.display = 'block';
+        dailyAmountInput.required = false;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleDepositFields();
+});
+</script>
+
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
+
+
+
+
+
+
+
+

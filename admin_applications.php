@@ -7,7 +7,7 @@ require_once __DIR__ . '/controllers/NotificationController.php';
 use function Auth\requireRole;
 use Controllers\NotificationController;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 
 $pdo = Database::getConnection();
 

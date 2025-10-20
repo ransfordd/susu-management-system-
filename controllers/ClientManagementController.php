@@ -4,6 +4,7 @@ namespace Controllers;
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/NotificationController.php';
 
 use Database;
 use function Auth\requireRole;
@@ -11,7 +12,7 @@ use function Auth\requireRole;
 class ClientManagementController {
     
     public function index(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $pdo = \Database::getConnection();
         
         // Get only clients with their information
@@ -30,7 +31,7 @@ class ClientManagementController {
     }
     
     public function create(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->handleCreate();
@@ -38,7 +39,12 @@ class ClientManagementController {
         }
         
         $pdo = \Database::getConnection();
-        $agents = $pdo->query('SELECT id, agent_code FROM agents WHERE status = "active"')->fetchAll();
+        $agents = $pdo->query('
+            SELECT a.id, a.agent_code, u.first_name, u.last_name 
+            FROM agents a 
+            JOIN users u ON a.user_id = u.id 
+            WHERE a.status = "active"
+        ')->fetchAll();
         
         include __DIR__ . '/../views/admin/client_create.php';
     }
@@ -55,11 +61,22 @@ class ClientManagementController {
             $lastName = trim($_POST['last_name'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
             $agentId = (int)($_POST['agent_id'] ?? 0);
+            $depositType = $_POST['deposit_type'] ?? 'fixed_amount';
             $dailyAmount = (float)($_POST['daily_deposit_amount'] ?? 20.0);
             
             // Validate required fields
             if (empty($username) || empty($email) || empty($password) || empty($firstName) || empty($lastName) || $agentId === 0) {
                 throw new \Exception('All required fields must be filled');
+            }
+            
+            // Validate deposit type
+            if (!in_array($depositType, ['fixed_amount', 'flexible_amount'])) {
+                throw new \Exception('Invalid deposit type selected');
+            }
+            
+            // For flexible amount, set daily amount to 0 (will be calculated dynamically)
+            if ($depositType === 'flexible_amount') {
+                $dailyAmount = 0;
             }
             
             // Check if username or email already exists
@@ -84,8 +101,8 @@ class ClientManagementController {
             
             // Create client record
             $clientCode = 'CL' . str_pad($userId, 3, '0', STR_PAD_LEFT);
-            $pdo->prepare('INSERT INTO clients (user_id, client_code, agent_id, daily_deposit_amount, registration_date, status) VALUES (:u, :code, :a, :amt, CURRENT_DATE(), "active")')
-                ->execute([':u' => $userId, ':code' => $clientCode, ':a' => $agentId, ':amt' => $dailyAmount]);
+            $pdo->prepare('INSERT INTO clients (user_id, client_code, agent_id, daily_deposit_amount, deposit_type, registration_date, status) VALUES (:u, :code, :a, :amt, :type, CURRENT_DATE(), "active")')
+                ->execute([':u' => $userId, ':code' => $clientCode, ':a' => $agentId, ':amt' => $dailyAmount, ':type' => $depositType]);
             
             $pdo->commit();
             header('Location: /admin_clients.php?success=1');
@@ -99,7 +116,7 @@ class ClientManagementController {
     }
     
     public function edit(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {
@@ -108,19 +125,34 @@ class ClientManagementController {
         }
         
         $pdo = \Database::getConnection();
-        $user = $pdo->prepare('SELECT * FROM users WHERE id = :id AND role = "client"');
-        $user->execute([':id' => $userId]);
-        $user = $user->fetch();
+        
+        // First check if the user exists and get their role
+        $userCheckStmt = $pdo->prepare('SELECT * FROM users WHERE id = :id');
+        $userCheckStmt->execute([':id' => $userId]);
+        $userCheck = $userCheckStmt->fetch();
+        
+        if (!$userCheck) {
+            header('Location: /admin_clients.php');
+            exit;
+        }
+        
+        // Get user and client data in one query
+        $stmt = $pdo->prepare('
+            SELECT u.*, c.*, c.id as client_id
+            FROM users u 
+            LEFT JOIN clients c ON u.id = c.user_id 
+            WHERE u.id = :id
+        ');
+        $stmt->execute([':id' => $userId]);
+        $user = $stmt->fetch();
         
         if (!$user) {
             header('Location: /admin_clients.php');
             exit;
         }
         
-        // Get client data
-        $clientData = $pdo->prepare('SELECT * FROM clients WHERE user_id = :id');
-        $clientData->execute([':id' => $userId]);
-        $clientData = $clientData->fetch();
+        // Extract client data from the combined result
+        $clientData = $user; // Now contains both user and client data
         
         $agents = $pdo->query('
             SELECT a.id, a.agent_code, u.first_name, u.last_name 
@@ -130,11 +162,17 @@ class ClientManagementController {
             ORDER BY u.first_name, u.last_name
         ')->fetchAll();
         
+        // Pass data to view using explicit variables
+        
+        // Create explicit variables for the view (similar to agent edit pattern)
+        $editUser = $user;
+        $editClientData = $clientData;
+        
         include __DIR__ . '/../views/admin/client_edit.php';
     }
     
     public function update(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_POST['user_id'] ?? 0);
         
         if ($userId === 0) {
@@ -143,21 +181,63 @@ class ClientManagementController {
         }
         
         $pdo = \Database::getConnection();
+        
+        // Get original user data for comparison
+        $originalUserStmt = $pdo->prepare('
+            SELECT u.*, c.*, c.id as client_id
+            FROM users u 
+            LEFT JOIN clients c ON u.id = c.user_id 
+            WHERE u.id = ?
+        ');
+        $originalUserStmt->execute([$userId]);
+        $originalUser = $originalUserStmt->fetch();
+        
+        if (!$originalUser) {
+            header('Location: /admin_clients.php?error=' . urlencode('User not found'));
+            exit;
+        }
+        
         $pdo->beginTransaction();
         
         try {
             $firstName = trim($_POST['first_name'] ?? '');
             $lastName = trim($_POST['last_name'] ?? '');
+            $email = trim($_POST['email'] ?? '');
             $phone = trim($_POST['phone'] ?? '');
             $status = $_POST['status'] ?? 'active';
             $agentId = (int)($_POST['agent_id'] ?? 0);
             $dailyAmount = (float)($_POST['daily_deposit_amount'] ?? 20.0);
             
+            // Validate required fields
+            if (empty($firstName) || empty($lastName) || empty($email)) {
+                throw new \Exception('First name, last name, and email are required.');
+            }
+            
+            // Validate email format
+            if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                throw new \Exception('Invalid email format.');
+            }
+            
+            // Check if email already exists for another user (only if email has changed)
+            $currentEmailStmt = $pdo->prepare('SELECT email FROM users WHERE id = ?');
+            $currentEmailStmt->execute([$userId]);
+            $currentEmail = $currentEmailStmt->fetchColumn();
+            
+            // Only check for duplicates if email has changed
+            if ($email !== $currentEmail) {
+                $checkStmt = $pdo->prepare('SELECT id FROM users WHERE email = ? AND id != ?');
+                $checkStmt->execute([$email, $userId]);
+                if ($checkStmt->fetch()) {
+                    throw new \Exception('Email already exists for another user.');
+                }
+            }
+            
             // Update user basic info
-            $stmt = $pdo->prepare('UPDATE users SET first_name = :f, last_name = :l, phone_number = :ph, status = :s WHERE id = :id');
+            $stmt = $pdo->prepare('UPDATE users SET first_name = :f, last_name = :l, email = :e, phone = :ph, status = :s WHERE id = :id');
             $stmt->execute([
                 ':f' => $firstName,
                 ':l' => $lastName,
+                ':e' => $email,
                 ':ph' => $phone,
                 ':s' => $status,
                 ':id' => $userId
@@ -174,6 +254,47 @@ class ClientManagementController {
             $stmt->execute([':a' => $agentId, ':amt' => $dailyAmount, ':id' => $userId]);
             
             $pdo->commit();
+            
+            // Send notification to the client about the account update
+            $changes = [];
+            if ($firstName !== ($originalUser['first_name'] ?? '')) $changes[] = 'first name';
+            if ($lastName !== ($originalUser['last_name'] ?? '')) $changes[] = 'last name';
+            if ($email !== ($originalUser['email'] ?? '')) $changes[] = 'email';
+            if ($phone !== ($originalUser['phone'] ?? '')) $changes[] = 'phone number';
+            if ($status !== ($originalUser['status'] ?? '')) $changes[] = 'account status';
+            if ($agentId != ($originalUser['agent_id'] ?? 0)) $changes[] = 'assigned agent';
+            if ($dailyAmount != ($originalUser['daily_deposit_amount'] ?? 0)) $changes[] = 'daily deposit amount';
+            
+            if (!empty($changes)) {
+                $changesText = implode(', ', $changes);
+                try {
+                    // Notify the client
+                    $clientNotificationId = \Controllers\NotificationController::createNotification(
+                        $userId,
+                        'account_updated',
+                        'Account Information Updated',
+                        "Your account information has been updated by an administrator. Changes made: " . $changesText . ".",
+                        $userId,
+                        'user'
+                    );
+                    // Notify the admin who made the changes
+                    $adminUserId = $_SESSION['user']['id'] ?? null;
+                    if ($adminUserId && $adminUserId != $userId) {
+                        $clientName = $originalUser['first_name'] . ' ' . $originalUser['last_name'];
+                        \Controllers\NotificationController::createNotification(
+                            $adminUserId,
+                            'account_updated',
+                            'Client Account Updated',
+                            "You have updated the account information for client {$clientName}. Changes made: " . $changesText . ".",
+                            $userId,
+                            'client'
+                        );
+                    }
+                } catch (Exception $e) {
+                    error_log("Client Update - Notification creation failed: " . $e->getMessage());
+                }
+            }
+            
             header('Location: /admin_clients.php?success=1');
             exit;
             
@@ -185,7 +306,7 @@ class ClientManagementController {
     }
     
     public function toggleStatus(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {
@@ -223,7 +344,7 @@ class ClientManagementController {
     }
     
     public function delete(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {
@@ -251,7 +372,7 @@ class ClientManagementController {
     }
     
     public function impersonate(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {

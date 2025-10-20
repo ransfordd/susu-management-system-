@@ -76,6 +76,12 @@ include __DIR__ . '/../../includes/header.php';
                                     <option value="loan_payment" <?php echo ($_POST['transaction_type'] ?? '') === 'loan_payment' ? 'selected' : ''; ?>>
                                         Loan Payment
                                     </option>
+                                    <option value="savings_withdrawal" <?php echo ($_POST['transaction_type'] ?? '') === 'savings_withdrawal' ? 'selected' : ''; ?>>
+                                        Savings Withdrawal
+                                    </option>
+                                    <option value="emergency_withdrawal" <?php echo ($_POST['transaction_type'] ?? '') === 'emergency_withdrawal' ? 'selected' : ''; ?>>
+                                        Emergency Withdrawal
+                                    </option>
                                 </select>
                             </div>
                         </div>

@@ -131,13 +131,13 @@ html, body {
 	margin: 0;
 	padding: 0;
 	font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: #667eea;
 	overflow: hidden;
 }
 
 /* Login Container */
 .login-container {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: #667eea;
 	height: 100vh;
 	width: 100vw;
 	position: fixed;
@@ -220,7 +220,7 @@ html, body {
 
 /* Login Header */
 .login-header {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: #667eea;
 	color: white;
 	padding: 3rem 2rem 2rem;
 	text-align: center;
@@ -381,7 +381,7 @@ html, body {
 
 /* Login Button */
 .login-btn {
-	background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+	background: #667eea;
 	border: none;
 	border-radius: 10px;
 	padding: 0.875rem 2rem;
@@ -395,13 +395,10 @@ html, body {
 	gap: 0.5rem;
 	color: white;
 	cursor: pointer;
-	box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
 }
 
 .login-btn:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
-	background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+	background: #B8860B;
 }
 
 .login-btn:active {

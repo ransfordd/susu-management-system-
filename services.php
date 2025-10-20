@@ -14,6 +14,78 @@
             box-sizing: border-box;
         }
 
+        /* Page Loader */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #667eea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .page-loader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loader-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .loader-logo i {
+            font-size: 3rem;
+            color: white;
+            animation: bounce 2s infinite;
+        }
+
+        .loader-logo .logo-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loader-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
         body {
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             line-height: 1.6;
@@ -22,9 +94,8 @@
 
         /* Top Information Bar */
         .top-bar {
-            background: white;
+            background: transparent;
             padding: 0.5rem 0;
-            border-bottom: 1px solid #e9ecef;
             font-size: 0.9rem;
             transition: all 0.3s ease;
             position: fixed;
@@ -32,6 +103,7 @@
             left: 0;
             right: 0;
             z-index: 1001;
+            width: 100%;
         }
 
         .top-bar-content {
@@ -53,11 +125,11 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: #6c757d;
+            color: white;
         }
 
         .top-bar-item i {
-            color: #667eea;
+            color: white;
         }
 
         .top-bar-right {
@@ -66,40 +138,55 @@
             gap: 1rem;
         }
 
+        .top-bar-right span {
+            color: white;
+            font-weight: 500;
+        }
+
         .social-icons {
             display: flex;
             gap: 0.5rem;
         }
 
         .social-icons a {
-            color: #6c757d;
+            color: white;
             text-decoration: none;
             font-size: 1.1rem;
             transition: color 0.3s ease;
         }
 
         .social-icons a:hover {
-            color: #667eea;
+            color: #f0f0f0;
         }
 
         /* Main Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            color: #333;
-            padding: 1rem 0;
             position: fixed;
             top: 40px;
+            left: 0;
+            right: 0;
             width: 100%;
             z-index: 1000;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+        }
+        
+        .header-background {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 0;
+            border-radius: 10px;
         }
 
         .header.scrolled {
+            top: 0;
+        }
+        
+        .header.scrolled .header-background {
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 0 4px 30px rgba(0,0,0,0.15);
-            top: 0;
         }
 
         .top-bar.scrolled {
@@ -111,8 +198,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 0 2rem;
         }
 
@@ -199,7 +284,7 @@
         }
 
         .signin-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 25px;
@@ -212,29 +297,93 @@
         }
 
         .signin-btn:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            background: #B8860B;
             color: white;
         }
 
         /* Main Content */
         .main-content {
-            margin-top: 80px;
+            margin-top: 0;
         }
 
         /* Hero Section */
         .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
-            padding: 5rem 0;
+            padding: 12rem 0 5rem;
             text-align: center;
+            margin-top: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hero Image Slider */
+        .hero-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            z-index: 1;
+        }
+
+        .hero-slide.active {
+            opacity: 0.8;
+        }
+
+        .hero-slide:nth-child(1) {
+            background-image: url('assets/images/services-side/service - first.jpg');
+        }
+
+        .hero-slide:nth-child(2) {
+            background-image: url('assets/images/services-side/service - second.jpg');
+        }
+
+        .hero-slide:nth-child(3) {
+            background-image: url('assets/images/services-side/service - third.jpg');
+        }
+
+        .hero-slide:nth-child(4) {
+            background-image: url('assets/images/services-side/service - fourth.jpg');
+        }
+
+        /* Hero Overlay */
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(184, 134, 11, 0.2);
+            z-index: 2;
+        }
+
+        /* Text Shadow for Better Readability */
+        .hero-title,
+        .hero-subtitle {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
         }
 
         .hero-content {
             max-width: 800px;
             margin: 0 auto;
             padding: 0 2rem;
+            position: relative;
+            z-index: 3;
         }
 
         .hero-title {
@@ -290,15 +439,16 @@
             background: white;
             border-radius: 15px;
             padding: 2.5rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 2px solid #667eea;
             transition: all 0.3s ease;
             position: relative;
             overflow: hidden;
         }
 
         .service-card:hover {
-            transform: translateY(-10px);
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border-color: #B8860B;
         }
 
         .service-card::before {
@@ -308,19 +458,30 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #667eea;
         }
 
         .service-icon {
             font-size: 3rem;
             color: #667eea;
             margin-bottom: 1.5rem;
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover .service-icon {
+            color: #B8860B;
+            transform: scale(1.1);
         }
 
         .service-card h3 {
             font-size: 1.8rem;
             color: #2c3e50;
             margin-bottom: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .service-card:hover h3 {
+            color: #667eea;
         }
 
         .service-card p {
@@ -348,7 +509,7 @@
         }
 
         .service-btn {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #667eea;
             color: white;
             padding: 0.75rem 1.5rem;
             border-radius: 25px;
@@ -359,8 +520,9 @@
         }
 
         .service-btn:hover {
+            background: #B8860B;
             transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 5px 15px rgba(184, 134, 11, 0.4);
             color: white;
         }
 
@@ -404,7 +566,7 @@
         .step-number {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #667eea;
             color: white;
             border-radius: 50%;
             display: flex;
@@ -467,7 +629,7 @@
 
         /* CTA Section */
         .cta-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             padding: 5rem 0;
             text-align: center;
@@ -554,7 +716,7 @@
         .feature-icon {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             border-radius: 50%;
             display: flex;
             align-items: center;
@@ -594,7 +756,7 @@
         .step-number {
             width: 60px;
             height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             border-radius: 50%;
             display: flex;
@@ -619,44 +781,62 @@
 
         .benefits-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 2rem;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
             margin-top: 3rem;
+            align-items: stretch;
         }
 
         .benefit-item {
             background: white;
-            padding: 2rem;
-            border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            text-align: center;
-            transition: transform 0.3s ease;
+            padding: 2.5rem 2rem;
+            border-radius: 20px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            text-align: left;
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
 
         .benefit-item:hover {
-            transform: translateY(-5px);
+            transform: translateY(-8px);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.12);
+            border-color: rgba(102, 126, 234, 0.2);
         }
 
         .benefit-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border-radius: 50%;
+            width: 70px;
+            height: 70px;
+            background: #667eea;
+            border-radius: 18px;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin: 0 auto 1.5rem;
+            margin-bottom: 2rem;
+            flex-shrink: 0;
         }
 
         .benefit-icon i {
-            font-size: 1.5rem;
+            font-size: 1.8rem;
             color: white;
         }
 
         .benefit-item h4 {
-            font-size: 1.3rem;
-            margin-bottom: 1rem;
+            font-size: 1.4rem;
+            margin-bottom: 1.2rem;
             color: #333;
+            font-weight: 700;
+            line-height: 1.3;
+        }
+
+        .benefit-item p {
+            color: #6c757d;
+            line-height: 1.6;
+            font-size: 1rem;
+            margin: 0;
+            flex-grow: 1;
         }
 
         /* Service Comparison Section */
@@ -676,7 +856,7 @@
         .comparison-header {
             display: grid;
             grid-template-columns: 1fr 1fr 1fr;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             font-weight: 700;
         }
@@ -716,6 +896,78 @@
         }
 
         @media (max-width: 768px) {
+            /* Services Grid Mobile */
+            .services-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin-bottom: 3rem;
+            }
+
+            .service-card {
+                padding: 1.5rem;
+                margin: 0 1rem;
+            }
+
+            .service-card h3 {
+                font-size: 1.5rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .service-card p {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                margin-bottom: 1rem;
+            }
+
+            .service-features {
+                margin-bottom: 1.5rem;
+            }
+
+            .service-features li {
+                padding: 0.25rem 0;
+                font-size: 0.9rem;
+            }
+
+            /* Success Stories Grid Mobile */
+            .success-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+                margin-top: 2rem;
+            }
+
+            .success-card {
+                margin: 0 1rem;
+            }
+
+            .success-content {
+                padding: 1.5rem;
+            }
+
+            .success-content h4 {
+                font-size: 1.3rem;
+                margin-bottom: 0.75rem;
+            }
+
+            .success-content p {
+                font-size: 0.9rem;
+                line-height: 1.5;
+                margin-bottom: 1rem;
+            }
+
+            .success-stats {
+                flex-direction: column;
+                gap: 0.5rem;
+                margin-bottom: 1rem;
+            }
+
+            .success-stats span {
+                font-size: 0.9rem;
+            }
+
+            .success-author {
+                font-size: 0.9rem;
+            }
+
             .comparison-header,
             .comparison-row {
                 grid-template-columns: 1fr;
@@ -725,6 +977,354 @@
             .comparison-row > div {
                 padding: 1rem;
             }
+
+            .benefits-grid {
+                grid-template-columns: 1fr;
+                gap: 2rem;
+            }
+
+            .benefit-item {
+                padding: 2rem 1.5rem;
+            }
+
+            .benefit-icon {
+                width: 60px;
+                height: 60px;
+                border-radius: 15px;
+            }
+
+            .benefit-icon i {
+                font-size: 1.5rem;
+            }
+
+            .benefit-item h4 {
+                font-size: 1.3rem;
+            }
+        }
+
+        /* Calculator Section */
+        .calculator-section {
+            padding: 4rem 0;
+            background: #f8f9fa;
+        }
+
+        .calculator-container {
+            max-width: 800px;
+            margin: 3rem auto 0;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .calculator-tabs {
+            display: flex;
+            background: #f8f9fa;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 1rem 2rem;
+            background: transparent;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #666;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: #667eea;
+            color: white;
+        }
+
+        .calculator-content {
+            padding: 2rem;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+
+        .tab-panel.active {
+            display: block;
+        }
+
+        .calculator-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #333;
+        }
+
+        .input-group input {
+            padding: 0.8rem;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .calculate-btn {
+            grid-column: 1 / -1;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s ease;
+        }
+
+        .calculate-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .calculator-result {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .result-card {
+            background: #667eea;
+            color: white;
+            padding: 1.5rem;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .result-card h4 {
+            font-size: 0.9rem;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }
+
+        .result-amount {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #ffd700;
+        }
+
+        /* Documents Section */
+        .documents-section {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .documents-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .document-category {
+            background: #f8f9fa;
+            padding: 2rem;
+            border-radius: 15px;
+            border-top: 4px solid #667eea;
+        }
+
+        .document-category h3 {
+            color: #333;
+            margin-bottom: 1.5rem;
+            font-size: 1.3rem;
+        }
+
+        .document-list {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+        }
+
+        .document-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .document-item i {
+            color: #667eea;
+            font-size: 1.2rem;
+            width: 20px;
+        }
+
+        .document-item span {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* Process Timeline Section */
+        .process-timeline-section {
+            padding: 4rem 0;
+            background: #f8f9fa;
+        }
+
+        .process-timeline {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .process-step {
+            background: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            position: relative;
+            transition: transform 0.3s ease;
+        }
+
+        .process-step:hover {
+            transform: translateY(-5px);
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: #667eea;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0 auto 1.5rem;
+        }
+
+        .process-step h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .process-step p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+        }
+
+        .step-time {
+            background: #667eea;
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* Success Stories Section */
+        .success-stories-section {
+            padding: 4rem 0;
+            background: white;
+        }
+
+        .success-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-top: 3rem;
+        }
+
+        .success-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+
+        .success-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .success-image {
+            background: #667eea;
+            color: white;
+            padding: 2rem;
+            text-align: center;
+            font-size: 3rem;
+        }
+
+        .success-content {
+            padding: 2rem;
+        }
+
+        .success-content h4 {
+            color: #333;
+            margin-bottom: 1rem;
+            font-size: 1.3rem;
+        }
+
+        .success-content p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            font-style: italic;
+        }
+
+        .success-stats {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .success-stats span {
+            background: #f8f9fa;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            text-align: center;
+            flex: 1;
+        }
+
+        .success-stats strong {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .success-author {
+            text-align: center;
+            padding-top: 1rem;
+            border-top: 1px solid #e9ecef;
+        }
+
+        .success-author strong {
+            color: #333;
+            display: block;
+            margin-bottom: 0.5rem;
+        }
+
+        .success-author span {
+            color: #667eea;
+            font-size: 0.9rem;
         }
 
         /* Footer */
@@ -763,16 +1363,281 @@
             color: #bdc3c7;
         }
 
+        /* Mobile Navigation */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-nav-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .mobile-nav-backdrop.active {
+            display: block;
+        }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 320px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-nav * {
+            box-sizing: border-box;
+        }
+
+        .mobile-nav.active {
+            display: block;
+            transform: translateX(0);
+        }
+
+        .mobile-nav-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .mobile-nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .mobile-nav-logo i {
+            font-size: 1.8rem;
+            color: #667eea;
+        }
+
+        .mobile-nav-logo-text h3 {
+            font-size: 1.4rem;
+            color: #667eea;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .mobile-nav-logo-text p {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .mobile-nav-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .mobile-nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 1rem 0;
+            width: 100%;
+        }
+
+        .mobile-nav-links li {
+            margin: 0;
+            width: 100%;
+        }
+
+        .mobile-nav-links a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .mobile-nav-links a:hover,
+        .mobile-nav-links a.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .mobile-nav-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            border-top: 1px solid #f0f0f0;
+            background: white;
+            margin-top: auto;
+        }
+
+        .mobile-nav-signin {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-signin:hover {
+            background: #5a6fd8;
+        }
+
+        /* Ensure mobile nav doesn't inherit header styles */
+        .mobile-nav .logo,
+        .mobile-nav .navbar-right {
+            display: none !important;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
+            .top-bar {
+                display: none;
+            }
+
+            .header {
+                top: 0;
+                padding: 1rem 0;
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                position: fixed;
+                width: 100%;
+                z-index: 1000;
+            }
+
+            .header.scrolled {
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .header-background {
+                margin: 0 1rem;
+                padding: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .header.scrolled .header-background {
+                background: transparent;
+                box-shadow: none;
+            }
+
             .navbar {
-                flex-direction: column;
-                gap: 1rem;
+                padding: 0 1rem;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+                gap: 0.75rem;
+                color: #667eea;
+            }
+
+            .logo i {
+                font-size: 1.8rem;
+                color: #667eea;
+            }
+
+            .logo-subtitle {
+                font-size: 0.7rem;
+                color: #6c757d;
+                font-weight: 400;
             }
 
             .nav-links {
-                flex-direction: column;
+                display: none;
+            }
+
+            .navbar-right {
+                display: flex;
+                align-items: center;
                 gap: 1rem;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: #333;
+                padding: 0.5rem;
+            }
+
+            .signin-btn {
+                display: none;
+            }
+
+            .header-background {
+                margin: 0 1rem;
+                padding: 0.5rem 0;
+                border-radius: 8px;
+            }
+
+            .navbar {
+                padding: 0 1rem;
+                position: relative;
+            }
+
+            .logo {
+                font-size: 1.2rem;
+                gap: 0.5rem;
+            }
+
+            .logo i {
+                font-size: 1.5rem;
+            }
+
+            .logo-subtitle {
+                font-size: 0.7rem;
+            }
+
+            .nav-links {
+                display: none;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+            }
+
+            .signin-btn {
+                padding: 0.5rem 1rem;
+                font-size: 0.9rem;
             }
 
             .hero-title {
@@ -795,13 +1660,25 @@
     </style>
 </head>
 <body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <i class="fas fa-coins"></i>
+                <div class="logo-text">The Determiners</div>
+            </div>
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Loading your financial future...</div>
+        </div>
+    </div>
+
     <!-- Top Information Bar -->
     <div class="top-bar">
         <div class="top-bar-content">
             <div class="top-bar-left">
                 <div class="top-bar-item">
-                    <i class="fas fa-phone"></i>
-                    <span>+233 24 123 4567</span>
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana</span>
                 </div>
                 <div class="top-bar-item">
                     <i class="fas fa-envelope"></i>
@@ -809,11 +1686,12 @@
                 </div>
             </div>
             <div class="top-bar-right">
+                <span>Follow US</span>
                 <div class="social-icons">
-                    <a href="#"><i class="fab fa-facebook"></i></a>
+                    <a href="#"><i class="fab fa-facebook-f"></i></a>
                     <a href="#"><i class="fab fa-twitter"></i></a>
-                    <a href="#"><i class="fab fa-linkedin"></i></a>
                     <a href="#"><i class="fab fa-instagram"></i></a>
+                    <a href="#"><i class="fab fa-linkedin-in"></i></a>
                 </div>
             </div>
         </div>
@@ -821,36 +1699,82 @@
 
     <!-- Header -->
     <header class="header">
-        <nav class="navbar">
-            <a href="/" class="logo">
-                <i class="fas fa-coins"></i>
-                <i class="fas fa-coins"></i>
-                <div>
-                    <div>The Determiners</div>
-                    <div class="logo-subtitle">DIGITAL BANKING SYSTEM</div>
+        <div class="header-background">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <i class="fas fa-coins"></i>
+                    <i class="fas fa-coins"></i>
+                    <div>
+                        <div>The Determiners</div>
+                        <div class="logo-subtitle">DIGITAL BANKING SYSTEM</div>
+                    </div>
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/services.php" class="active">Services</a></li>
+                    <li><a href="/about.php">About</a></li>
+                    <li><a href="/contact.php">Contact</a></li>
+                    <li><a href="/news.php">News</a></li>
+                </ul>
+                
+                <div class="navbar-right">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <a href="/login.php" class="signin-btn">
+                        <i class="fas fa-arrow-right"></i>
+                        Sign In
+                    </a>
                 </div>
-            </a>
-            
-            <ul class="nav-links">
+            </nav>
+        </div>
+        <!-- Mobile Navigation Menu -->
+        <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+        <div class="mobile-nav" id="mobileNav">
+            <div class="mobile-nav-header">
+                <div class="mobile-nav-logo">
+                    <i class="fas fa-coins"></i>
+                    <div class="mobile-nav-logo-text">
+                        <h3>The Determiners</h3>
+                        <p>DIGITAL BANKING SYSTEM</p>
+                    </div>
+                </div>
+                <button class="mobile-nav-close" id="mobileNavClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <ul class="mobile-nav-links">
                 <li><a href="/">Home</a></li>
                 <li><a href="/services.php" class="active">Services</a></li>
                 <li><a href="/about.php">About</a></li>
                 <li><a href="/contact.php">Contact</a></li>
+                <li><a href="/news.php">News</a></li>
             </ul>
-            
-            <div class="navbar-right">
-                <a href="/login.php" class="signin-btn">
-                    <i class="fas fa-arrow-right"></i>
+            <div class="mobile-nav-footer">
+                <a href="/login.php" class="mobile-nav-signin">
+                    <i class="fas fa-user"></i>
                     Sign In
                 </a>
             </div>
-        </nav>
+        </div>
     </header>
 
     <!-- Main Content -->
     <main class="main-content">
         <!-- Hero Section -->
         <section class="hero-section">
+            <!-- Hero Image Slider -->
+            <div class="hero-slider">
+                <div class="hero-slide"></div>
+                <div class="hero-slide"></div>
+                <div class="hero-slide"></div>
+                <div class="hero-slide"></div>
+            </div>
+            
+            <!-- Hero Overlay -->
+            <div class="hero-overlay"></div>
+            
             <div class="hero-content">
                 <h1 class="hero-title">Our Services</h1>
                 <p class="hero-subtitle">Comprehensive financial solutions designed for your success</p>
@@ -1307,6 +2231,279 @@
                 </div>
             </div>
         </section>
+
+        <!-- Interest Rates Calculator Section -->
+        <section class="calculator-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Interest Rates Calculator</h2>
+                    <p>Calculate your loan payments and savings growth instantly</p>
+                </div>
+                
+                <div class="calculator-container">
+                    <div class="calculator-tabs">
+                        <button class="tab-btn active" data-tab="loan">Loan Calculator</button>
+                        <button class="tab-btn" data-tab="savings">Savings Calculator</button>
+                    </div>
+                    
+                    <div class="calculator-content">
+                        <div class="tab-panel active" id="loan-calculator">
+                            <div class="calculator-form">
+                                <div class="input-group">
+                                    <label>Loan Amount (₵)</label>
+                                    <input type="number" id="loan-amount" placeholder="Enter loan amount" min="1000" max="500000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Interest Rate (%)</label>
+                                    <input type="number" id="interest-rate" placeholder="Enter interest rate" min="1" max="50" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Loan Term (months)</label>
+                                    <input type="number" id="loan-term" placeholder="Enter loan term" min="1" max="60">
+                                </div>
+                                <button class="calculate-btn" onclick="calculateLoan()">Calculate Payment</button>
+                            </div>
+                            
+                            <div class="calculator-result">
+                                <div class="result-card">
+                                    <h4>Monthly Payment</h4>
+                                    <div class="result-amount" id="monthly-payment">₵0.00</div>
+                                </div>
+                                <div class="result-card">
+                                    <h4>Total Interest</h4>
+                                    <div class="result-amount" id="total-interest">₵0.00</div>
+                                </div>
+                                <div class="result-card">
+                                    <h4>Total Amount</h4>
+                                    <div class="result-amount" id="total-amount">₵0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="tab-panel" id="savings-calculator">
+                            <div class="calculator-form">
+                                <div class="input-group">
+                                    <label>Monthly Deposit (₵)</label>
+                                    <input type="number" id="monthly-deposit" placeholder="Enter monthly deposit" min="50" max="10000">
+                                </div>
+                                <div class="input-group">
+                                    <label>Interest Rate (%)</label>
+                                    <input type="number" id="savings-rate" placeholder="Enter interest rate" min="1" max="20" step="0.1">
+                                </div>
+                                <div class="input-group">
+                                    <label>Savings Period (months)</label>
+                                    <input type="number" id="savings-term" placeholder="Enter savings period" min="1" max="120">
+                                </div>
+                                <button class="calculate-btn" onclick="calculateSavings()">Calculate Growth</button>
+                            </div>
+                            
+                            <div class="calculator-result">
+                                <div class="result-card">
+                                    <h4>Total Deposits</h4>
+                                    <div class="result-amount" id="total-deposits">₵0.00</div>
+                                </div>
+                                <div class="result-card">
+                                    <h4>Interest Earned</h4>
+                                    <div class="result-amount" id="interest-earned">₵0.00</div>
+                                </div>
+                                <div class="result-card">
+                                    <h4>Final Amount</h4>
+                                    <div class="result-amount" id="final-amount">₵0.00</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Document Requirements Section -->
+        <section class="documents-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Document Requirements</h2>
+                    <p>Everything you need to get started with our services</p>
+                </div>
+                
+                <div class="documents-grid">
+                    <div class="document-category">
+                        <h3>Susu Registration</h3>
+                        <div class="document-list">
+                            <div class="document-item">
+                                <i class="fas fa-id-card"></i>
+                                <span>Valid Ghana Card (National ID)</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-phone"></i>
+                                <span>Active Mobile Money Number</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-home"></i>
+                                <span>Proof of Address (Utility Bill)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="document-category">
+                        <h3>Loan Application</h3>
+                        <div class="document-list">
+                            <div class="document-item">
+                                <i class="fas fa-id-card"></i>
+                                <span>Valid Ghana Card (National ID)</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-file-invoice"></i>
+                                <span>Proof of Income (3 months)</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-user-friends"></i>
+                                <span>Guarantor Information</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-home"></i>
+                                <span>Proof of Address (Utility Bill)</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="document-category">
+                        <h3>Business Loans</h3>
+                        <div class="document-list">
+                            <div class="document-item">
+                                <i class="fas fa-certificate"></i>
+                                <span>Business Registration Certificate</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-chart-line"></i>
+                                <span>Financial Statements (6 months)</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-building"></i>
+                                <span>Business Address Verification</span>
+                            </div>
+                            <div class="document-item">
+                                <i class="fas fa-handshake"></i>
+                                <span>Business Plan</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Application Process Timeline Section -->
+        <section class="process-timeline-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Application Process Timeline</h2>
+                    <p>Simple steps to get your loan approved quickly</p>
+                </div>
+                
+                <div class="process-timeline">
+                    <div class="process-step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h4>Submit Application</h4>
+                            <p>Complete our online application form with your personal and financial information.</p>
+                            <span class="step-time">5 minutes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h4>Document Upload</h4>
+                            <p>Upload required documents including ID, proof of income, and address verification.</p>
+                            <span class="step-time">10 minutes</span>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h4>Verification & Review</h4>
+                            <p>Our team reviews your application and verifies all submitted documents.</p>
+                            <span class="step-time">2-4 hours</span>
+                        </div>
+                    </div>
+                    
+                    <div class="process-step">
+                        <div class="step-number">4</div>
+                        <div class="step-content">
+                            <h4>Approval & Disbursement</h4>
+                            <p>Receive instant approval notification and funds disbursed to your account.</p>
+                            <span class="step-time">24 hours</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Success Stories Section -->
+        <section class="success-stories-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Success Stories</h2>
+                    <p>Real customers achieving their financial goals with us</p>
+                </div>
+                
+                <div class="success-grid">
+                    <div class="success-card">
+                        <div class="success-image">
+                            <i class="fas fa-store"></i>
+                        </div>
+                        <div class="success-content">
+                            <h4>Sarah's Grocery Store</h4>
+                            <p>"With The Determiners' business loan, I was able to expand my grocery store from a small kiosk to a full supermarket. The loan process was quick and the interest rates were very reasonable."</p>
+                            <div class="success-stats">
+                                <span><strong>₵50,000</strong> Loan Amount</span>
+                                <span><strong>6 months</strong> Repayment</span>
+                            </div>
+                            <div class="success-author">
+                                <strong>Sarah Mensah</strong>
+                                <span>Business Owner, Kumasi</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="success-card">
+                        <div class="success-image">
+                            <i class="fas fa-graduation-cap"></i>
+                        </div>
+                        <div class="success-content">
+                            <h4>Kofi's Education Fund</h4>
+                            <p>"The Susu savings plan helped me save consistently for my daughter's university education. The discipline and structure made all the difference in achieving my financial goal."</p>
+                            <div class="success-stats">
+                                <span><strong>₵25,000</strong> Saved</span>
+                                <span><strong>18 months</strong> Duration</span>
+                            </div>
+                            <div class="success-author">
+                                <strong>Kofi Asante</strong>
+                                <span>Teacher, Accra</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="success-card">
+                        <div class="success-image">
+                            <i class="fas fa-home"></i>
+                        </div>
+                        <div class="success-content">
+                            <h4>Akosua's Home Renovation</h4>
+                            <p>"I needed to renovate my house but didn't want to deplete my savings. The Determiners' home improvement loan was perfect - low rates and flexible repayment terms."</p>
+                            <div class="success-stats">
+                                <span><strong>₵75,000</strong> Loan Amount</span>
+                                <span><strong>12 months</strong> Repayment</span>
+                            </div>
+                            <div class="success-author">
+                                <strong>Akosua Boateng</strong>
+                                <span>Nurse, Tamale</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Footer -->
@@ -1324,6 +2521,7 @@
                     <p><a href="/services.php">Services</a></p>
                     <p><a href="/about.php">About</a></p>
                     <p><a href="/contact.php">Contact</a></p>
+                    <p><a href="/news.php">News</a></p>
                 </div>
                 
                 <div class="footer-section">
@@ -1349,6 +2547,40 @@
     </footer>
 
     <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const mobileNavClose = document.getElementById('mobileNavClose');
+        const mobileNavBackdrop = document.getElementById('mobileNavBackdrop');
+        
+        function openMobileNav() {
+            mobileNav.classList.add('active');
+            mobileNavBackdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileNav() {
+            mobileNav.classList.remove('active');
+            mobileNavBackdrop.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        if (mobileMenuToggle && mobileNav && mobileNavBackdrop) {
+            mobileMenuToggle.addEventListener('click', openMobileNav);
+            
+            if (mobileNavClose) {
+                mobileNavClose.addEventListener('click', closeMobileNav);
+            }
+            
+            // Close mobile menu when clicking on backdrop
+            mobileNavBackdrop.addEventListener('click', closeMobileNav);
+            
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+                link.addEventListener('click', closeMobileNav);
+            });
+        }
+
         // Add scroll effect to header
         window.addEventListener('scroll', function() {
             const header = document.querySelector('.header');
@@ -1360,6 +2592,100 @@
             } else {
                 header.classList.remove('scrolled');
                 topBar.classList.remove('scrolled');
+            }
+        });
+
+        // Page Loader
+        window.addEventListener('load', function() {
+            const pageLoader = document.getElementById('pageLoader');
+            setTimeout(function() {
+                pageLoader.classList.add('fade-out');
+                setTimeout(function() {
+                    pageLoader.style.display = 'none';
+                }, 500);
+            }, 1500); // Show loader for 1.5 seconds
+        });
+
+        // Calculator Tab Functionality
+        document.addEventListener('DOMContentLoaded', function() {
+            const tabBtns = document.querySelectorAll('.tab-btn');
+            const tabPanels = document.querySelectorAll('.tab-panel');
+
+            tabBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    const targetTab = this.getAttribute('data-tab');
+                    
+                    // Remove active class from all tabs and panels
+                    tabBtns.forEach(b => b.classList.remove('active'));
+                    tabPanels.forEach(p => p.classList.remove('active'));
+                    
+                    // Add active class to clicked tab and corresponding panel
+                    this.classList.add('active');
+                    document.getElementById(targetTab + '-calculator').classList.add('active');
+                });
+            });
+        });
+
+        // Loan Calculator Function
+        function calculateLoan() {
+            const loanAmount = parseFloat(document.getElementById('loan-amount').value);
+            const interestRate = parseFloat(document.getElementById('interest-rate').value);
+            const loanTerm = parseInt(document.getElementById('loan-term').value);
+
+            if (loanAmount && interestRate && loanTerm) {
+                const monthlyRate = interestRate / 100 / 12;
+                const monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, loanTerm)) / (Math.pow(1 + monthlyRate, loanTerm) - 1);
+                const totalAmount = monthlyPayment * loanTerm;
+                const totalInterest = totalAmount - loanAmount;
+
+                document.getElementById('monthly-payment').textContent = '₵' + monthlyPayment.toFixed(2);
+                document.getElementById('total-interest').textContent = '₵' + totalInterest.toFixed(2);
+                document.getElementById('total-amount').textContent = '₵' + totalAmount.toFixed(2);
+            }
+        }
+
+        // Savings Calculator Function
+        function calculateSavings() {
+            const monthlyDeposit = parseFloat(document.getElementById('monthly-deposit').value);
+            const interestRate = parseFloat(document.getElementById('savings-rate').value);
+            const savingsTerm = parseInt(document.getElementById('savings-term').value);
+
+            if (monthlyDeposit && interestRate && savingsTerm) {
+                const monthlyRate = interestRate / 100 / 12;
+                const totalDeposits = monthlyDeposit * savingsTerm;
+                const futureValue = monthlyDeposit * ((Math.pow(1 + monthlyRate, savingsTerm) - 1) / monthlyRate);
+                const interestEarned = futureValue - totalDeposits;
+
+                document.getElementById('total-deposits').textContent = '₵' + totalDeposits.toFixed(2);
+                document.getElementById('interest-earned').textContent = '₵' + interestEarned.toFixed(2);
+                document.getElementById('final-amount').textContent = '₵' + futureValue.toFixed(2);
+            }
+        }
+
+        // Hero Image Slider
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.hero-slide');
+            let currentSlide = 0;
+            
+            function showSlide(index) {
+                // Remove active class from all slides
+                slides.forEach(slide => slide.classList.remove('active'));
+                
+                // Add active class to current slide
+                slides[index].classList.add('active');
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            // Start the slider
+            if (slides.length > 0) {
+                showSlide(0);
+                
+                // Auto-advance slides every 4 seconds
+                setInterval(nextSlide, 4000);
             }
         });
     </script>

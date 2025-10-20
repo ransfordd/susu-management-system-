@@ -11,7 +11,7 @@ use function Auth\requireRole;
 class UserManagementController {
     
     public function index(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $pdo = \Database::getConnection();
         
         // Get all users with their roles and status
@@ -37,7 +37,7 @@ class UserManagementController {
     }
     
     public function create(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $this->handleCreate();
@@ -109,6 +109,9 @@ class UserManagementController {
                 
                 $pdo->prepare('INSERT INTO clients (user_id, client_code, agent_id, daily_deposit_amount, registration_date, status) VALUES (:u, :code, :a, :amt, CURRENT_DATE(), "active")')
                     ->execute([':u' => $userId, ':code' => $clientCode, ':a' => $agentId, ':amt' => $dailyAmount]);
+            } elseif ($role === 'manager') {
+                // Manager role doesn't need additional tables, just the user record
+                // Managers have restricted access compared to business_admin
             }
             
             $pdo->commit();
@@ -123,7 +126,7 @@ class UserManagementController {
     }
     
     public function edit(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {
@@ -194,7 +197,7 @@ class UserManagementController {
     }
     
     public function update(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_POST['user_id'] ?? 0);
         
         if ($userId === 0) {
@@ -347,7 +350,7 @@ class UserManagementController {
     }
     
     public function toggleStatus(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {
@@ -385,7 +388,7 @@ class UserManagementController {
     }
     
     public function delete(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $userId = (int)($_GET['id'] ?? 0);
         
         if ($userId === 0) {

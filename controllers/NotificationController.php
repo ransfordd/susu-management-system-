@@ -132,6 +132,7 @@ class NotificationController {
     public static function createNotification($userId, $type, $title, $message, $referenceId = null, $referenceType = null) {
         $pdo = \Database::getConnection();
         
+        
         // Set timezone to Ghana
         date_default_timezone_set('Africa/Accra');
         

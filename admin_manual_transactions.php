@@ -9,7 +9,7 @@ use function Auth\requireRole;
 use Controllers\ManualTransactionController;
 
 startSessionIfNeeded();
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 
 $controller = new ManualTransactionController();
 $action = $_GET['action'] ?? 'index';

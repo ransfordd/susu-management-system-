@@ -7,7 +7,8 @@ use function Auth\startSessionIfNeeded;
 
 startSessionIfNeeded();
 
-if (!Auth\isAuthenticated() || ($_SESSION['user']['role'] ?? '') !== 'business_admin') {
+$userRole = $_SESSION['user']['role'] ?? '';
+if (!Auth\isAuthenticated() || !in_array($userRole, ['business_admin', 'manager'])) {
     header('Location: /login.php');
     exit;
 }

@@ -4,7 +4,7 @@ require_once __DIR__ . '/../../includes/functions.php';
 
 use function Auth\requireRole;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 
 include __DIR__ . '/../../includes/header.php';
 ?>
@@ -104,12 +104,14 @@ include __DIR__ . '/../../includes/header.php';
                         </td>
                         <td>
                             <div class="action-buttons">
+                                <?php if (($_SESSION['user']['role'] ?? '') === 'business_admin'): ?>
                                 <a href="/admin_agents.php?action=impersonate&id=<?php echo $agent['id']; ?>" 
                                    class="btn btn-sm btn-outline-success action-btn" 
                                    title="Login as Agent"
                                    onclick="return confirm('Are you sure you want to login as this agent?')">
                                     <i class="fas fa-sign-in-alt"></i>
                                 </a>
+                                <?php endif; ?>
                                 <a href="/admin_agents.php?action=edit&id=<?php echo $agent['id']; ?>" 
                                    class="btn btn-sm btn-outline-primary action-btn" 
                                    title="Edit Agent">

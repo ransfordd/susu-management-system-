@@ -9,7 +9,7 @@ use function Auth\requireRole;
 
 class AdminReportController {
     public function index(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         // If parameters are present, redirect to financial report
         if (isset($_GET['from_date']) || isset($_GET['to_date']) || isset($_GET['report_type']) || isset($_GET['agent_id'])) {
@@ -21,7 +21,7 @@ class AdminReportController {
     }
 
     public function financialReport(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $fromDate = $_GET['from_date'] ?? date('Y-m-01');
         $toDate = $_GET['to_date'] ?? date('Y-m-d');
@@ -220,7 +220,7 @@ class AdminReportController {
     }
 
     public function agentPerformanceReport(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $agentId = $_GET['agent_id'] ?? null;
         $fromDate = $_GET['from_date'] ?? date('Y-m-01');
@@ -282,7 +282,7 @@ class AdminReportController {
     }
 
     public function exportReport(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $format = $_GET['format'] ?? 'csv';
         $reportType = $_GET['report_type'] ?? 'financial';

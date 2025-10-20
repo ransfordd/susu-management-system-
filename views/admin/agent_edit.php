@@ -5,7 +5,7 @@ require_once __DIR__ . "/../../includes/header.php";
 
 use function Auth\requireRole;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 ?>
 
 <!-- Modern Agent Edit Header -->
@@ -59,6 +59,18 @@ requireRole(['business_admin']);
                         </div>
                         <div class="col-md-6">
                             <div class="form-group">
+                                <label for="username" class="form-label">
+                                    <i class="fas fa-user-circle"></i> Username
+                                </label>
+                                <input type="text" class="form-control modern-input" id="username" name="username" 
+                                       value="<?php echo htmlspecialchars($agent['username'] ?? ''); ?>" required>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
                                 <label for="first_name" class="form-label">
                                     <i class="fas fa-user"></i> First Name
                                 </label>
@@ -66,9 +78,6 @@ requireRole(['business_admin']);
                                        value="<?php echo htmlspecialchars($agent['first_name'] ?? ''); ?>" required>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="last_name" class="form-label">
@@ -78,6 +87,9 @@ requireRole(['business_admin']);
                                        value="<?php echo htmlspecialchars($agent['last_name'] ?? ''); ?>" required>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="email" class="form-label">
@@ -87,9 +99,6 @@ requireRole(['business_admin']);
                                        value="<?php echo htmlspecialchars($agent['email'] ?? ''); ?>" required>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="phone" class="form-label">
@@ -101,6 +110,9 @@ requireRole(['business_admin']);
                                 <div class="form-text">Enter 10-digit phone number (e.g., 0244444444)</div>
                             </div>
                         </div>
+                    </div>
+                    
+                    <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="commission_rate" class="form-label">
@@ -112,9 +124,6 @@ requireRole(['business_admin']);
                                 <div class="form-text">Commission percentage for collections</div>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="row g-3">
                         <div class="col-md-6">
                             <div class="form-group">
                                 <label for="status" class="form-label">

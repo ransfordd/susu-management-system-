@@ -4,12 +4,13 @@ namespace Controllers;
 require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
+require_once __DIR__ . '/NotificationController.php';
 
 use function Auth\requireRole;
 
 class AgentController {
     public function index(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         $agents = $pdo->query("
@@ -80,12 +81,12 @@ class AgentController {
     }
 
     public function create(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         include __DIR__ . '/../views/admin/agent_create.php';
     }
 
     public function store(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_agents.php');
@@ -145,7 +146,7 @@ class AgentController {
     }
 
     public function edit(int $id): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         $stmt = $pdo->prepare("
@@ -189,17 +190,59 @@ class AgentController {
     }
 
     public function update(int $id): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_agents.php');
             exit;
         }
         
+        
         $pdo = \Database::getConnection();
+        
+        // Get original agent data for comparison
+        $originalAgentStmt = $pdo->prepare("
+            SELECT a.*, u.first_name, u.last_name, u.email, u.phone, u.username
+            FROM agents a
+            JOIN users u ON a.user_id = u.id
+            WHERE a.id = ?
+        ");
+        $originalAgentStmt->execute([$id]);
+        $originalAgent = $originalAgentStmt->fetch();
+        
+        if (!$originalAgent) {
+            $_SESSION['error'] = 'Agent not found.';
+            header('Location: /admin_agents.php');
+            exit;
+        }
+        
+        
+        // Validate required fields
+        $username = trim($_POST['username'] ?? '');
+        $email = trim($_POST['email'] ?? '');
+        $firstName = trim($_POST['first_name'] ?? '');
+        $lastName = trim($_POST['last_name'] ?? '');
+        
+        if (empty($username) || empty($email) || empty($firstName) || empty($lastName)) {
+            $_SESSION['error'] = 'All required fields must be filled.';
+            header('Location: /admin_agents.php?action=edit&id=' . $id);
+            exit;
+        }
         
         try {
             $pdo->beginTransaction();
+            
+            // Check if username already exists for another user
+            $checkStmt = $pdo->prepare("
+                SELECT u.id 
+                FROM users u 
+                JOIN agents a ON u.id = a.user_id 
+                WHERE u.username = ? AND a.id != ?
+            ");
+            $checkStmt->execute([$username, $id]);
+            if ($checkStmt->fetch()) {
+                throw new Exception('Username already exists.');
+            }
             
             // Update user
             $userStmt = $pdo->prepare("
@@ -209,10 +252,10 @@ class AgentController {
             ");
             
             $userStmt->execute([
-                $_POST['username'] ?? '',
-                $_POST['email'] ?? '',
-                $_POST['first_name'] ?? '',
-                $_POST['last_name'] ?? '',
+                $username,
+                $email,
+                $firstName,
+                $lastName,
                 $_POST['phone'] ?? '',
                 $id
             ]);
@@ -232,6 +275,44 @@ class AgentController {
             
             $pdo->commit();
             
+            // Send notification to the agent about the account update
+            $changes = [];
+            if ($firstName !== ($originalAgent['first_name'] ?? '')) $changes[] = 'first name';
+            if ($lastName !== ($originalAgent['last_name'] ?? '')) $changes[] = 'last name';
+            if ($email !== ($originalAgent['email'] ?? '')) $changes[] = 'email';
+            if ($username !== ($originalAgent['username'] ?? '')) $changes[] = 'username';
+            if (($_POST['phone'] ?? '') !== ($originalAgent['phone'] ?? '')) $changes[] = 'phone number';
+            if (($_POST['commission_rate'] ?? 5.0) != ($originalAgent['commission_rate'] ?? 5.0)) $changes[] = 'commission rate';
+            if (($_POST['status'] ?? 'active') !== ($originalAgent['status'] ?? 'active')) $changes[] = 'account status';
+            
+            if (!empty($changes)) {
+                $changesText = implode(', ', $changes);
+                
+                // Notify the agent
+                \Controllers\NotificationController::createNotification(
+                    $originalAgent['user_id'],
+                    'account_updated',
+                    'Account Information Updated',
+                    "Your agent account information has been updated by an administrator. Changes made: " . $changesText . ".",
+                    $originalAgent['user_id'],
+                    'user'
+                );
+                
+                // Notify the admin who made the changes
+                $adminUserId = $_SESSION['user']['id'] ?? null;
+                if ($adminUserId && $adminUserId != $originalAgent['user_id']) {
+                    $agentName = $originalAgent['first_name'] . ' ' . $originalAgent['last_name'];
+                    \Controllers\NotificationController::createNotification(
+                        $adminUserId,
+                        'account_updated',
+                        'Agent Account Updated',
+                        "You have updated the account information for agent {$agentName}. Changes made: " . $changesText . ".",
+                        $originalAgent['user_id'],
+                        'agent'
+                    );
+                }
+            }
+            
             $_SESSION['success'] = 'Agent updated successfully!';
             header('Location: /admin_agents.php');
             exit;
@@ -245,7 +326,7 @@ class AgentController {
     }
 
     public function delete(int $id): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -282,7 +363,7 @@ class AgentController {
     }
 
     public function assignClient(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_agents.php');
@@ -336,7 +417,7 @@ class AgentController {
     }
 
     public function removeClient(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_agents.php');

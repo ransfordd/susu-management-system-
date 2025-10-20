@@ -29,10 +29,10 @@ $userAvatar = $user && isset($user['profile_picture']) ? $user['profile_picture'
             </li>
             <li><hr class="dropdown-divider"></li>
             <li class="dropdown-footer">
-                <a class="dropdown-item text-center" href="/notifications.php">
+                <a class="dropdown-item text-center" href="<?php echo $userRole === 'manager' ? '/views/manager/notifications.php' : '/notifications.php'; ?>">
                     <i class="fas fa-eye me-1"></i> View All Notifications
                 </a>
-                <a class="dropdown-item text-center" href="#" onclick="markAllNotificationsAsRead()">
+                <a class="dropdown-item text-center" href="#" onclick="markAllNotificationsAsRead(); return false;">
                     <i class="fas fa-check-double me-1"></i> Mark All as Read
                 </a>
             </li>
@@ -492,9 +492,3 @@ function formatTime(dateString) {
     return Math.floor(diff / 86400000) + 'd ago';
 }
 </script>
-
-
-
-
-
-

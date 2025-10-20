@@ -5,7 +5,7 @@ require_once __DIR__ . '/../../config/database.php';
 
 use function Auth\requireRole;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 $pdo = Database::getConnection();
 
 include __DIR__ . '/../../includes/header.php';
@@ -147,7 +147,9 @@ include __DIR__ . '/../../includes/header.php';
                         <div class="stat-content">
                             <h5 class="stat-title">Total Withdrawals</h5>
                             <h3 class="stat-value"><?php 
-                                $totalWithdrawals = $pdo->query("SELECT COALESCE(SUM(payout_amount),0) as total FROM susu_cycles WHERE status='completed'")->fetch()['total'];
+                                $susuWithdrawals = $pdo->query("SELECT COALESCE(SUM(payout_amount),0) as total FROM susu_cycles WHERE status='completed'")->fetch()['total'];
+                                $manualWithdrawals = $pdo->query("SELECT COALESCE(SUM(amount),0) as total FROM manual_transactions WHERE transaction_type='withdrawal'")->fetch()['total'];
+                                $totalWithdrawals = $susuWithdrawals + $manualWithdrawals;
                                 echo 'GHS ' . number_format($totalWithdrawals, 2);
                             ?></h3>
                         </div>

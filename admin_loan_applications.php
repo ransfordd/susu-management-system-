@@ -7,7 +7,7 @@ use function Auth\startSessionIfNeeded;
 use function Auth\requireRole;
 
 startSessionIfNeeded();
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 
 $pdo = Database::getConnection();
 

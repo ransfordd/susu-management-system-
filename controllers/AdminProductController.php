@@ -9,13 +9,13 @@ use function Auth\requireRole;
 
 class AdminProductController {
 	public function index(): void {
-		requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
 		$products = \LoanProduct::all();
 		include __DIR__ . '/../views/admin/products_list.php';
 	}
 
 	public function create(): void {
-		requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 			$id = \LoanProduct::create($_POST);
 			header('Location: /admin_products.php');

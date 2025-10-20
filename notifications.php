@@ -4,7 +4,7 @@ require_once __DIR__ . '/includes/functions.php';
 
 use function Auth\requireRole;
 
-requireRole(['business_admin','agent','client']);
+requireRole(['business_admin', 'manager', 'agent', 'client']);
 
 require_once __DIR__ . '/controllers/NotificationController.php';
 

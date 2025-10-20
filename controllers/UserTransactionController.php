@@ -19,7 +19,7 @@ class UserTransactionController {
             exit;
         }
         
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -38,6 +38,26 @@ class UserTransactionController {
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $fromDate) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $toDate)) {
             $fromDate = date('Y-m-01');
             $toDate = date('Y-m-d');
+        }
+        
+        // Debug: Log the filter parameters (only when client is selected)
+        if ($clientId !== null) {
+            error_log("Transaction Filter Debug - Client ID: " . $clientId . 
+                     ", From Date: " . $fromDate . 
+                     ", To Date: " . $toDate . 
+                     ", Transaction Type: " . $transactionType);
+        }
+        
+        // For Susu transactions, ensure date filter is within the same month to prevent cycle display issues
+        if ($transactionType === 'susu_collection' || $transactionType === 'susu') {
+            $fromMonth = date('Y-m', strtotime($fromDate));
+            $toMonth = date('Y-m', strtotime($toDate));
+            
+            if ($fromMonth !== $toMonth) {
+                // Force to current month if cross-month range is detected
+                $fromDate = date('Y-m-01');
+                $toDate = date('Y-m-t'); // Last day of current month
+            }
         }
         
         // Get all clients for the filter dropdown
@@ -70,8 +90,8 @@ class UserTransactionController {
         // Get all transactions (show all by default, filter by client if selected)
         $transactions = $this->getAllTransactions($pdo, $clientId, $fromDate, $toDate, $transactionType);
         
-        // Calculate totals for the selected transaction type
-        $totals = $this->calculateTotals($pdo, $clientId, $fromDate, $toDate, $transactionType);
+        // Calculate totals from the actual transactions returned
+        $totals = $this->calculateTotalsFromTransactions($transactions);
         
         // Get all clients for dropdown
         $allClients = $pdo->query("
@@ -118,19 +138,20 @@ class UserTransactionController {
         
         $whereClause = empty($whereConditions) ? '' : 'WHERE ' . implode(' AND ', $whereConditions);
         
-        // Get Susu collections
+        // Get Susu collections (grouped by receipt number to show single transactions)
         $susuQuery = "
             SELECT 
                 dc.collection_date as transaction_date,
                 COALESCE(dc.collection_time, dc.created_at) as transaction_time,
                 dc.created_at,
+                cl.id as client_id,
                 CONCAT(c.first_name, ' ', c.last_name) as client_name,
                 CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
-                dc.collected_amount as amount,
+                SUM(dc.collected_amount) as amount,
                 'susu_collection' as transaction_type,
-                CONCAT('Susu Collection - Cycle ', sc.cycle_number) as description,
-                CONCAT('SUSU-', dc.id) as reference_number,
-                dc.id as collection_id,
+                CONCAT('Susu Collection - Cycle ', sc.cycle_number, ' (', COUNT(dc.id), ' days)') as description,
+                SUBSTRING_INDEX(dc.receipt_number, '-D', 1) as reference_number,
+                GROUP_CONCAT(dc.id) as collection_id,
                 NULL as payment_id,
                 NULL as manual_id
             FROM daily_collections dc
@@ -140,23 +161,30 @@ class UserTransactionController {
             LEFT JOIN agents ag ON cl.agent_id = ag.id
             LEFT JOIN users ag_u ON ag.user_id = ag_u.id
             WHERE dc.collection_status = 'collected'
+            GROUP BY cl.id, SUBSTRING_INDEX(dc.receipt_number, '-D', 1), dc.collection_date, dc.collection_time
         ";
         
+        // Build additional WHERE conditions for Susu query
+        $susuWhereConditions = ["dc.collection_status = 'collected'"];
         $susuParams = [];
+        
         if ($clientId) {
-            $susuQuery .= " AND cl.id = ?";
+            $susuWhereConditions[] = "cl.id = ?";
             $susuParams[] = $clientId;
         }
         if ($fromDate && $toDate) {
-            $susuQuery .= " AND dc.collection_date BETWEEN ? AND ?";
+            $susuWhereConditions[] = "dc.collection_date BETWEEN ? AND ?";
             $susuParams[] = $fromDate;
             $susuParams[] = $toDate;
         }
         if ($transactionType === 'susu_collection') {
             // Already filtered by susu_collection
         } elseif ($transactionType !== 'all' && $transactionType !== 'susu_collection') {
-            $susuQuery .= " AND 1=0"; // Exclude susu collections
+            $susuWhereConditions[] = "1=0"; // Exclude susu collections
         }
+        
+        // Add the WHERE clause to the query
+        $susuQuery = str_replace("WHERE dc.collection_status = 'collected'", "WHERE " . implode(" AND ", $susuWhereConditions), $susuQuery);
         
         // Get loan payments
         $loanQuery = "
@@ -164,6 +192,7 @@ class UserTransactionController {
                 lp.payment_date as transaction_date,
                 COALESCE(lp.payment_time, lp.created_at) as transaction_time,
                 lp.created_at,
+                cl.id as client_id,
                 CONCAT(c.first_name, ' ', c.last_name) as client_name,
                 CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
                 lp.amount_paid as amount,
@@ -179,24 +208,30 @@ class UserTransactionController {
             JOIN users c ON cl.user_id = c.id
             LEFT JOIN agents ag ON cl.agent_id = ag.id
             LEFT JOIN users ag_u ON ag.user_id = ag_u.id
-            WHERE lp.payment_status = 'completed'
+            WHERE lp.payment_status IN ('completed', 'paid')
         ";
         
+        // Build additional WHERE conditions for Loan query
+        $loanWhereConditions = ["lp.payment_status IN ('completed', 'paid')"];
         $loanParams = [];
+        
         if ($clientId) {
-            $loanQuery .= " AND cl.id = ?";
+            $loanWhereConditions[] = "cl.id = ?";
             $loanParams[] = $clientId;
         }
         if ($fromDate && $toDate) {
-            $loanQuery .= " AND lp.payment_date BETWEEN ? AND ?";
+            $loanWhereConditions[] = "lp.payment_date BETWEEN ? AND ?";
             $loanParams[] = $fromDate;
             $loanParams[] = $toDate;
         }
         if ($transactionType === 'loan_payment') {
             // Already filtered by loan payments
         } elseif ($transactionType !== 'all' && $transactionType !== 'loan_payment') {
-            $loanQuery .= " AND 1=0"; // Exclude loan payments
+            $loanWhereConditions[] = "1=0"; // Exclude loan payments
         }
+        
+        // Add the WHERE clause to the query
+        $loanQuery = str_replace("WHERE lp.payment_status IN ('completed', 'paid')", "WHERE " . implode(" AND ", $loanWhereConditions), $loanQuery);
 
         // Get manual transactions
         $manualQuery = "
@@ -204,6 +239,7 @@ class UserTransactionController {
                 DATE(mt.created_at) as transaction_date,
                 TIME(mt.created_at) as transaction_time,
                 mt.created_at,
+                cl.id as client_id,
                 CONCAT(c.first_name, ' ', c.last_name) as client_name,
                 CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
                 mt.amount as amount,
@@ -225,41 +261,89 @@ class UserTransactionController {
             WHERE 1=1
         ";
         
+        // Build additional WHERE conditions for Manual query
+        $manualWhereConditions = ["1=1"]; // Base condition that's always true
         $manualParams = [];
+        
         if ($clientId) {
-            $manualQuery .= " AND cl.id = ?";
+            $manualWhereConditions[] = "cl.id = ?";
             $manualParams[] = $clientId;
         }
         if ($fromDate && $toDate) {
-            $manualQuery .= " AND mt.created_at BETWEEN ? AND ?";
+            $manualWhereConditions[] = "DATE(mt.created_at) BETWEEN ? AND ?";
             $manualParams[] = $fromDate;
             $manualParams[] = $toDate;
         }
         if ($transactionType === 'manual_transaction') {
             // Already filtered by manual transactions
         } elseif ($transactionType !== 'all' && $transactionType !== 'manual_transaction') {
-            $manualQuery .= " AND 1=0"; // Exclude manual transactions
+            $manualWhereConditions[] = "1=0"; // Exclude manual transactions
         }
         
-        // Combine results
+        // Add the WHERE clause to the query
+        $manualQuery = str_replace("WHERE 1=1", "WHERE " . implode(" AND ", $manualWhereConditions), $manualQuery);
+        
+        // Combine results with proper limits
         $allTransactions = [];
+        $limitPerType = $clientId ? 100 : 50; // If client is selected, get more records per type
         
         if ($transactionType === 'all' || $transactionType === 'susu_collection') {
-            $stmt = $pdo->prepare($susuQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT 50");
+            $stmt = $pdo->prepare($susuQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT " . $limitPerType);
             $stmt->execute($susuParams);
-            $allTransactions = array_merge($allTransactions, $stmt->fetchAll());
+            $susuResults = $stmt->fetchAll();
+            
+            // Debug: Log if we're getting wrong client data
+            if ($clientId && !empty($susuResults)) {
+                foreach ($susuResults as $result) {
+                    if (!isset($result['client_name']) || strpos($result['client_name'], 'Gilbert') === false) {
+                        error_log("SUSU: Found non-Gilbert transaction: " . json_encode($result));
+                    }
+                }
+            }
+            
+            $allTransactions = array_merge($allTransactions, $susuResults);
         }
         
         if ($transactionType === 'all' || $transactionType === 'loan_payment') {
-            $stmt = $pdo->prepare($loanQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT 50");
+            $stmt = $pdo->prepare($loanQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT " . $limitPerType);
             $stmt->execute($loanParams);
-            $allTransactions = array_merge($allTransactions, $stmt->fetchAll());
+            $loanResults = $stmt->fetchAll();
+            
+            // Debug: Log if we're getting wrong client data
+            if ($clientId && !empty($loanResults)) {
+                foreach ($loanResults as $result) {
+                    if (!isset($result['client_name']) || strpos($result['client_name'], 'Gilbert') === false) {
+                        error_log("LOAN: Found non-Gilbert transaction: " . json_encode($result));
+                    }
+                }
+            }
+            
+            $allTransactions = array_merge($allTransactions, $loanResults);
         }
         
         if ($transactionType === 'all' || $transactionType === 'manual_transaction') {
-            $stmt = $pdo->prepare($manualQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT 50");
+            $stmt = $pdo->prepare($manualQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT " . $limitPerType);
             $stmt->execute($manualParams);
-            $allTransactions = array_merge($allTransactions, $stmt->fetchAll());
+            $manualResults = $stmt->fetchAll();
+            
+            // Debug: Log if we're getting wrong client data
+            if ($clientId && !empty($manualResults)) {
+                foreach ($manualResults as $result) {
+                    if (!isset($result['client_name']) || strpos($result['client_name'], 'Gilbert') === false) {
+                        error_log("MANUAL: Found non-Gilbert transaction: " . json_encode($result));
+                    }
+                }
+            }
+            
+            $allTransactions = array_merge($allTransactions, $manualResults);
+        }
+        
+        // Final client filter - ensure we only return transactions for the selected client
+        if ($clientId) {
+            $allTransactions = array_filter($allTransactions, function($transaction) use ($clientId) {
+                // Filter by client ID if available in the transaction data
+                return isset($transaction['client_id']) && $transaction['client_id'] == $clientId;
+            });
         }
         
         // Sort combined results
@@ -271,7 +355,33 @@ class UserTransactionController {
             return $dateCompare;
         });
         
-        return array_slice($allTransactions, 0, 100);
+        return array_slice($allTransactions, 0, $clientId ? 200 : 100);
+    }
+    
+    private function calculateTotalsFromTransactions($transactions) {
+        $totals = [
+            'total_amount' => 0,
+            'deposit_amount' => 0,
+            'withdrawal_amount' => 0,
+            'transaction_count' => count($transactions)
+        ];
+        
+        foreach ($transactions as $transaction) {
+            $amount = (float)$transaction['amount'];
+            $transactionType = $transaction['transaction_type'];
+            
+            // Add to total amount
+            $totals['total_amount'] += $amount;
+            
+            // Categorize by transaction type
+            if (in_array($transactionType, ['susu_collection', 'loan_payment', 'manual_deposit'])) {
+                $totals['deposit_amount'] += $amount;
+            } elseif (in_array($transactionType, ['manual_withdrawal'])) {
+                $totals['withdrawal_amount'] += $amount;
+            }
+        }
+        
+        return $totals;
     }
     
     private function calculateTotals($pdo, $clientId, $fromDate, $toDate, $transactionType) {
@@ -282,27 +392,41 @@ class UserTransactionController {
             'transaction_count' => 0
         ];
         
-        // Get Susu collections total
+        // Get Susu collections total (grouped by receipt number)
         $susuQuery = "
             SELECT 
                 COALESCE(SUM(dc.collected_amount), 0) as total_amount,
-                COUNT(*) as count
+                COUNT(DISTINCT SUBSTRING_INDEX(dc.receipt_number, '-D', 1)) as count
             FROM daily_collections dc
             JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
             JOIN clients cl ON sc.client_id = cl.id
             WHERE dc.collection_status = 'collected'
         ";
         
+        // Build additional WHERE conditions for Susu totals query
+        $susuWhereConditions = ["dc.collection_status = 'collected'"];
         $susuParams = [];
+        
         if ($clientId) {
-            $susuQuery .= " AND cl.id = ?";
+            $susuWhereConditions[] = "cl.id = ?";
             $susuParams[] = $clientId;
         }
         if ($fromDate && $toDate) {
-            $susuQuery .= " AND dc.collection_date BETWEEN ? AND ?";
+            $susuWhereConditions[] = "dc.collection_date BETWEEN ? AND ?";
             $susuParams[] = $fromDate;
             $susuParams[] = $toDate;
         }
+        
+        if ($transactionType !== 'all') {
+            if ($transactionType === 'susu_collection') {
+                // Only susu collections
+            } elseif ($transactionType !== 'susu_collection') {
+                $susuWhereConditions[] = "1=0"; // Exclude susu collections
+            }
+        }
+        
+        // Add the WHERE clause to the query
+        $susuQuery = str_replace("WHERE dc.collection_status = 'collected'", "WHERE " . implode(" AND ", $susuWhereConditions), $susuQuery);
         
         $stmt = $pdo->prepare($susuQuery);
         $stmt->execute($susuParams);
@@ -320,16 +444,19 @@ class UserTransactionController {
             FROM loan_payments lp
             JOIN loans l ON lp.loan_id = l.id
             JOIN clients cl ON l.client_id = cl.id
-            WHERE lp.payment_status = 'completed'
+            WHERE lp.payment_status IN ('completed', 'paid')
         ";
         
+        // Build additional WHERE conditions for Loan totals query
+        $loanWhereConditions = ["lp.payment_status IN ('completed', 'paid')"];
         $loanParams = [];
+        
         if ($clientId) {
-            $loanQuery .= " AND cl.id = ?";
+            $loanWhereConditions[] = "cl.id = ?";
             $loanParams[] = $clientId;
         }
         if ($fromDate && $toDate) {
-            $loanQuery .= " AND lp.payment_date BETWEEN ? AND ?";
+            $loanWhereConditions[] = "lp.payment_date BETWEEN ? AND ?";
             $loanParams[] = $fromDate;
             $loanParams[] = $toDate;
         }
@@ -337,10 +464,13 @@ class UserTransactionController {
         if ($transactionType !== 'all') {
             if ($transactionType === 'loan_payment') {
                 // Only loan payments
-            } elseif ($transactionType === 'susu_collection') {
-                $loanQuery .= " AND 1=0"; // Exclude loan payments
+            } elseif ($transactionType !== 'loan_payment') {
+                $loanWhereConditions[] = "1=0"; // Exclude loan payments
             }
         }
+        
+        // Add the WHERE clause to the query
+        $loanQuery = str_replace("WHERE lp.payment_status IN ('completed', 'paid')", "WHERE " . implode(" AND ", $loanWhereConditions), $loanQuery);
         
         $stmt = $pdo->prepare($loanQuery);
         $stmt->execute($loanParams);
@@ -361,13 +491,16 @@ class UserTransactionController {
             WHERE 1=1
         ";
         
+        // Build additional WHERE conditions for Manual totals query
+        $manualWhereConditions = ["1=1"]; // Base condition that's always true
         $manualParams = [];
+        
         if ($clientId) {
-            $manualQuery .= " AND cl.id = ?";
+            $manualWhereConditions[] = "cl.id = ?";
             $manualParams[] = $clientId;
         }
         if ($fromDate && $toDate) {
-            $manualQuery .= " AND mt.created_at BETWEEN ? AND ?";
+            $manualWhereConditions[] = "DATE(mt.created_at) BETWEEN ? AND ?";
             $manualParams[] = $fromDate;
             $manualParams[] = $toDate;
         }
@@ -375,10 +508,13 @@ class UserTransactionController {
         if ($transactionType !== 'all') {
             if ($transactionType === 'manual_transaction') {
                 // Only manual transactions
-            } elseif ($transactionType === 'susu_collection') {
-                $manualQuery .= " AND 1=0"; // Exclude manual transactions
+            } elseif ($transactionType !== 'manual_transaction') {
+                $manualWhereConditions[] = "1=0"; // Exclude manual transactions
             }
         }
+        
+        // Add the WHERE clause to the query
+        $manualQuery = str_replace("WHERE 1=1", "WHERE " . implode(" AND ", $manualWhereConditions), $manualQuery);
         
         $stmt = $pdo->prepare($manualQuery);
         $stmt->execute($manualParams);
@@ -400,7 +536,7 @@ class UserTransactionController {
             exit;
         }
         
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $transactionId = $_GET['transaction_id'] ?? '';
         
@@ -549,7 +685,7 @@ class UserTransactionController {
             exit;
         }
         
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         

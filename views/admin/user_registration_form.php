@@ -270,6 +270,7 @@ include __DIR__ . '/../../includes/header.php';
                                 <option value="">Select Role</option>
                                 <option value="client">Client</option>
                                 <option value="agent">Agent</option>
+                                <option value="manager">Manager</option>
                                 <option value="business_admin">Business Admin</option>
                             </select>
                         </div>

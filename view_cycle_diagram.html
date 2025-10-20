@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar-Based Cycle Diagram</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+            margin: 0;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            text-align: center;
+            color: #6c757d;
+            margin-bottom: 40px;
+        }
+        .diagram {
+            margin: 40px 0;
+        }
+        .month-section {
+            margin: 30px 0;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 5px solid #667eea;
+        }
+        .month-header {
+            font-size: 1.5em;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 15px;
+        }
+        .collection-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(40px, 1fr));
+            gap: 8px;
+            margin: 15px 0;
+        }
+        .day-box {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: all 0.3s ease;
+        }
+        .day-box:hover {
+            transform: scale(1.1);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+        }
+        .collected {
+            background: #28a745;
+            color: white;
+        }
+        .borrowed {
+            background: #17a2b8;
+            color: white;
+        }
+        .missing {
+            background: #dc3545;
+            color: white;
+        }
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #e9ecef;
+            border-radius: 10px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border-radius: 5px;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-weight: 700;
+            margin-left: 15px;
+        }
+        .badge-complete {
+            background: #28a745;
+            color: white;
+        }
+        .badge-incomplete {
+            background: #ffc107;
+            color: #333;
+        }
+        .summary {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 30px;
+            border-radius: 12px;
+            margin: 40px 0;
+        }
+        .summary h2 {
+            margin: 0 0 20px 0;
+            color: white;
+        }
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        .summary-item {
+            background: rgba(255,255,255,0.2);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .summary-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin: 10px 0;
+        }
+        .summary-label {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+        .explanation {
+            background: #fff3cd;
+            border-left: 5px solid #ffc107;
+            padding: 20px;
+            margin: 30px 0;
+            border-radius: 8px;
+        }
+        .explanation h3 {
+            color: #856404;
+            margin-top: 0;
+        }
+        .explanation p {
+            color: #856404;
+            line-height: 1.6;
+        }
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #667eea;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📅 Calendar-Based Monthly Cycle System</h1>
+        <p class="subtitle">Visual Explanation for Gilbert Amidu's Case</p>
+        
+        <div class="legend">
+            <div class="legend-item">
+                <div class="legend-box collected"></div>
+                <span><strong>Collected in Month</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box borrowed"></div>
+                <span><strong>Borrowed from Next Month</strong></span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-box missing"></div>
+                <span><strong>Missing/Pending</strong></span>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h3>🎯 How It Works</h3>
+            <p><strong>Gilbert's Situation:</strong> He has 33 total collections (20 from September + 13 from October).</p>
+            <p><strong>The Logic:</strong> Collections are allocated chronologically to fill each calendar month. If a month isn't complete, we use collections from the next month to fill the gaps.</p>
+            <p><strong>The Result:</strong> September cycle becomes complete (30/30), and October cycle shows partial completion (3/31).</p>
+        </div>
+        
+        <div class="diagram">
+            <!-- September Cycle -->
+            <div class="month-section">
+                <div class="month-header">
+                    🗓️ September 2025 (30 days required)
+                    <span class="status-badge badge-complete">✅ COMPLETE</span>
+                </div>
+                
+                <p><strong>Collections Breakdown:</strong></p>
+                <ul>
+                    <li>Days 1-20: Collected in September (20 days) 🟢</li>
+                    <li>Days 21-30: Borrowed from October (10 days) 🔵</li>
+                    <li><strong>Total: 30/30 days ✅</strong></li>
+                </ul>
+                
+                <div class="collection-grid">
+                    <!-- Days 1-20: Collected in September -->
+                    <div class="day-box collected" title="Sept 1 - Collected">1</div>
+                    <div class="day-box collected" title="Sept 2 - Collected">2</div>
+                    <div class="day-box collected" title="Sept 3 - Collected">3</div>
+                    <div class="day-box collected" title="Sept 4 - Collected">4</div>
+                    <div class="day-box collected" title="Sept 5 - Collected">5</div>
+                    <div class="day-box collected" title="Sept 6 - Collected">6</div>
+                    <div class="day-box collected" title="Sept 7 - Collected">7</div>
+                    <div class="day-box collected" title="Sept 8 - Collected">8</div>
+                    <div class="day-box collected" title="Sept 9 - Collected">9</div>
+                    <div class="day-box collected" title="Sept 10 - Collected">10</div>
+                    <div class="day-box collected" title="Sept 11 - Collected">11</div>
+                    <div class="day-box collected" title="Sept 12 - Collected">12</div>
+                    <div class="day-box collected" title="Sept 13 - Collected">13</div>
+                    <div class="day-box collected" title="Sept 14 - Collected">14</div>
+                    <div class="day-box collected" title="Sept 15 - Collected">15</div>
+                    <div class="day-box collected" title="Sept 16 - Collected">16</div>
+                    <div class="day-box collected" title="Sept 17 - Collected">17</div>
+                    <div class="day-box collected" title="Sept 18 - Collected">18</div>
+                    <div class="day-box collected" title="Sept 19 - Collected">19</div>
+                    <div class="day-box collected" title="Sept 20 - Collected">20</div>
+                    
+                    <!-- Days 21-30: Borrowed from October -->
+                    <div class="day-box borrowed" title="Sept 21 - Borrowed from Oct">21</div>
+                    <div class="day-box borrowed" title="Sept 22 - Borrowed from Oct">22</div>
+                    <div class="day-box borrowed" title="Sept 23 - Borrowed from Oct">23</div>
+                    <div class="day-box borrowed" title="Sept 24 - Borrowed from Oct">24</div>
+                    <div class="day-box borrowed" title="Sept 25 - Borrowed from Oct">25</div>
+                    <div class="day-box borrowed" title="Sept 26 - Borrowed from Oct">26</div>
+                    <div class="day-box borrowed" title="Sept 27 - Borrowed from Oct">27</div>
+                    <div class="day-box borrowed" title="Sept 28 - Borrowed from Oct">28</div>
+                    <div class="day-box borrowed" title="Sept 29 - Borrowed from Oct">29</div>
+                    <div class="day-box borrowed" title="Sept 30 - Borrowed from Oct">30</div>
+                </div>
+            </div>
+            
+            <div class="arrow">⬇️</div>
+            
+            <!-- October Cycle -->
+            <div class="month-section" style="border-left-color: #ffc107;">
+                <div class="month-header">
+                    🗓️ October 2025 (31 days required)
+                    <span class="status-badge badge-incomplete">⏳ IN PROGRESS</span>
+                </div>
+                
+                <p><strong>Collections Breakdown:</strong></p>
+                <ul>
+                    <li>Days 1-10: Used to complete September (10 days) 🔵</li>
+                    <li>Days 11-13: Remaining October collections (3 days) 🟢</li>
+                    <li><strong>Total: 3/31 days ⚠️</strong></li>
+                </ul>
+                
+                <div class="collection-grid">
+                    <!-- Days 1-3: Collected -->
+                    <div class="day-box collected" title="Oct 1 - Available">1</div>
+                    <div class="day-box collected" title="Oct 2 - Available">2</div>
+                    <div class="day-box collected" title="Oct 3 - Available">3</div>
+                    
+                    <!-- Days 4-31: Missing -->
+                    <div class="day-box missing" title="Oct 4 - Missing">4</div>
+                    <div class="day-box missing" title="Oct 5 - Missing">5</div>
+                    <div class="day-box missing" title="Oct 6 - Missing">6</div>
+                    <div class="day-box missing" title="Oct 7 - Missing">7</div>
+                    <div class="day-box missing" title="Oct 8 - Missing">8</div>
+                    <div class="day-box missing" title="Oct 9 - Missing">9</div>
+                    <div class="day-box missing" title="Oct 10 - Missing">10</div>
+                    <div class="day-box missing" title="Oct 11 - Missing">11</div>
+                    <div class="day-box missing" title="Oct 12 - Missing">12</div>
+                    <div class="day-box missing" title="Oct 13 - Missing">13</div>
+                    <div class="day-box missing" title="Oct 14 - Missing">14</div>
+                    <div class="day-box missing" title="Oct 15 - Missing">15</div>
+                    <div class="day-box missing" title="Oct 16 - Missing">16</div>
+                    <div class="day-box missing" title="Oct 17 - Missing">17</div>
+                    <div class="day-box missing" title="Oct 18 - Missing">18</div>
+                    <div class="day-box missing" title="Oct 19 - Missing">19</div>
+                    <div class="day-box missing" title="Oct 20 - Missing">20</div>
+                    <div class="day-box missing" title="Oct 21 - Missing">21</div>
+                    <div class="day-box missing" title="Oct 22 - Missing">22</div>
+                    <div class="day-box missing" title="Oct 23 - Missing">23</div>
+                    <div class="day-box missing" title="Oct 24 - Missing">24</div>
+                    <div class="day-box missing" title="Oct 25 - Missing">25</div>
+                    <div class="day-box missing" title="Oct 26 - Missing">26</div>
+                    <div class="day-box missing" title="Oct 27 - Missing">27</div>
+                    <div class="day-box missing" title="Oct 28 - Missing">28</div>
+                    <div class="day-box missing" title="Oct 29 - Missing">29</div>
+                    <div class="day-box missing" title="Oct 30 - Missing">30</div>
+                    <div class="day-box missing" title="Oct 31 - Missing">31</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="summary">
+            <h2>📊 Final Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="summary-label">Total Collections</div>
+                    <div class="summary-value">33</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">Completed Cycles</div>
+                    <div class="summary-value">1</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">September Status</div>
+                    <div class="summary-value">30/30</div>
+                </div>
+                <div class="summary-item">
+                    <div class="summary-label">October Status</div>
+                    <div class="summary-value">3/31</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="explanation" style="background: #d4edda; border-left-color: #28a745;">
+            <h3 style="color: #155724;">✅ Expected Dashboard Display</h3>
+            <p style="color: #155724;"><strong>When Gilbert logs in, he will see:</strong></p>
+            <ul style="color: #155724;">
+                <li>💰 Total Collected: GHS 4,950.00</li>
+                <li>✅ Cycles Completed: <strong>1</strong></li>
+                <li>📅 Current Cycle: October 2025 (3/31 days)</li>
+                <li>📊 Progress: 9.7% (3 out of 31 days)</li>
+            </ul>
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="/migrate_gilbert_cycles.php" style="display: inline-block; padding: 15px 30px; background: #667eea; color: white; text-decoration: none; border-radius: 8px; font-weight: 700; margin: 10px;">🔧 Run Migration</a>
+            <a href="/test_cycle_calculator.php" style="display: inline-block; padding: 15px 30px; background: #28a745; color: white; text-decoration: none; border-radius: 8px; font-weight: 700; margin: 10px;">🧪 Run Tests</a>
+            <a href="/client_cycles_completed.php" style="display: inline-block; padding: 15px 30px; background: #17a2b8; color: white; text-decoration: none; border-radius: 8px; font-weight: 700; margin: 10px;">📊 View Cycles</a>
+        </div>
+    </div>
+</body>
+</html>
+

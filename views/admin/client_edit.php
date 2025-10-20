@@ -4,7 +4,9 @@ require_once __DIR__ . '/../../includes/functions.php';
 
 use function Auth\requireRole;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
+
+// Client edit view - data is now properly passed via $editUser variable
 
 include __DIR__ . '/../../includes/header.php';
 ?>
@@ -46,21 +48,20 @@ include __DIR__ . '/../../includes/header.php';
     </div>
     <div class="card-body-modern">
         <form method="POST" action="/admin_clients.php?action=update" enctype="multipart/form-data">
-            <input type="hidden" name="user_id" value="<?php echo e($user['id']); ?>">
+            <input type="hidden" name="user_id" value="<?php echo htmlspecialchars($editUser['user_id'] ?? $editUser['id'] ?? '', ENT_QUOTES); ?>">
             
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Username</label>
-                        <input type="text" class="form-control" value="<?php echo e($user['username']); ?>" readonly>
+                        <input type="text" class="form-control" value="<?php echo htmlspecialchars($editUser['username'] ?? '', ENT_QUOTES); ?>" readonly>
                         <small class="form-text text-muted">Username cannot be changed</small>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Email</label>
-                        <input type="email" class="form-control" value="<?php echo e($user['email']); ?>" readonly>
-                        <small class="form-text text-muted">Email cannot be changed</small>
+                        <input type="email" class="form-control" name="email" value="<?php echo htmlspecialchars($editUser['email'] ?? '', ENT_QUOTES); ?>" required>
                     </div>
                 </div>
             </div>
@@ -70,14 +71,14 @@ include __DIR__ . '/../../includes/header.php';
                     <div class="mb-3">
                         <label class="form-label">First Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="first_name" 
-                               value="<?php echo e($user['first_name']); ?>" required>
+                               value="<?php echo htmlspecialchars($editUser['first_name'] ?? '', ENT_QUOTES); ?>" required>
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Last Name <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" name="last_name" 
-                               value="<?php echo e($user['last_name']); ?>" required>
+                               value="<?php echo htmlspecialchars($editUser['last_name'] ?? '', ENT_QUOTES); ?>" required>
                     </div>
                 </div>
             </div>
@@ -87,15 +88,15 @@ include __DIR__ . '/../../includes/header.php';
                     <div class="mb-3">
                         <label class="form-label">Phone</label>
                         <input type="tel" class="form-control" name="phone" 
-                               value="<?php echo e($user['phone_number'] ?? ''); ?>">
+                               value="<?php echo htmlspecialchars($editUser['phone'] ?? '', ENT_QUOTES); ?>">
                     </div>
                 </div>
                 <div class="col-md-6">
                     <div class="mb-3">
                         <label class="form-label">Status</label>
                         <select class="form-select" name="status">
-                            <option value="active" <?php echo $user['status'] === 'active' ? 'selected' : ''; ?>>Active</option>
-                            <option value="inactive" <?php echo $user['status'] === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
+                            <option value="active" <?php echo ($editUser['status'] ?? '') === 'active' ? 'selected' : ''; ?>>Active</option>
+                            <option value="inactive" <?php echo ($editUser['status'] ?? '') === 'inactive' ? 'selected' : ''; ?>>Inactive</option>
                         </select>
                     </div>
                 </div>
@@ -361,3 +362,11 @@ include __DIR__ . '/../../includes/header.php';
 </style>
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
+
+
+
+
+
+
+
+

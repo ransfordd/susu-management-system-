@@ -40,7 +40,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		
 		// Client specific information
 		$agentId = (int)($_POST['agent_id'] ?? 0);
+		$depositType = $_POST['deposit_type'] ?? 'fixed_amount';
 		$dailyAmount = (float)($_POST['daily_deposit_amount'] ?? 20.0);
+		
+		// Validate deposit type
+		if (!in_array($depositType, ['fixed_amount', 'flexible_amount'])) {
+			throw new Exception('Invalid deposit type selected');
+		}
+		
+		// For flexible amount, set daily amount to 0 (will be calculated dynamically)
+		if ($depositType === 'flexible_amount') {
+			$dailyAmount = 0;
+		}
 		
 		// Validate required fields
 		if (empty($nextOfKinName) || empty($nextOfKinRelationship) || empty($nextOfKinPhone) || empty($nextOfKinAddress)) {
@@ -69,13 +80,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 		// Insert client
 		$clientCode = 'CL' . str_pad($userId, 3, '0', STR_PAD_LEFT);
 		$clientStmt = $pdo->prepare('
-			INSERT INTO clients (user_id, client_code, agent_id, daily_deposit_amount, 
+			INSERT INTO clients (user_id, client_code, agent_id, daily_deposit_amount, deposit_type,
 			                     next_of_kin_name, next_of_kin_relationship, next_of_kin_phone, 
 			                     next_of_kin_email, next_of_kin_address, registration_date, status) 
-			VALUES (:uid, :code, :aid, :amt, :nok_name, :nok_rel, :nok_phone, :nok_email, :nok_addr, CURRENT_DATE(), "active")
+			VALUES (:uid, :code, :aid, :amt, :type, :nok_name, :nok_rel, :nok_phone, :nok_email, :nok_addr, CURRENT_DATE(), "active")
 		');
 		$clientStmt->execute([
-			':uid' => $userId, ':code' => $clientCode, ':aid' => $agentId, ':amt' => $dailyAmount,
+			':uid' => $userId, ':code' => $clientCode, ':aid' => $agentId, ':amt' => $dailyAmount, ':type' => $depositType,
 			':nok_name' => $nextOfKinName, ':nok_rel' => $nextOfKinRelationship, 
 			':nok_phone' => $nextOfKinPhone, ':nok_email' => $nextOfKinEmail, ':nok_addr' => $nextOfKinAddress
 		]);
@@ -100,7 +111,7 @@ body.signup-page {
     padding: 0 !important;
     height: 100% !important;
     width: 100% !important;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: #667eea !important;
     overflow-x: hidden !important;
 }
 
@@ -129,7 +140,7 @@ body.signup-page main {
 
 /* Signup Container - Force full coverage */
 body.signup-page .signup-container {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: #667eea !important;
     min-height: 100vh !important;
     width: 100vw !important;
     padding: 2rem 0 !important;
@@ -195,7 +206,7 @@ body.signup-page .signup-card {
 
 /* Signup Header - Force gradient */
 body.signup-page .signup-header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: #667eea !important;
     color: white !important;
     padding: 3rem 2rem 2rem !important;
     text-align: center !important;
@@ -345,7 +356,7 @@ body.signup-page .form-actions button {
 body.signup-page .modern-btn,
 body.signup-page .btn.modern-btn,
 body.signup-page .btn-primary.modern-btn {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+    background: #667eea !important;
     border: none !important;
     border-radius: 10px !important;
     padding: 0.75rem 3rem !important;
@@ -369,9 +380,7 @@ body.signup-page .btn-primary.modern-btn {
 body.signup-page .modern-btn:hover,
 body.signup-page .btn.modern-btn:hover,
 body.signup-page .btn-primary.modern-btn:hover {
-    transform: translateY(-2px) !important;
-    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3) !important;
-    background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%) !important;
+    background: #B8860B !important;
     color: white !important;
     text-decoration: none !important;
 }
@@ -870,10 +879,39 @@ document.addEventListener('DOMContentLoaded', function() {
 									</select>
 								</div>
 								<div class="col-md-6">
+									<label class="form-label">Deposit Type <span class="text-danger">*</span></label>
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="deposit_type" id="fixed_amount_signup" 
+											   value="fixed_amount" checked onchange="toggleDepositFieldsSignup()">
+										<label class="form-check-label" for="fixed_amount_signup">
+											Fixed Daily Amount
+										</label>
+									</div>
+									<div class="form-check">
+										<input class="form-check-input" type="radio" name="deposit_type" id="flexible_amount_signup" 
+											   value="flexible_amount" onchange="toggleDepositFieldsSignup()">
+										<label class="form-check-label" for="flexible_amount_signup">
+											Flexible Daily Amount
+										</label>
+									</div>
+								</div>
+							</div>
+							
+							<div class="row g-3">
+								<div class="col-md-6" id="fixed_amount_fields_signup">
 									<label class="form-label">Daily Deposit Amount (GHS) <span class="text-danger">*</span></label>
 									<input type="number" class="form-control modern-input" name="daily_deposit_amount" 
 										   value="20.00" step="0.01" min="1" required />
 									<div class="form-text">Minimum GHS 1.00 per day</div>
+								</div>
+								
+								<div class="col-md-6" id="flexible_amount_fields_signup" style="display: none;">
+									<div class="alert alert-info">
+										<i class="fas fa-info-circle me-2"></i>
+										<strong>Flexible Daily Amount</strong><br>
+										You can deposit any amount each day (minimum GHS 10.00).<br>
+										Commission will be calculated as: Total Amount ÷ Total Days
+									</div>
 								</div>
 							</div>
 						</div>
@@ -923,5 +961,29 @@ document.querySelector('.signup-form').addEventListener('submit', function() {
 	const submitBtn = document.querySelector('.modern-btn');
 	submitBtn.classList.add('loading');
 	submitBtn.innerHTML = '<i class="fas fa-spinner"></i> Creating Account...';
+});
+
+// Function to toggle deposit fields for signup form
+function toggleDepositFieldsSignup() {
+    const fixedAmount = document.getElementById('fixed_amount_signup');
+    const flexibleAmount = document.getElementById('flexible_amount_signup');
+    const fixedFields = document.getElementById('fixed_amount_fields_signup');
+    const flexibleFields = document.getElementById('flexible_amount_fields_signup');
+    const dailyAmountInput = document.querySelector('input[name="daily_deposit_amount"]');
+    
+    if (fixedAmount.checked) {
+        fixedFields.style.display = 'block';
+        flexibleFields.style.display = 'none';
+        dailyAmountInput.required = true;
+    } else if (flexibleAmount.checked) {
+        fixedFields.style.display = 'none';
+        flexibleFields.style.display = 'block';
+        dailyAmountInput.required = false;
+    }
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    toggleDepositFieldsSignup();
 });
 </script>

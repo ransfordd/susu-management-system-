@@ -75,3 +75,11 @@ echo "<p style='text-align: center; margin-top: 30px; font-size: 0.9em; color: #
 echo "User activities table setup completed at " . date('Y-m-d H:i:s') . "\n";
 echo "</p>\n";
 ?>
+
+
+
+
+
+
+
+

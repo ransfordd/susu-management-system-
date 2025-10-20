@@ -11,7 +11,7 @@ use function Auth\requireRole;
 class SystemSettingsController {
     
     public function index(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $pdo = \Database::getConnection();
         
         // Get all system settings
@@ -27,7 +27,7 @@ class SystemSettingsController {
     }
     
     public function updateSettings(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_settings.php');
@@ -69,7 +69,7 @@ class SystemSettingsController {
     }
     
     public function addHoliday(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_settings.php');
@@ -105,7 +105,7 @@ class SystemSettingsController {
     }
     
     public function deleteHoliday(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         $holidayId = (int)($_GET['id'] ?? 0);
         
         if ($holidayId === 0) {
@@ -129,7 +129,7 @@ class SystemSettingsController {
     }
     
     public function sendNotification(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_settings.php');

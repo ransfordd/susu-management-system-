@@ -5,7 +5,7 @@ require_once __DIR__ . '/includes/functions.php';
 
 use function Auth\requireRole;
 
-requireRole(['business_admin']);
+requireRole(['business_admin', 'manager']);
 
 $pdo = Database::getConnection();
 $applicationId = (int)($_GET['id'] ?? 0);

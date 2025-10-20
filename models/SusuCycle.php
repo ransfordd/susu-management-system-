@@ -2,12 +2,22 @@
 require_once __DIR__ . '/../config/database.php';
 
 class SusuCycle {
-	public static function create(int $clientId, float $dailyAmount, int $cycleNumber, string $startDate, string $endDate): int {
+	public static function create(int $clientId, float $dailyAmount, int $cycleNumber, string $startDate, string $endDate, bool $isFlexible = false): int {
 		$pdo = Database::getConnection();
-		$total = $dailyAmount * 31;
-		$payout = $dailyAmount * 30;
-		$fee = $dailyAmount * 1;
-		$stmt = $pdo->prepare('INSERT INTO susu_cycles (client_id, cycle_number, start_date, end_date, daily_amount, total_amount, payout_amount, agent_fee, status) VALUES (:client_id, :cycle_number, :start_date, :end_date, :daily_amount, :total_amount, :payout_amount, :agent_fee, "active")');
+		
+		if ($isFlexible) {
+			// Flexible cycle: start with 0 amounts, will be calculated dynamically
+			$total = 0;
+			$payout = 0;
+			$fee = 0;
+		} else {
+			// Fixed cycle: traditional calculation
+			$total = $dailyAmount * 31;
+			$payout = $dailyAmount * 30;
+			$fee = $dailyAmount * 1;
+		}
+		
+		$stmt = $pdo->prepare('INSERT INTO susu_cycles (client_id, cycle_number, start_date, end_date, daily_amount, total_amount, payout_amount, agent_fee, is_flexible, status) VALUES (:client_id, :cycle_number, :start_date, :end_date, :daily_amount, :total_amount, :payout_amount, :agent_fee, :is_flexible, "active")');
 		$stmt->execute([
 			':client_id' => $clientId,
 			':cycle_number' => $cycleNumber,
@@ -17,6 +27,7 @@ class SusuCycle {
 			':total_amount' => $total,
 			':payout_amount' => $payout,
 			':agent_fee' => $fee,
+			':is_flexible' => $isFlexible,
 		]);
 		return (int)$pdo->lastInsertId();
 	}

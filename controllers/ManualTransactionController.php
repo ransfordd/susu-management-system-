@@ -21,7 +21,7 @@ class ManualTransactionController {
             exit;
         }
         
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -56,7 +56,7 @@ class ManualTransactionController {
             exit;
         }
         
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -129,7 +129,7 @@ class ManualTransactionController {
         $errors = [];
         
         if ($clientId <= 0) $errors[] = 'Please select a client';
-        if (!in_array($transactionType, ['deposit', 'withdrawal', 'loan_disbursement', 'loan_payment'])) $errors[] = 'Invalid transaction type';
+        if (!in_array($transactionType, ['deposit', 'withdrawal', 'loan_disbursement', 'loan_payment', 'savings_withdrawal', 'emergency_withdrawal'])) $errors[] = 'Invalid transaction type';
         if ($amount <= 0) $errors[] = 'Amount must be greater than 0';
         if (empty($description)) $errors[] = 'Description is required';
         
@@ -273,7 +273,7 @@ class ManualTransactionController {
             exit;
         }
         
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $transactionId = (int)($_GET['id'] ?? 0);
         

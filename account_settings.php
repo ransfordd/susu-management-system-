@@ -83,7 +83,12 @@ function getUserData($pdo, $userId) {
                    WHEN u.role = "client" THEN c.client_code
                    WHEN u.role = "agent" THEN a.agent_code
                    ELSE NULL
-               END as user_code
+               END as user_code,
+               c.next_of_kin_name,
+               c.next_of_kin_relationship,
+               c.next_of_kin_phone,
+               c.next_of_kin_email,
+               c.next_of_kin_address
         FROM users u
         LEFT JOIN clients c ON u.id = c.user_id
         LEFT JOIN agents a ON u.id = a.user_id
@@ -98,9 +103,7 @@ function updateUserProfile($pdo, $userId, $data) {
         UPDATE users 
         SET first_name = ?, last_name = ?, middle_name = ?, 
             date_of_birth = ?, gender = ?, marital_status = ?, nationality = ?,
-            phone_number = ?, residential_address = ?, city = ?, region = ?,
-            next_of_kin_name = ?, next_of_kin_relationship = ?, 
-            next_of_kin_phone = ?, next_of_kin_address = ?
+            residential_address = ?, city = ?, region = ?
         WHERE id = ?
     ');
     $stmt->execute([
@@ -111,14 +114,9 @@ function updateUserProfile($pdo, $userId, $data) {
         $data['gender'],
         $data['marital_status'],
         $data['nationality'],
-        $data['phone_number'],
         $data['residential_address'],
         $data['city'],
         $data['region'],
-        $data['next_of_kin_name'],
-        $data['next_of_kin_relationship'],
-        $data['next_of_kin_phone'],
-        $data['next_of_kin_address'],
         $userId
     ]);
 }
@@ -137,17 +135,17 @@ function changeUserPassword($pdo, $userId, $data) {
     }
     
     // Verify current password
-    $stmt = $pdo->prepare('SELECT password FROM users WHERE id = ?');
+    $stmt = $pdo->prepare('SELECT password_hash FROM users WHERE id = ?');
     $stmt->execute([$userId]);
     $user = $stmt->fetch();
     
-    if (!password_verify($currentPassword, $user['password'])) {
+    if (!password_verify($currentPassword, $user['password_hash'])) {
         throw new Exception('Current password is incorrect');
     }
     
     // Update password
     $hashedPassword = password_hash($newPassword, PASSWORD_DEFAULT);
-    $stmt = $pdo->prepare('UPDATE users SET password = ? WHERE id = ?');
+    $stmt = $pdo->prepare('UPDATE users SET password_hash = ? WHERE id = ?');
     $stmt->execute([$hashedPassword, $userId]);
 }
 
@@ -231,10 +229,10 @@ function removeProfilePicture($pdo, $userId) {
 
 function updateNextOfKin($pdo, $userId, $data) {
     $stmt = $pdo->prepare('
-        UPDATE users 
+        UPDATE clients 
         SET next_of_kin_name = ?, next_of_kin_relationship = ?, 
             next_of_kin_phone = ?, next_of_kin_email = ?, next_of_kin_address = ?
-        WHERE id = ?
+        WHERE user_id = ?
     ');
     $stmt->execute([
         $data['next_of_kin_name'],
@@ -527,7 +525,7 @@ include __DIR__ . '/includes/header.php';
                         <div class="col-md-6">
                             <label class="form-label">Phone Number <span class="text-danger">*</span></label>
                             <input type="tel" name="phone" class="form-control" 
-                                   value="<?php echo htmlspecialchars($userData['phone_number'] ?? ''); ?>" 
+                                   value="<?php echo htmlspecialchars($userData['phone'] ?? ''); ?>" 
                                    placeholder="0244444444" pattern="[0-9]{10}" minlength="10" maxlength="10" required>
                             <div class="form-text">Enter 10-digit phone number (e.g., 0244444444)</div>
                         </div>

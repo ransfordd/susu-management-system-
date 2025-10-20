@@ -10,7 +10,7 @@ use function Auth\requireRole;
 
 class TransactionController {
     public function index(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -122,7 +122,7 @@ class TransactionController {
     }
 
     public function edit(int $id): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -178,7 +178,7 @@ class TransactionController {
     }
 
     public function update(int $id): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
             header('Location: /admin_transactions.php');
@@ -226,7 +226,7 @@ class TransactionController {
     }
 
     public function delete(int $id): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         

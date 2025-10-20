@@ -12,8 +12,16 @@ class SusuController {
 		requireRole(['agent', 'business_admin']);
 		$clientId = (int)($_POST['client_id'] ?? 0);
 		$daily = (float)($_POST['daily_amount'] ?? 0);
+		
+		// Get client's deposit type
+		$pdo = \Database::getConnection();
+		$clientStmt = $pdo->prepare('SELECT deposit_type FROM clients WHERE id = ?');
+		$clientStmt->execute([$clientId]);
+		$client = $clientStmt->fetch();
+		$isFlexible = $client && $client['deposit_type'] === 'flexible_amount';
+		
 		$engine = new \SusuCycleEngine();
-		$id = $engine->startNewCycle($clientId, $daily);
+		$id = $engine->startNewCycle($clientId, $daily, $isFlexible);
 		echo (string)$id;
 	}
 

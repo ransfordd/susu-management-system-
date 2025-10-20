@@ -106,6 +106,7 @@ include __DIR__ . '/../../includes/header.php';
                                        data-phone="<?php echo htmlspecialchars($client['phone']); ?>"
                                        data-email="<?php echo htmlspecialchars($client['email']); ?>"
                                        data-daily="<?php echo $client['daily_deposit_amount']; ?>"
+                                       data-deposit-type="<?php echo $client['deposit_type'] ?? 'fixed_amount'; ?>"
                                        data-agent="<?php echo htmlspecialchars($client['agent_code'] ?? 'Unassigned'); ?>">
                                         <strong><?php echo htmlspecialchars($client['client_code']); ?></strong> - 
                                         <?php echo htmlspecialchars($client['first_name'] . ' ' . $client['last_name']); ?>
@@ -122,7 +123,7 @@ include __DIR__ . '/../../includes/header.php';
                             <label class="form-label">Account Type <span class="text-danger">*</span></label>
                             <select name="account_type" id="account_type" class="form-select" required>
                                 <option value="">Select account type...</option>
-                                <option value="susu">Susu Collection</option>
+                                <option value="susu" <?php echo $preSelectedAccountType === 'susu' ? 'selected' : ''; ?>>Susu Collection</option>
                                 <option value="loan">Loan Payment</option>
                                 <option value="both">Both Susu & Loan</option>
                             </select>
@@ -132,8 +133,9 @@ include __DIR__ . '/../../includes/header.php';
                         <div id="susu_fields" class="col-12" style="display: none;">
                             <div class="row g-3">
                                 <div class="col-md-6">
-                                    <label class="form-label">Susu Amount</label>
+                                    <label class="form-label" id="susu_amount_label">Susu Amount</label>
                                     <input type="number" step="0.01" name="susu_amount" id="susu_amount" class="form-control" placeholder="Enter amount">
+                                    <div class="form-text" id="susu_amount_help"></div>
                                 </div>
                                 <div class="col-md-6">
                                     <label class="form-label">Collection Date</label>
@@ -292,6 +294,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const preSelectedClientPhone = '<?php echo htmlspecialchars($preSelectedClient['phone']); ?>';
     const preSelectedClientEmail = '<?php echo htmlspecialchars($preSelectedClient['email']); ?>';
     const preSelectedClientDaily = '<?php echo $preSelectedClient['daily_deposit_amount']; ?>';
+    const preSelectedClientDepositType = '<?php echo isset($preSelectedClient['deposit_type']) ? $preSelectedClient['deposit_type'] : 'fixed_amount'; ?>';
     
     // Find and select the pre-selected client
     const preSelectedOption = document.querySelector(`[data-value="${preSelectedClientId}"]`);
@@ -301,6 +304,13 @@ document.addEventListener('DOMContentLoaded', function() {
         clientId.value = preSelectedClientId;
         
         // Update client info display
+        let dailyAmountDisplay = '';
+        if (preSelectedClientDepositType === 'flexible_amount') {
+            dailyAmountDisplay = '<p><strong>Deposit Type:</strong> Flexible Amount</p><p><strong>Minimum:</strong> GHS 10.00</p>';
+        } else {
+            dailyAmountDisplay = `<p><strong>Daily Amount:</strong> GHS ${preSelectedClientDaily}</p>`;
+        }
+        
         document.getElementById('client_info').innerHTML = `
             <div class="client-card">
                 <div class="client-avatar">
@@ -324,7 +334,7 @@ document.addEventListener('DOMContentLoaded', function() {
         
         // Set amount if provided
         <?php if ($preSelectedAmount): ?>
-        document.getElementById('susu_amount').value = '<?php echo number_format($preSelectedAmount, 2); ?>';
+        updateAmountField(preSelectedClientDepositType, '<?php echo $preSelectedAmount; ?>');
         <?php endif; ?>
         
         // Trigger account type change to show relevant fields
@@ -365,6 +375,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const clientPhone = this.dataset.phone;
             const clientEmail = this.dataset.email;
             const clientDaily = this.dataset.daily;
+            const clientDepositType = this.dataset.depositType;
             const clientAgent = this.dataset.agent;
             
             // Update search input with clean display text
@@ -375,19 +386,27 @@ document.addEventListener('DOMContentLoaded', function() {
             clientDropdown.style.display = 'none';
             
             // Update client info panel
+            let dailyAmountDisplay = '';
+            if (clientDepositType === 'flexible_amount') {
+                dailyAmountDisplay = '<p><strong>Deposit Type:</strong> Flexible Amount</p><p><strong>Minimum:</strong> GHS 10.00</p>';
+            } else {
+                dailyAmountDisplay = `<p><strong>Daily Amount:</strong> GHS ${clientDaily}</p>`;
+            }
+            
             document.getElementById('client_info').innerHTML = `
                 <div class="client-info-display">
                     <h6><i class="fas fa-user me-2"></i>${clientName}</h6>
                     <p><strong>Client Code:</strong> ${clientCode}</p>
                     <p><strong>Phone:</strong> ${clientPhone}</p>
                     <p><strong>Email:</strong> ${clientEmail}</p>
-                    <p><strong>Daily Amount:</strong> GHS ${clientDaily}</p>
+                    ${dailyAmountDisplay}
                     <p><strong>Assigned Agent:</strong> ${clientAgent}</p>
                 </div>
             `;
             
-            // Set default amounts
-            document.getElementById('susu_amount').value = clientDaily || '';
+            // Update amount field based on deposit type
+            console.log('Client selected:', { clientDepositType, clientDaily });
+            updateAmountField(clientDepositType, clientDaily);
         });
     });
     
@@ -414,6 +433,20 @@ document.addEventListener('DOMContentLoaded', function() {
             loanFields.style.display = 'block';
         }
     });
+    
+    // Initialize form fields on page load
+    function initializeFormFields() {
+        const accountTypeValue = accountType.value;
+        if (accountTypeValue === 'susu' || accountTypeValue === 'both') {
+            susuFields.style.display = 'block';
+        }
+        if (accountTypeValue === 'loan' || accountTypeValue === 'both') {
+            loanFields.style.display = 'block';
+        }
+    }
+    
+    // Run initialization
+    initializeFormFields();
     
     // Payment method change
     const paymentMethod = document.getElementById('payment_method');
@@ -493,6 +526,41 @@ document.addEventListener('DOMContentLoaded', function() {
             alert('Error recording payment: ' + error.message);
         }
     });
+    
+    // Function to update amount field based on deposit type
+    function updateAmountField(depositType, dailyAmount) {
+        const susuAmountInput = document.getElementById('susu_amount');
+        const susuAmountLabel = document.getElementById('susu_amount_label');
+        const susuAmountHelp = document.getElementById('susu_amount_help');
+        
+        // Check if elements exist
+        if (!susuAmountInput || !susuAmountLabel || !susuAmountHelp) {
+            console.error('Payment form elements not found:', {
+                susuAmountInput: !!susuAmountInput,
+                susuAmountLabel: !!susuAmountLabel,
+                susuAmountHelp: !!susuAmountHelp
+            });
+            return;
+        }
+        
+        console.log('Updating amount field:', { depositType, dailyAmount });
+        
+        if (depositType === 'flexible_amount') {
+            susuAmountLabel.textContent = "Today's Deposit Amount";
+            susuAmountInput.placeholder = "Enter any amount (minimum GHS 10.00)";
+            susuAmountInput.min = "10";
+            susuAmountInput.value = "";
+            susuAmountHelp.textContent = "Client can deposit any amount today (minimum GHS 10.00)";
+            susuAmountHelp.className = "form-text text-info";
+        } else {
+            susuAmountLabel.textContent = "Susu Amount";
+            susuAmountInput.placeholder = "Enter amount";
+            susuAmountInput.min = "0";
+            susuAmountInput.value = dailyAmount || "";
+            susuAmountHelp.textContent = "Fixed daily amount for this client";
+            susuAmountHelp.className = "form-text";
+        }
+    }
 });
 </script>
 

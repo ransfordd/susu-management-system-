@@ -9,7 +9,7 @@ use function Auth\requireRole;
 
 class AgentReportController {
     public function consolidatedReport(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -40,7 +40,7 @@ class AgentReportController {
     }
 
     public function individualReport(int $agentId): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         
@@ -79,7 +79,7 @@ class AgentReportController {
     }
 
     public function dailyReport(): void {
-        requireRole(['business_admin']);
+        requireRole(['business_admin', 'manager']);
         
         $pdo = \Database::getConnection();
         

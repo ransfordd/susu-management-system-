@@ -124,7 +124,11 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
                             <?php echo ucfirst($cycle['status']); ?>
                         </span>
                     </p>
-                    <p class="mb-1"><strong>Daily Amount:</strong> GHS <?php echo number_format($cycle['daily_amount'], 2); ?></p>
+                    <?php if ($client['deposit_type'] === 'flexible_amount'): ?>
+                        <p class="mb-1"><strong>Average Amount:</strong> GHS <?php echo number_format($cycle['average_daily_amount'] ?? 0, 2); ?></p>
+                    <?php else: ?>
+                        <p class="mb-1"><strong>Daily Amount:</strong> GHS <?php echo number_format($cycle['daily_amount'], 2); ?></p>
+                    <?php endif; ?>
                     <?php if ($fromDate && $toDate): ?>
                         <p class="mb-1"><strong>Collections Made (<?php echo date('M j', strtotime($fromDate)); ?> - <?php echo date('M j', strtotime($toDate)); ?>):</strong> <?php echo $collections_in_range; ?></p>
                         <p class="mb-1"><strong>Date Range:</strong> <?php echo date('M j, Y', strtotime($fromDate)); ?> to <?php echo date('M j, Y', strtotime($toDate)); ?></p>
@@ -134,9 +138,15 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
                         <p class="mb-1"><strong>Remaining:</strong> <?php echo 31 - $cycle['collections_made']; ?> days</p>
                     <?php endif; ?>
                     <p class="mb-0"><strong>Total Collected:</strong> GHS <?php 
-                        $totalCollected = $fromDate && $toDate ? 
-                            ($collections_in_range * $cycle['daily_amount']) : 
-                            ($cycle['collections_made'] * $cycle['daily_amount']);
+                        if ($client['deposit_type'] === 'flexible_amount') {
+                            // For flexible clients, use the actual total from the cycle
+                            $totalCollected = $cycle['total_amount'] ?? 0;
+                        } else {
+                            // For fixed clients, calculate based on daily amount
+                            $totalCollected = $fromDate && $toDate ? 
+                                ($collections_in_range * $cycle['daily_amount']) : 
+                                ($cycle['collections_made'] * $cycle['daily_amount']);
+                        }
                         echo number_format($totalCollected, 2); 
                     ?></p>
                 </div>
@@ -191,6 +201,7 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
                             $collection = $visualDayMapping[$day] ?? null;
                             
                             $isCollected = $collection !== null;
+                            // Show the actual collection date, not a calculated date
                             $collectionDate = $collection ? date('M j', strtotime($collection['collection_date'])) : '';
                             ?>
                             <div class="susu-day <?php echo $isCollected ? 'collected' : 'pending'; ?>" 
@@ -205,7 +216,7 @@ function renderSusuTracker($clientId, $cycleId = null, $showClientInfo = true, $
                                         <i class="fas fa-check-circle text-success"></i>
                                     </div>
                                     <div class="day-details">
-                                        <small><?php echo $collectionDate; ?></small>
+                                        <small><?php echo date('M j', strtotime($collection['collection_date'])); ?></small>
                                         <br><small>GHS <?php echo number_format($collection['collected_amount'], 2); ?></small>
                                     </div>
                                 <?php else: ?>

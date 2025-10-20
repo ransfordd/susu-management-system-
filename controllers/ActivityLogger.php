@@ -448,3 +448,539 @@ class ActivityLogger {
 
 
 
+
+    }
+
+    
+
+    public static function logSusuCollection($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'susu_collection', "Agent '{$username}' collected GHS " . number_format($amount, 2) . " from '{$clientName}'");
+
+    }
+
+    
+
+    public static function logCycleCompletion($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'cycle_completion', "Susu cycle completed for '{$clientName}' - Payout: GHS " . number_format($amount, 2));
+
+    }
+
+    
+
+    public static function logAgentAssignment($userId, $username, $agentName, $clientName) {
+
+        self::logActivity($userId, 'agent_assignment', "Admin '{$username}' assigned agent '{$agentName}' to client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logClientRegistration($userId, $username, $clientName) {
+
+        self::logActivity($userId, 'client_registration', "Admin '{$username}' registered new client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logAgentRegistration($userId, $username, $agentName) {
+
+        self::logActivity($userId, 'agent_registration', "Admin '{$username}' registered new agent '{$agentName}'");
+
+    }
+
+    
+
+    private static function getClientIP() {
+
+        $ipKeys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+
+        foreach ($ipKeys as $key) {
+
+            if (array_key_exists($key, $_SERVER) === true) {
+
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+
+                    $ip = trim($ip);
+
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+
+                        return $ip;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+
+    }
+
+    
+
+    public static function getUserActivities($userId = null, $limit = 50) {
+
+        self::init();
+
+        
+
+        if ($userId) {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                WHERE ua.user_id = :user_id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':user_id' => $userId, ':limit' => $limit]);
+
+        } else {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':limit' => $limit]);
+
+        }
+
+        
+
+        return $stmt->fetchAll();
+
+    }
+
+}
+
+?>
+
+
+
+
+
+    }
+
+    
+
+    public static function logSusuCollection($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'susu_collection', "Agent '{$username}' collected GHS " . number_format($amount, 2) . " from '{$clientName}'");
+
+    }
+
+    
+
+    public static function logCycleCompletion($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'cycle_completion', "Susu cycle completed for '{$clientName}' - Payout: GHS " . number_format($amount, 2));
+
+    }
+
+    
+
+    public static function logAgentAssignment($userId, $username, $agentName, $clientName) {
+
+        self::logActivity($userId, 'agent_assignment', "Admin '{$username}' assigned agent '{$agentName}' to client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logClientRegistration($userId, $username, $clientName) {
+
+        self::logActivity($userId, 'client_registration', "Admin '{$username}' registered new client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logAgentRegistration($userId, $username, $agentName) {
+
+        self::logActivity($userId, 'agent_registration', "Admin '{$username}' registered new agent '{$agentName}'");
+
+    }
+
+    
+
+    private static function getClientIP() {
+
+        $ipKeys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+
+        foreach ($ipKeys as $key) {
+
+            if (array_key_exists($key, $_SERVER) === true) {
+
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+
+                    $ip = trim($ip);
+
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+
+                        return $ip;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+
+    }
+
+    
+
+    public static function getUserActivities($userId = null, $limit = 50) {
+
+        self::init();
+
+        
+
+        if ($userId) {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                WHERE ua.user_id = :user_id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':user_id' => $userId, ':limit' => $limit]);
+
+        } else {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':limit' => $limit]);
+
+        }
+
+        
+
+        return $stmt->fetchAll();
+
+    }
+
+}
+
+?>
+
+
+
+
+
+    }
+
+    
+
+    public static function logSusuCollection($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'susu_collection', "Agent '{$username}' collected GHS " . number_format($amount, 2) . " from '{$clientName}'");
+
+    }
+
+    
+
+    public static function logCycleCompletion($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'cycle_completion', "Susu cycle completed for '{$clientName}' - Payout: GHS " . number_format($amount, 2));
+
+    }
+
+    
+
+    public static function logAgentAssignment($userId, $username, $agentName, $clientName) {
+
+        self::logActivity($userId, 'agent_assignment', "Admin '{$username}' assigned agent '{$agentName}' to client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logClientRegistration($userId, $username, $clientName) {
+
+        self::logActivity($userId, 'client_registration', "Admin '{$username}' registered new client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logAgentRegistration($userId, $username, $agentName) {
+
+        self::logActivity($userId, 'agent_registration', "Admin '{$username}' registered new agent '{$agentName}'");
+
+    }
+
+    
+
+    private static function getClientIP() {
+
+        $ipKeys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+
+        foreach ($ipKeys as $key) {
+
+            if (array_key_exists($key, $_SERVER) === true) {
+
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+
+                    $ip = trim($ip);
+
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+
+                        return $ip;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+
+    }
+
+    
+
+    public static function getUserActivities($userId = null, $limit = 50) {
+
+        self::init();
+
+        
+
+        if ($userId) {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                WHERE ua.user_id = :user_id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':user_id' => $userId, ':limit' => $limit]);
+
+        } else {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':limit' => $limit]);
+
+        }
+
+        
+
+        return $stmt->fetchAll();
+
+    }
+
+}
+
+?>
+
+
+
+
+
+    }
+
+    
+
+    public static function logSusuCollection($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'susu_collection', "Agent '{$username}' collected GHS " . number_format($amount, 2) . " from '{$clientName}'");
+
+    }
+
+    
+
+    public static function logCycleCompletion($userId, $username, $amount, $clientName) {
+
+        self::logActivity($userId, 'cycle_completion', "Susu cycle completed for '{$clientName}' - Payout: GHS " . number_format($amount, 2));
+
+    }
+
+    
+
+    public static function logAgentAssignment($userId, $username, $agentName, $clientName) {
+
+        self::logActivity($userId, 'agent_assignment', "Admin '{$username}' assigned agent '{$agentName}' to client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logClientRegistration($userId, $username, $clientName) {
+
+        self::logActivity($userId, 'client_registration', "Admin '{$username}' registered new client '{$clientName}'");
+
+    }
+
+    
+
+    public static function logAgentRegistration($userId, $username, $agentName) {
+
+        self::logActivity($userId, 'agent_registration', "Admin '{$username}' registered new agent '{$agentName}'");
+
+    }
+
+    
+
+    private static function getClientIP() {
+
+        $ipKeys = ['HTTP_CLIENT_IP', 'HTTP_X_FORWARDED_FOR', 'REMOTE_ADDR'];
+
+        foreach ($ipKeys as $key) {
+
+            if (array_key_exists($key, $_SERVER) === true) {
+
+                foreach (explode(',', $_SERVER[$key]) as $ip) {
+
+                    $ip = trim($ip);
+
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) !== false) {
+
+                        return $ip;
+
+                    }
+
+                }
+
+            }
+
+        }
+
+        return $_SERVER['REMOTE_ADDR'] ?? 'Unknown';
+
+    }
+
+    
+
+    public static function getUserActivities($userId = null, $limit = 50) {
+
+        self::init();
+
+        
+
+        if ($userId) {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                WHERE ua.user_id = :user_id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':user_id' => $userId, ':limit' => $limit]);
+
+        } else {
+
+            $stmt = self::$pdo->prepare('
+
+                SELECT ua.*, u.first_name, u.last_name, u.username, u.role
+
+                FROM user_activity ua
+
+                JOIN users u ON ua.user_id = u.id
+
+                ORDER BY ua.created_at DESC
+
+                LIMIT :limit
+
+            ');
+
+            $stmt->execute([':limit' => $limit]);
+
+        }
+
+        
+
+        return $stmt->fetchAll();
+
+    }
+
+}
+
+?>
+
+
+
+

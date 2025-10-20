@@ -11,3 +11,11 @@ CREATE TABLE IF NOT EXISTS user_activities (
     INDEX idx_created_at (created_at),
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+
+
+
+
+
+
+

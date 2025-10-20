@@ -1,4 +1,11 @@
 <?php
+require_once __DIR__ . '/../../config/auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
+
+use function Auth\requireRole;
+
+requireRole(['business_admin', 'manager']);
+
 include __DIR__ . '/../../includes/header.php';
 ?>
 

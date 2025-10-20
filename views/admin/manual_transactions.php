@@ -1,4 +1,11 @@
 <?php
+require_once __DIR__ . '/../../config/auth.php';
+require_once __DIR__ . '/../../includes/functions.php';
+
+use function Auth\requireRole;
+
+requireRole(['business_admin', 'manager']);
+
 include __DIR__ . '/../../includes/header.php';
 ?>
 
@@ -63,6 +70,10 @@ include __DIR__ . '/../../includes/header.php';
                                 $badgeClass = 'info';
                             } elseif ($transaction['transaction_type'] === 'loan_payment') {
                                 $badgeClass = 'primary';
+                            } elseif ($transaction['transaction_type'] === 'savings_withdrawal') {
+                                $badgeClass = 'success';
+                            } elseif ($transaction['transaction_type'] === 'emergency_withdrawal') {
+                                $badgeClass = 'danger';
                             }
                             ?>
                             <span class="badge bg-<?php echo $badgeClass; ?>">

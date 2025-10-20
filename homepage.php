@@ -14,6 +14,78 @@
             box-sizing: border-box;
         }
 
+        /* Page Loader */
+        .page-loader {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #667eea;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+
+        .page-loader.fade-out {
+            opacity: 0;
+            visibility: hidden;
+        }
+
+        .loader-content {
+            text-align: center;
+            color: white;
+        }
+
+        .loader-logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .loader-logo i {
+            font-size: 3rem;
+            color: white;
+            animation: bounce 2s infinite;
+        }
+
+        .loader-logo .logo-text {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .loader-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top: 3px solid white;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 1rem;
+        }
+
+        .loader-text {
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
         body {
             font-family: 'Inter', sans-serif;
             line-height: 1.6;
@@ -23,9 +95,8 @@
 
         /* Top Information Bar */
         .top-bar {
-            background: white;
+            background: transparent;
             padding: 0.5rem 0;
-            border-bottom: 1px solid #e9ecef;
             font-size: 0.9rem;
             transition: all 0.3s ease;
             position: fixed;
@@ -33,6 +104,7 @@
             left: 0;
             right: 0;
             z-index: 1001;
+            width: 100%;
         }
 
         .top-bar-content {
@@ -54,11 +126,11 @@
             display: flex;
             align-items: center;
             gap: 0.5rem;
-            color: #6c757d;
+            color: white;
         }
 
         .top-bar-item i {
-            color: #667eea;
+            color: white;
         }
 
         .top-bar-right {
@@ -67,40 +139,55 @@
             gap: 1rem;
         }
 
+        .top-bar-right span {
+            color: white;
+            font-weight: 500;
+        }
+
         .social-icons {
             display: flex;
             gap: 0.5rem;
         }
 
         .social-icons a {
-            color: #6c757d;
+            color: white;
             text-decoration: none;
             font-size: 1.1rem;
             transition: color 0.3s ease;
         }
 
         .social-icons a:hover {
-            color: #667eea;
+            color: #f0f0f0;
         }
 
         /* Main Header */
         .header {
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(10px);
-            color: #333;
-            padding: 1rem 0;
             position: fixed;
             top: 40px;
+            left: 0;
+            right: 0;
             width: 100%;
             z-index: 1000;
-            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
             transition: all 0.3s ease;
+        }
+        
+        .header-background {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 2px 20px rgba(0,0,0,0.1);
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem 0;
+            border-radius: 10px;
         }
 
         .header.scrolled {
+            top: 0;
+        }
+        
+        .header.scrolled .header-background {
             background: rgba(255, 255, 255, 0.98);
             box-shadow: 0 4px 30px rgba(0,0,0,0.15);
-            top: 0;
         }
 
         .top-bar.scrolled {
@@ -112,8 +199,6 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            max-width: 1200px;
-            margin: 0 auto;
             padding: 0 2rem;
         }
 
@@ -156,7 +241,6 @@
 
         .nav-links a:hover {
             color: #667eea;
-            transform: translateY(-2px);
         }
 
         .nav-links a.active {
@@ -199,10 +283,10 @@
         }
 
         .signin-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             padding: 0.75rem 1.5rem;
-            border-radius: 25px;
+            border-radius: 8px;
             text-decoration: none;
             font-weight: 600;
             transition: all 0.3s ease;
@@ -212,45 +296,129 @@
         }
 
         .signin-btn:hover {
-            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+            background: #B8860B;
             color: white;
         }
 
         /* Hero Section */
         .hero {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             min-height: 100vh;
             display: flex;
             align-items: center;
             padding-top: 120px; /* Increased padding to avoid header overlap */
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Hero Image Slider */
+        .hero-slider {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+
+        .hero-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            opacity: 0;
+            transition: opacity 2s ease-in-out;
+            z-index: 1;
+        }
+
+        .hero-slide.active {
+            opacity: 0.8;
+        }
+
+        /* Text Shadow for Better Readability */
+        .hero-text h1,
+        .hero-text p {
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-slide:nth-child(1) {
+            background-image: url('assets/images/Home-side/hero -  man (1).jpg');
+        }
+
+        .hero-slide:nth-child(2) {
+            background-image: url('assets/images/Home-side/hero -  man.jpg');
+        }
+
+        .hero-slide:nth-child(3) {
+            background-image: url('assets/images/Home-side/hero -  mechanic_1.jpg');
+        }
+
+        .hero-slide:nth-child(4) {
+            background-image: url('assets/images/Home-side/hero -  mechanic.jpg');
+        }
+
+        .hero-slide:nth-child(5) {
+            background-image: url('assets/images/Home-side/hero - market women.jpg');
+        }
+
+        /* Hero Overlay */
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(184, 134, 11, 0.2);
+            z-index: 2;
         }
 
         .hero-content {
-            max-width: 1200px;
+            max-width: 1000px;
             margin: 0 auto;
             padding: 0 2rem;
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            display: flex;
+            justify-content: center;
             align-items: center;
-            min-height: 70vh;
+            min-height: 80vh;
+            position: relative;
+            z-index: 3;
+            text-align: center;
         }
 
         .hero-text h1 {
-            font-size: 4rem;
-            font-weight: 700;
+            font-size: 4.5rem;
+            font-weight: 800;
             color: white;
-            margin-bottom: 1.5rem;
+            margin-bottom: 2rem;
             line-height: 1.1;
+            letter-spacing: -0.02em;
+            position: relative;
+        }
+
+        .hero-text h1::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #ffd700, #B8860B);
+            border-radius: 2px;
         }
 
         .hero-text p {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-bottom: 2rem;
-            line-height: 1.6;
+            font-size: 1.4rem;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 3rem;
+            line-height: 1.7;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .hero-text .highlight {
@@ -259,65 +427,146 @@
 
         .cta-buttons {
             display: flex;
-            gap: 1rem;
+            gap: 1.5rem;
             flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 2rem;
+        }
+
+        /* Floating Elements */
+        .floating-elements {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .floating-shape {
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: float 6s ease-in-out infinite;
+        }
+
+        .shape-1 {
+            width: 80px;
+            height: 80px;
+            top: 20%;
+            left: 10%;
+            animation-delay: 0s;
+        }
+
+        .shape-2 {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 15%;
+            animation-delay: 2s;
+        }
+
+        .shape-3 {
+            width: 60px;
+            height: 60px;
+            top: 30%;
+            right: 25%;
+            animation-delay: 4s;
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.3;
+            }
+            50% {
+                transform: translateY(-20px) rotate(180deg);
+                opacity: 0.6;
+            }
         }
 
         .btn-primary-custom {
-            background: linear-gradient(135deg, #ffd700, #ffed4e);
-            color: #333;
-            padding: 1rem 2rem;
-            border-radius: 25px;
+            background: #B8860B;
+            color: white;
+            padding: 1.2rem 3rem;
+            border: none;
+            border-radius: 50px;
+            font-size: 1.1rem;
+            font-weight: 700;
             text-decoration: none;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.5);
-            border: 2px solid #ffd700;
+            display: inline-block;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 8px 25px rgba(184, 134, 11, 0.3);
+        }
+
+        .btn-primary-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-primary-custom:hover::before {
+            left: 100%;
         }
 
         .btn-primary-custom:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(255, 215, 0, 0.6);
-            color: #333;
-            background: linear-gradient(135deg, #ffed4e, #ffd700);
+            background: #667eea;
+            color: white;
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(102, 126, 234, 0.4);
         }
 
         .btn-outline-custom {
-            background: rgba(255, 255, 255, 0.1);
+            background: transparent;
             color: white;
-            padding: 1rem 2rem;
+            padding: 1.2rem 3rem;
             border: 2px solid white;
-            border-radius: 25px;
+            border-radius: 50px;
             text-decoration: none;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            transition: all 0.3s ease;
+            font-weight: 700;
+            font-size: 1.1rem;
+            display: inline-block;
+            transition: all 0.4s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
             backdrop-filter: blur(10px);
         }
 
+        .btn-outline-custom::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.1);
+            transition: width 0.4s ease;
+            z-index: -1;
+        }
+
+        .btn-outline-custom:hover::before {
+            width: 100%;
+        }
+
         .btn-outline-custom:hover {
-            background: white;
-            color: #667eea;
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.8);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.2);
         }
 
-        .hero-image {
-            position: relative;
-            text-align: center;
-        }
-
-        .hero-image img {
-            max-width: 100%;
-            height: auto;
-            border-radius: 15px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-        }
 
         .floating-card {
             position: absolute;
@@ -358,11 +607,11 @@
 
 
         .btn-primary-custom {
-            background: linear-gradient(135deg, #667eea, #764ba2);
+            background: #B8860B;
             border: none;
             color: white;
             padding: 1rem 2rem;
-            border-radius: 50px;
+            border-radius: 8px;
             font-size: 1.1rem;
             font-weight: 600;
             text-decoration: none;
@@ -370,12 +619,10 @@
             align-items: center;
             gap: 0.5rem;
             transition: all 0.3s ease;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
 
         .btn-primary-custom:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+            background: #667eea;
             color: white;
         }
 
@@ -407,8 +654,8 @@
         }
 
         .hero-image img {
-            width: 100%;
-            height: 500px;
+            width: 80%;
+            height: 400px;
             object-fit: cover;
             border-radius: 20px;
             box-shadow: 0 20px 40px rgba(0,0,0,0.1);
@@ -489,7 +736,7 @@
 
         .feature-card {
             background: white;
-            padding: 2rem;
+            padding: 0;
             border-radius: 15px;
             text-align: center;
             transition: all 0.3s ease;
@@ -497,11 +744,18 @@
             position: relative;
             overflow: hidden;
             cursor: pointer;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
         }
 
         .feature-card > * {
             position: relative;
             z-index: 2;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
         }
 
         .feature-card::before {
@@ -511,50 +765,35 @@
             left: 0;
             width: 100%;
             height: 4px;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             transition: all 0.3s ease;
             z-index: 1;
         }
 
-        .feature-card:hover::before {
-            height: 100%;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            opacity: 1;
-        }
+        /* Hover effects removed for service cards */
 
-        .feature-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            background: white;
-        }
-
-        .feature-card:hover .feature-icon {
-            color: white;
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .feature-card:hover .feature-title {
-            color: white;
-        }
-
-        .feature-card:hover p {
-            color: rgba(255, 255, 255, 0.9);
-        }
-
-        .feature-icon {
-            width: 80px;
-            height: 80px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 1.5rem;
-            color: white;
-            font-size: 2rem;
+        .service-image-container {
+            width: 100%;
+            height: 200px;
+            margin: 0 0 1.5rem;
+            border-radius: 15px 15px 0 0;
+            overflow: hidden;
+            position: relative;
             transition: all 0.3s ease;
         }
+
+        .service-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: all 0.3s ease;
+        }
+
+        .feature-card:hover .service-image {
+            transform: scale(1.05);
+        }
+
+        /* Service icon hover effect removed */
 
         .feature-card h3 {
             font-size: 1.5rem;
@@ -562,11 +801,13 @@
             color: #2c3e50;
             margin-bottom: 1rem;
             transition: all 0.3s ease;
+            padding: 0 1.5rem;
         }
 
         .feature-card p {
             color: #6c757d;
             line-height: 1.6;
+            padding: 0 1.5rem 1.5rem;
         }
 
     /* How It Works Section */
@@ -671,49 +912,60 @@
         }
     }
 
-    /* About Section */
-    .about {
+    /* Why Choose Section */
+    .why-choose {
         padding: 5rem 0;
         background: #f8f9fa;
     }
 
-        .about-container {
-            max-width: 1200px;
+        .why-choose-container {
+            width: 100%;
             margin: 0 auto;
             padding: 0 2rem;
         }
 
-        .about-content {
+        .why-choose-content {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: 1fr;
             gap: 4rem;
             align-items: center;
             margin-top: 3rem;
+            text-align: center;
         }
 
-        .about-text h3 {
+        .why-choose-text h3 {
             font-size: 2rem;
             margin-bottom: 1.5rem;
             color: #2c3e50;
         }
 
-        .about-text p {
+        .why-choose-text p {
             font-size: 1.1rem;
             line-height: 1.8;
             color: #6c757d;
             margin-bottom: 2rem;
         }
 
-        .about-features {
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem;
+        .why-choose-features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-top: 2rem;
         }
 
         .feature-item {
             display: flex;
             align-items: flex-start;
             gap: 1rem;
+            padding: 1.5rem;
+            background: white;
+            border-radius: 10px;
+            transition: all 0.3s ease;
+        }
+
+        .feature-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
         }
 
         .feature-item i {
@@ -733,124 +985,490 @@
             margin: 0;
         }
 
-        .about-image {
-            text-align: center;
+        /* Service Comparison Section */
+        .service-comparison-section {
+            padding: 4rem 0;
+            background: white;
         }
 
-        .about-image img {
-            max-width: 100%;
-            height: auto;
+        .comparison-table {
+            margin-top: 3rem;
+            background: white;
             border-radius: 15px;
+            overflow: hidden;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
         }
 
-        /* Stats Section */
-        .stats {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4rem 0;
-        }
-
-        .stats-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .stats-grid {
+        .comparison-header {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 2rem;
+            grid-template-columns: 1fr 1fr 1fr;
+            background: #667eea;
+            color: white;
+            font-weight: 700;
+        }
+
+        .comparison-header > div {
+            padding: 1.5rem;
             text-align: center;
         }
 
-        .stat-item h3 {
-            font-size: 3rem;
+        .comparison-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .comparison-row:nth-child(even) {
+            background: #f8f9fa;
+        }
+
+        .comparison-row > div {
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .feature-name {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .traditional-value {
+            color: #6c757d;
+        }
+
+        .our-value {
+            color: #28a745;
+            font-weight: 600;
+        }
+
+        /* Gallery Slider */
+        .why-choose-gallery {
+            position: relative;
+        }
+
+        .gallery-slider {
+            position: relative;
+            width: 100%;
+            height: 500px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+
+        .gallery-track {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .gallery-slide {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1s ease-in-out;
+            background: #667eea;
+            pointer-events: none;
+        }
+
+        .gallery-slide.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .gallery-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            background: #667eea;
+            display: block;
+        }
+
+        .gallery-slide:hover .gallery-image {
+            transform: scale(1.05);
+        }
+
+        .slide-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9));
+            color: white;
+            padding: 1.5rem;
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            z-index: 10;
+            border-radius: 0 0 15px 15px;
+        }
+
+        .gallery-slide:hover .slide-overlay {
+            transform: translateY(0);
+        }
+
+        .gallery-slide.active:hover .slide-overlay {
+            transform: translateY(0);
+        }
+
+        /* Testimonial content in gallery slides */
+        .gallery-slide .testimonial-content {
+            position: relative;
+            text-align: center;
+        }
+
+        .gallery-slide .quote-icon {
+            font-size: 1.5rem;
+            color: #667eea;
+            margin-bottom: 0.75rem;
+        }
+
+        .gallery-slide .testimonial-content p {
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 1rem;
+            font-style: italic;
+        }
+
+        .gallery-slide .testimonial-author {
+            text-align: center;
+        }
+
+        .gallery-slide .testimonial-author h4 {
+            color: white;
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin: 0 0 0.25rem 0;
+        }
+
+        .gallery-slide .testimonial-author span {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.9rem;
+        }
+
+        .slide-overlay h4 {
+            font-size: 1.3rem;
             font-weight: 700;
             margin-bottom: 0.5rem;
         }
 
-        .stat-item p {
-            font-size: 1.1rem;
+        .slide-overlay p {
+            font-size: 0.95rem;
             opacity: 0.9;
+            margin: 0;
         }
 
-        /* Testimonials Section */
-        .testimonials {
-            padding: 5rem 0;
+        /* Gallery Controls */
+        .gallery-controls {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 1rem;
+            pointer-events: none;
+        }
+
+        .gallery-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            pointer-events: all;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-btn:hover {
+            background: white;
+            transform: scale(1.1);
+        }
+
+        .gallery-btn i {
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        /* Gallery Dots */
+        .gallery-dots {
+            position: absolute;
+            bottom: 1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #667eea;
+            transform: scale(1.2);
+        }
+
+        .dot:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+
+        /* Testimonials Section removed */
+
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+        }
+
+        /* News & Blog */
+        .news-blog {
             background: #f8f9fa;
+            padding: 5rem 0;
         }
 
-        .testimonials-container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 2rem;
-        }
-
-        .testimonials-grid {
+        .news-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
             gap: 2rem;
             margin-top: 3rem;
         }
 
-        .testimonial-card {
+        .news-card {
             background: white;
-            border-radius: 15px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.08);
+            transition: all 0.3s ease;
+            border: 1px solid rgba(102, 126, 234, 0.1);
+        }
+
+        .news-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+            border-color: rgba(102, 126, 234, 0.2);
+        }
+
+        .news-image {
+            position: relative;
+            height: 200px;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            overflow: hidden;
+            border-radius: 15px 15px 0 0;
+            box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .news-image::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.05));
+            pointer-events: none;
+        }
+
+        .news-image-growth {
+            background-image: url('assets/images/Home-side/growth.jpg');
+        }
+
+        .news-image-phone {
+            background-image: url('assets/images/Home-side/phone.jpg');
+        }
+
+        .news-image-badge {
+            background-image: url('assets/images/Home-side/badge.png');
+        }
+
+        /* Overlay removed - images will display directly */
+
+        .news-content {
             padding: 2rem;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            transition: transform 0.3s ease;
-        }
-
-        .testimonial-card:hover {
-            transform: translateY(-5px);
-        }
-
-        .testimonial-content {
             position: relative;
         }
 
-        .quote-icon {
-            font-size: 2rem;
+        /* Gradient bar removed */
+
+        .news-date {
             color: #667eea;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .news-content h3 {
+            color: #2c3e50;
             margin-bottom: 1rem;
+            font-size: 1.4rem;
+            font-weight: 700;
+            line-height: 1.3;
+            transition: color 0.3s ease;
         }
 
-        .testimonial-content p {
-            font-size: 1.1rem;
-            line-height: 1.6;
+        .news-card:hover .news-content h3 {
+            color: #667eea;
+        }
+
+        .news-content p {
             color: #6c757d;
+            line-height: 1.6;
             margin-bottom: 1.5rem;
-            font-style: italic;
+            font-size: 1rem;
         }
 
-        .testimonial-author {
+        .news-link {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            padding: 0.5rem 1rem;
+            border-radius: 25px;
+            background: rgba(102, 126, 234, 0.1);
+            border: 1px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .news-link:hover {
+            color: white;
+            background: #667eea;
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        /* Partners */
+        .partners {
+            background: white;
+            padding: 5rem 0;
+        }
+
+        /* Partners Carousel */
+        .partners-carousel {
+            margin-top: 3rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .partners-track {
             display: flex;
+            animation: scroll 30s linear infinite;
+            gap: 2rem;
+        }
+
+        .partners-track:hover {
+            animation-play-state: paused;
+        }
+
+        @keyframes scroll {
+            0% {
+                transform: translateX(0);
+            }
+            100% {
+                transform: translateX(-100%);
+            }
+        }
+
+        .partner-logo {
+            text-align: center;
+            padding: 2rem;
+            background: #f8f9fa;
+            border-radius: 15px;
+            transition: all 0.3s ease;
+            display: flex;
+            flex-direction: column;
             align-items: center;
             gap: 1rem;
+            min-width: 200px;
+            flex-shrink: 0;
         }
 
-        .author-avatar {
-            width: 50px;
-            height: 50px;
-            background: linear-gradient(135deg, #667eea, #764ba2);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        .partner-logo:hover {
+            background: #667eea;
             color: white;
-            font-size: 1.2rem;
         }
 
-        .author-info h4 {
-            color: #2c3e50;
-            margin-bottom: 0.25rem;
+        .partner-image {
+            width: 60px;
+            height: 60px;
+            object-fit: contain;
+            transition: all 0.3s ease;
         }
 
-        .author-info span {
-            color: #6c757d;
-            font-size: 0.9rem;
+        .partner-logo:hover .partner-image {
+            filter: none; /* Maintain original logo appearance on hover */
         }
+
+        .partner-logo span {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Responsive Design for Partners Carousel */
+        @media (max-width: 768px) {
+            .partners-track {
+                animation-duration: 20s; /* Faster on mobile */
+                gap: 1rem;
+            }
+            
+            .partner-logo {
+                min-width: 150px;
+                padding: 1.5rem 1rem;
+            }
+            
+            .partner-image {
+                width: 50px;
+                height: 50px;
+            }
+            
+            .partner-logo span {
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .partners-track {
+                animation-duration: 15s; /* Even faster on small mobile */
+                gap: 0.5rem;
+            }
+            
+            .partner-logo {
+                min-width: 120px;
+                padding: 1rem 0.5rem;
+            }
+            
+            .partner-image {
+                width: 40px;
+                height: 40px;
+            }
+            
+            .partner-logo span {
+                font-size: 0.9rem;
+            }
+        }
+
+
+        /* Testimonials CSS removed */
+
+        /* Author avatar CSS removed */
 
         /* Footer */
         .footer {
@@ -907,6 +1525,170 @@
             color: #95a5a6;
         }
 
+        /* Mobile Navigation */
+        .mobile-menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #2c3e50;
+            cursor: pointer;
+            padding: 0.5rem;
+        }
+
+        .mobile-nav-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 999;
+        }
+
+        .mobile-nav-backdrop.active {
+            display: block;
+        }
+
+        .mobile-nav {
+            display: none;
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 320px;
+            height: 100vh;
+            background: white;
+            box-shadow: -5px 0 20px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.3s ease;
+        }
+
+        .mobile-nav.active {
+            display: block;
+            transform: translateX(0);
+        }
+
+        .mobile-nav * {
+            box-sizing: border-box;
+        }
+
+        .mobile-nav.active {
+            display: block;
+        }
+
+        .mobile-nav-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .mobile-nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .mobile-nav-logo i {
+            font-size: 1.8rem;
+            color: #667eea;
+        }
+
+        .mobile-nav-logo-text h3 {
+            font-size: 1.4rem;
+            color: #667eea;
+            margin: 0;
+            font-weight: 700;
+        }
+
+        .mobile-nav-logo-text p {
+            font-size: 0.7rem;
+            color: #6c757d;
+            margin: 0;
+            font-weight: 400;
+        }
+
+        .mobile-nav-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            color: #333;
+            padding: 0.5rem;
+            cursor: pointer;
+        }
+
+        .mobile-nav-links {
+            list-style: none;
+            margin: 0;
+            padding: 1rem 0;
+            width: 100%;
+        }
+
+        .mobile-nav-links li {
+            margin: 0;
+            width: 100%;
+        }
+
+        .mobile-nav-links a {
+            display: block;
+            padding: 1rem 1.5rem;
+            color: #333;
+            text-decoration: none;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .mobile-nav-links a:hover,
+        .mobile-nav-links a.active {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .mobile-nav-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 1.5rem;
+            border-top: 1px solid #f0f0f0;
+            background: white;
+            margin-top: auto;
+        }
+
+        .mobile-nav-signin {
+            width: 100%;
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 0.75rem 1rem;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .mobile-nav-signin:hover {
+            background: #5a6fd8;
+        }
+
+        /* Ensure mobile nav doesn't inherit header styles */
+        .mobile-nav .logo,
+        .mobile-nav .navbar-right {
+            display: none !important;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .top-bar {
@@ -915,15 +1697,81 @@
 
             .header {
                 top: 0;
+                padding: 1rem 0;
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+                position: fixed;
+                width: 100%;
+                z-index: 1000;
+            }
+
+            .header.scrolled {
+                background: white;
+                box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            }
+
+            .header-background {
+                margin: 0 1rem;
+                padding: 0;
+                border-radius: 0;
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .header.scrolled .header-background {
+                background: transparent;
+                box-shadow: none;
+            }
+
+            .navbar {
+                padding: 0 1rem;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            .logo {
+                font-size: 1.4rem;
+                gap: 0.75rem;
+                color: #667eea;
+            }
+
+            .logo i {
+                font-size: 1.8rem;
+                color: #667eea;
+            }
+
+            .logo-subtitle {
+                font-size: 0.7rem;
+                color: #6c757d;
+                font-weight: 400;
             }
 
             .nav-links {
                 display: none;
             }
 
+            .navbar-right {
+                display: flex;
+                align-items: center;
+                gap: 1rem;
+            }
+
+            .mobile-menu-toggle {
+                display: block;
+                background: none;
+                border: none;
+                font-size: 1.5rem;
+                color: #333;
+                padding: 0.5rem;
+            }
+
+            .signin-btn {
+                display: none;
+            }
+
             .hero-content {
-                grid-template-columns: 1fr;
                 text-align: center;
+                padding: 0 1rem;
             }
 
             .hero {
@@ -931,7 +1779,22 @@
             }
 
             .hero-text h1 {
-                font-size: 2.5rem;
+                font-size: 3rem;
+            }
+
+            .hero-text p {
+                font-size: 1.2rem;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary-custom,
+            .btn-outline-custom {
+                padding: 1rem 2rem;
+                font-size: 1rem;
             }
 
             .navbar-right {
@@ -951,18 +1814,34 @@
                 grid-template-columns: 1fr;
             }
 
-            .stats-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
 
-            .about-content {
+            .why-choose-content {
                 grid-template-columns: 1fr;
                 gap: 2rem;
                 text-align: center;
             }
 
-            .about-text h3 {
+            .why-choose-text h3 {
                 font-size: 1.5rem;
+            }
+
+            .why-choose-features {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+
+            .gallery-slider {
+                height: 350px;
+            }
+
+            .comparison-header,
+            .comparison-row {
+                grid-template-columns: 1fr;
+            }
+
+            .comparison-header > div,
+            .comparison-row > div {
+                padding: 1rem;
             }
         }
 
@@ -971,6 +1850,8 @@
                 padding-top: 80px; /* Further reduced for small mobile */
             }
         }
+
+
 
         /* Animations */
         .fade-in {
@@ -993,13 +1874,25 @@
     </style>
 </head>
 <body>
+    <!-- Page Loader -->
+    <div class="page-loader" id="pageLoader">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <i class="fas fa-coins"></i>
+                <div class="logo-text">The Determiners</div>
+            </div>
+            <div class="loader-spinner"></div>
+            <div class="loader-text">Loading your financial future...</div>
+        </div>
+    </div>
+
     <!-- Top Information Bar -->
     <div class="top-bar">
         <div class="top-bar-content">
             <div class="top-bar-left">
                 <div class="top-bar-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>PO Box 223158 Oliver Street East Victoria 2006 UK</span>
+                    <span>232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana</span>
                 </div>
                 <div class="top-bar-item">
                     <i class="fas fa-envelope"></i>
@@ -1020,59 +1913,99 @@
 
     <!-- Header -->
     <header class="header">
-        <nav class="navbar">
-            <a href="/" class="logo">
-                <i class="fas fa-coins"></i>
-                <div>
-                    <div>The Determiners</div>
-                    <div class="logo-subtitle">Digital Banking System</div>
+        <div class="header-background">
+            <nav class="navbar">
+                <a href="/" class="logo">
+                    <i class="fas fa-coins"></i>
+                    <div>
+                        <div>The Determiners</div>
+                        <div class="logo-subtitle">Digital Banking System</div>
+                    </div>
+                </a>
+                
+                <ul class="nav-links">
+                    <li><a href="#home" class="active">Home</a></li>
+                    <li><a href="/services.php">Services</a></li>
+                    <li><a href="/about.php">About</a></li>
+                    <li><a href="/contact.php">Contact</a></li>
+                    <li><a href="/news.php">News</a></li>
+                </ul>
+                
+                <div class="navbar-right">
+                    <button class="mobile-menu-toggle" id="mobileMenuToggle">
+                        <i class="fas fa-bars"></i>
+                    </button>
+                    <a href="/login.php" class="signin-btn">
+                        Sign In
+                        <i class="fas fa-arrow-right"></i>
+                    </a>
                 </div>
-            </a>
-            
-            <ul class="nav-links">
+            </nav>
+        </div>
+        <!-- Mobile Navigation Menu -->
+        <div class="mobile-nav-backdrop" id="mobileNavBackdrop"></div>
+        <div class="mobile-nav" id="mobileNav">
+            <div class="mobile-nav-header">
+                <div class="mobile-nav-logo">
+                    <i class="fas fa-coins"></i>
+                    <div class="mobile-nav-logo-text">
+                        <h3>The Determiners</h3>
+                        <p>DIGITAL BANKING SYSTEM</p>
+                    </div>
+                </div>
+                <button class="mobile-nav-close" id="mobileNavClose">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <ul class="mobile-nav-links">
                 <li><a href="#home" class="active">Home</a></li>
                 <li><a href="/services.php">Services</a></li>
                 <li><a href="/about.php">About</a></li>
                 <li><a href="/contact.php">Contact</a></li>
+                <li><a href="/news.php">News</a></li>
             </ul>
-            
-            <div class="navbar-right">
-                <a href="/login.php" class="signin-btn">
+            <div class="mobile-nav-footer">
+                <a href="/login.php" class="mobile-nav-signin">
+                    <i class="fas fa-user"></i>
                     Sign In
-                    <i class="fas fa-arrow-right"></i>
                 </a>
             </div>
-        </nav>
+        </div>
     </header>
 
     <!-- Hero Section -->
     <section class="hero" id="home">
+        <!-- Hero Image Slider -->
+        <div class="hero-slider">
+            <div class="hero-slide active"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+            <div class="hero-slide"></div>
+        </div>
+        
+        <!-- Hero Overlay -->
+        <div class="hero-overlay"></div>
+        
         <div class="hero-content">
             <div class="hero-text fade-in">
-                <h1>Welcome To The<br><span class="highlight">Susu & Loan</span><br>Management System</h1>
+                <h1>Welcome to your trusted<br><span class="highlight">Susu & Loan</span><br>Solutions</h1>
                 <p>Empowering communities through innovative financial solutions. Join thousands of satisfied customers who trust us with their savings and loan needs.</p>
                 
                 <div class="cta-buttons">
                     <a href="/signup.php" class="btn-primary-custom">
-                        <i class="fas fa-user-plus"></i>
                         CREATE AN ACCOUNT
                     </a>
-                    <a href="#services" class="btn-outline-custom">
-                        <i class="fas fa-info-circle"></i>
-                        Learn More
+                    <a href="services.php" class="btn-outline-custom">
+                        EXPLORE SERVICES
                     </a>
                 </div>
                 
-            </div>
-            
-            <div class="hero-image fade-in">
-                <img src="/assets/images/hero-placeholder.svg" alt="Happy customer with phone and card">
-                <div class="floating-card">
-                    <i class="fas fa-shield-alt"></i>
-                    <div class="floating-card-text">
-                        <h4>Secure & Trusted</h4>
-                        <p>Your money is safe with us</p>
-                    </div>
+                <!-- Cool floating elements -->
+                <div class="floating-elements">
+                    <div class="floating-shape shape-1"></div>
+                    <div class="floating-shape shape-2"></div>
+                    <div class="floating-shape shape-3"></div>
                 </div>
             </div>
         </div>
@@ -1088,36 +2021,29 @@
             
             <div class="features-grid">
                 <div class="feature-card fade-in">
-                    <div class="feature-icon">
-                        <i class="fas fa-piggy-bank"></i>
+                    <div class="service-image-container">
+                        <img src="assets/images/Home-side/susu collections.jpg" alt="Susu Collections" class="service-image">
                     </div>
                     <h3>Susu Collections</h3>
                     <p>Join our rotating savings scheme and build your financial future. Regular contributions with guaranteed payouts.</p>
                 </div>
                 
                 <div class="feature-card fade-in">
-                    <div class="feature-icon">
-                        <i class="fas fa-hand-holding-usd"></i>
+                    <div class="service-image-container">
+                        <img src="assets/images/Home-side/quick loans.jpg" alt="Quick Loans" class="service-image">
                     </div>
                     <h3>Quick Loans</h3>
                     <p>Get access to fast, affordable loans with flexible repayment terms. No hidden fees, transparent rates.</p>
                 </div>
                 
                 <div class="feature-card fade-in">
-                    <div class="feature-icon">
-                        <i class="fas fa-mobile-alt"></i>
+                    <div class="service-image-container">
+                        <img src="assets/images/Home-side/digital banking.jpg" alt="Digital Banking" class="service-image">
                     </div>
                     <h3>Digital Banking</h3>
                     <p>Manage your finances on the go with our secure mobile platform. 24/7 access to your accounts.</p>
                 </div>
                 
-                <div class="feature-card fade-in">
-                    <div class="feature-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <h3>Community Support</h3>
-                    <p>Join a community of like-minded individuals working towards financial independence together.</p>
-                </div>
             </div>
         </div>
     </section>
@@ -1186,20 +2112,19 @@
         </div>
     </section>
 
-        <!-- About Section -->
-        <section class="about" id="about">
-            <div class="about-container">
+        <!-- Why Choose Section -->
+        <section class="why-choose" id="about">
+            <div class="why-choose-container">
                 <div class="section-title fade-in">
                     <h2>Why Choose The Determiners?</h2>
                     <p>Experience the future of community banking with cutting-edge technology</p>
                 </div>
                 
-                <div class="about-content">
-                    <div class="about-text fade-in">
-                        <h3>Revolutionizing Financial Services in Ghana</h3>
+                <div class="why-choose-content">
+                    <div class="why-choose-text fade-in">
                         <p>At The Determiners, we're transforming how Ghanaians save, borrow, and invest. Our innovative digital platform combines the trust and community spirit of traditional Susu with the convenience and security of modern banking technology.</p>
                         
-                        <div class="about-features">
+                        <div class="why-choose-features">
                             <div class="feature-item">
                                 <i class="fas fa-shield-alt"></i>
                                 <div>
@@ -1221,6 +2146,13 @@
                                     <p>Get insights into your spending and savings patterns with AI-powered analytics</p>
                                 </div>
                             </div>
+                            <div class="feature-item">
+                                <i class="fas fa-users"></i>
+                                <div>
+                                    <h4>Community Support</h4>
+                                    <p>Join a supportive community of savers and borrowers with 24/7 customer service</p>
+                                </div>
+                            </div>
                         </div>
                         
                         <div style="margin-top: 2rem;">
@@ -1228,102 +2160,273 @@
                         </div>
                     </div>
                     
-                    <div class="about-image fade-in">
-                        <img src="/assets/images/about-placeholder.svg" alt="About The Determiners" onerror="this.src='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgdmlld0JveD0iMCAwIDQwMCAzMDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI0MDAiIGhlaWdodD0iMzAwIiBmaWxsPSIjRjVGNUY1Ii8+CjxjaXJjbGUgY3g9IjIwMCIgY3k9IjE1MCIgcj0iNTAiIGZpbGw9IiM2NjdlZWEiLz4KPHRleHQgeD0iMjAwIiB5PSIxNjAiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPkFib3V0IFVzPC90ZXh0Pgo8L3N2Zz4K'">
+                    <div class="why-choose-gallery fade-in">
+                        <div class="gallery-slider">
+                            <div class="gallery-track">
+                                <div class="gallery-slide active">
+                                    <img src="assets/images/Home-side/hero -  man (1).jpg" alt="Ghanaian Professional" class="gallery-image">
+                                    <div class="slide-overlay">
+                                        <div class="testimonial-content">
+                                            <div class="quote-icon">
+                                                <i class="fas fa-quote-left"></i>
+                                            </div>
+                                            <p>"The Determiners has transformed how I save money. The digital Susu system is so convenient, and I love getting notifications about my contributions. It's like having a personal financial advisor!"</p>
+                                            <div class="testimonial-author">
+                                                <h4>Akosua Mensah</h4>
+                                                <span>Small Business Owner</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="gallery-slide">
+                                    <img src="assets/images/Home-side/hero -  man.jpg" alt="Ghanaian Entrepreneur" class="gallery-image">
+                                    <div class="slide-overlay">
+                                        <div class="testimonial-content">
+                                            <div class="quote-icon">
+                                                <i class="fas fa-quote-left"></i>
+                                            </div>
+                                            <p>"Getting a loan was so easy with The Determiners. The application process was straightforward, and I received my funds within 24 hours. The interest rates are very competitive too!"</p>
+                                            <div class="testimonial-author">
+                                                <h4>Kwame Asante</h4>
+                                                <span>Teacher</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="gallery-slide">
+                                    <img src="assets/images/Home-side/hero -  mechanic.jpg" alt="Ghanaian Mechanic" class="gallery-image">
+                                    <div class="slide-overlay">
+                                        <div class="testimonial-content">
+                                            <div class="quote-icon">
+                                                <i class="fas fa-quote-left"></i>
+                                            </div>
+                                            <p>"The mobile app is fantastic! I can check my account balance, make payments, and even apply for loans right from my phone. It's made managing my finances so much easier."</p>
+                                            <div class="testimonial-author">
+                                                <h4>Efua Adjei</h4>
+                                                <span>Nurse</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="gallery-slide">
+                                    <img src="assets/images/Home-side/hero -  mechanic_1.jpg" alt="Ghanaian Technician" class="gallery-image">
+                                    <div class="slide-overlay">
+                                        <div class="testimonial-content">
+                                            <div class="quote-icon">
+                                                <i class="fas fa-quote-left"></i>
+                                            </div>
+                                            <p>"As a mechanic, I needed quick access to funds for my business. The Determiners made it possible for me to get the equipment I needed without the usual banking hassles. Highly recommended!"</p>
+                                            <div class="testimonial-author">
+                                                <h4>Kofi Osei</h4>
+                                                <span>Auto Mechanic</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="gallery-slide">
+                                    <img src="assets/images/Home-side/hero - market women.jpg" alt="Ghanaian Market Women" class="gallery-image">
+                                    <div class="slide-overlay">
+                                        <div class="testimonial-content">
+                                            <div class="quote-icon">
+                                                <i class="fas fa-quote-left"></i>
+                                            </div>
+                                            <p>"We market women have been saving together for years, but The Determiners has made it so much easier and safer. Our money is secure and we can track everything on our phones!"</p>
+                                            <div class="testimonial-author">
+                                                <h4>Adwoa Serwaa</h4>
+                                                <span>Market Woman</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="gallery-controls">
+                                <button class="gallery-btn prev-btn" onclick="changeSlide(-1)">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <button class="gallery-btn next-btn" onclick="changeSlide(1)">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+                            
+                            <div class="gallery-dots">
+                                <span class="dot active" onclick="currentSlide(1)"></span>
+                                <span class="dot" onclick="currentSlide(2)"></span>
+                                <span class="dot" onclick="currentSlide(3)"></span>
+                                <span class="dot" onclick="currentSlide(4)"></span>
+                                <span class="dot" onclick="currentSlide(5)"></span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </section>
 
-    <!-- Stats Section -->
-    <section class="stats">
-        <div class="stats-container">
-            <div class="stats-grid">
-                <div class="stat-item fade-in">
-                    <h3>10,000+</h3>
-                    <p>Active Members</p>
+        <!-- Service Comparison Section -->
+        <section class="service-comparison-section">
+            <div class="container">
+                <div class="section-title">
+                    <h2>Compare Our Services</h2>
+                    <p>See how we stack up against traditional banking</p>
                 </div>
-                <div class="stat-item fade-in">
-                    <h3>GHS 50M+</h3>
-                    <p>Total Transactions</p>
+
+                <div class="comparison-table">
+                    <div class="comparison-header">
+                        <div class="feature-column">Features</div>
+                        <div class="traditional-column">Traditional Banks</div> 
+                        <div class="our-column">The Determiners</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="feature-name">Account Opening</div>
+                        <div class="traditional-value">3-5 days</div>
+                        <div class="our-value">Instant</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="feature-name">Savings Interest Rate</div>
+                        <div class="traditional-value">2-4%</div>
+                        <div class="our-value">Up to 12%</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="feature-name">Loan Processing</div>
+                        <div class="traditional-value">7-14 days</div>
+                        <div class="our-value">24 hours</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="feature-name">Mobile Banking</div>
+                        <div class="traditional-value">Basic</div>
+                        <div class="our-value">Advanced</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="feature-name">Customer Support</div>        
+                        <div class="traditional-value">Business hours</div>     
+                        <div class="our-value">24/7</div>
+                    </div>
+
+                    <div class="comparison-row">
+                        <div class="feature-name">Susu Management</div>
+                        <div class="traditional-value">Not available</div>      
+                        <div class="our-value">Full service</div>
+                    </div>
                 </div>
-                <div class="stat-item fade-in">
-                    <h3>98%</h3>
-                    <p>Customer Satisfaction</p>
+            </div>
+        </section>
+
+    <!-- Recent News & Blog Section -->
+    <section class="news-blog">
+        <div class="container">
+            <div class="section-title fade-in">
+                <h2>Latest News & Financial Tips</h2>
+                <p>Stay updated with financial insights and company news</p>
+            </div>
+            
+            <div class="news-grid">
+                <div class="news-card fade-in">
+                    <div class="news-image news-image-growth">
+                    </div>
+                    <div class="news-content">
+                        <div class="news-date">Dec 15, 2024</div>
+                        <h3>5 Tips for Better Financial Planning in 2025</h3>
+                        <p>Discover simple strategies to improve your financial health and achieve your savings goals.</p>
+                        <a href="/news.php#financial-planning" class="news-link">Read More <i class="fas fa-arrow-right"></i></a>
+                    </div>
                 </div>
-                <div class="stat-item fade-in">
-                    <h3>500+</h3>
-                    <p>Completed Susu Cycles</p>
+                
+                <div class="news-card fade-in">
+                    <div class="news-image news-image-phone">
+                    </div>
+                    <div class="news-content">
+                        <div class="news-date">Dec 10, 2024</div>
+                        <h3>New Mobile App Features Coming Soon</h3>
+                        <p>Exciting updates to our mobile app including biometric login and instant notifications.</p>
+                        <a href="/news.php#mobile-app" class="news-link">Read More <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                
+                <div class="news-card fade-in">
+                    <div class="news-image news-image-badge">
+                    </div>
+                    <div class="news-content">
+                        <div class="news-date">Dec 5, 2024</div>
+                        <h3>We're Now Licensed by Bank of Ghana</h3>
+                        <p>The Determiners has received official licensing, ensuring your funds are protected.</p>
+                        <a href="/news.php#bank-licensing" class="news-link">Read More <i class="fas fa-arrow-right"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Testimonials Section -->
-    <section class="testimonials">
-        <div class="testimonials-container">
+    <!-- Partners & Sponsors Section -->
+    <section class="partners">
+        <div class="container">
             <div class="section-title fade-in">
-                <h2>What Our Customers Say</h2>
-                <p>Real stories from real people who trust The Determiners</p>
+                <h2>Trusted Partners</h2>
+                <p>We work with leading financial institutions and technology partners</p>
             </div>
             
-            <div class="testimonials-grid">
-                <div class="testimonial-card fade-in">
-                    <div class="testimonial-content">
-                        <div class="quote-icon">
-                            <i class="fas fa-quote-left"></i>
-                        </div>
-                        <p>"The Determiners has transformed how I save money. The digital Susu system is so convenient, and I love getting notifications about my contributions. It's like having a personal financial advisor!"</p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="author-info">
-                                <h4>Akosua Mensah</h4>
-                                <span>Small Business Owner</span>
-                            </div>
-                        </div>
+            <div class="partners-carousel">
+                <div class="partners-track">
+                    <!-- First set of partners -->
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/Bank of Ghana logo.png" alt="Bank of Ghana" class="partner-image">
+                        <span>Bank of Ghana</span>
                     </div>
-                </div>
-                
-                <div class="testimonial-card fade-in">
-                    <div class="testimonial-content">
-                        <div class="quote-icon">
-                            <i class="fas fa-quote-left"></i>
-                        </div>
-                        <p>"Getting a loan was so easy with The Determiners. The application process was straightforward, and I received my funds within 24 hours. The interest rates are very competitive too!"</p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="author-info">
-                                <h4>Kwame Asante</h4>
-                                <span>Teacher</span>
-                            </div>
-                        </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/GCB-logo.png" alt="Ghana Commercial Bank" class="partner-image">
+                        <span>Ghana Commercial Bank</span>
                     </div>
-                </div>
-                
-                <div class="testimonial-card fade-in">
-                    <div class="testimonial-content">
-                        <div class="quote-icon">
-                            <i class="fas fa-quote-left"></i>
-                        </div>
-                        <p>"The mobile app is fantastic! I can check my account balance, make payments, and even apply for loans right from my phone. It's made managing my finances so much easier."</p>
-                        <div class="testimonial-author">
-                            <div class="author-avatar">
-                                <i class="fas fa-user"></i>
-                            </div>
-                            <div class="author-info">
-                                <h4>Efua Adjei</h4>
-                                <span>Nurse</span>
-                            </div>
-                        </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/mtn-logo.jpg" alt="MTN Mobile Money" class="partner-image">
+                        <span>MTN Mobile Money</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/Telecel-Cash-Logo.jpg" alt="Telecel Cash" class="partner-image">
+                        <span>Telecel Cash</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/airteltigo-icon.png" alt="AirtelTigo Money" class="partner-image">
+                        <span>AirtelTigo Money</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/cybersecurity-logo.png" alt="Cybersecurity Partners" class="partner-image">
+                        <span>Cybersecurity Partners</span>
+                    </div>
+                    
+                    <!-- Duplicate set for seamless loop -->
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/Bank of Ghana logo.png" alt="Bank of Ghana" class="partner-image">
+                        <span>Bank of Ghana</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/GCB-logo.png" alt="Ghana Commercial Bank" class="partner-image">
+                        <span>Ghana Commercial Bank</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/mtn-logo.jpg" alt="MTN Mobile Money" class="partner-image">
+                        <span>MTN Mobile Money</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/Telecel-Cash-Logo.jpg" alt="Telecel Cash" class="partner-image">
+                        <span>Telecel Cash</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/airteltigo-icon.png" alt="AirtelTigo Money" class="partner-image">
+                        <span>AirtelTigo Money</span>
+                    </div>
+                    <div class="partner-logo">
+                        <img src="assets/images/icons/cybersecurity-logo.png" alt="Cybersecurity Partners" class="partner-image">
+                        <span>Cybersecurity Partners</span>
                     </div>
                 </div>
             </div>
         </div>
     </section>
+
 
     <!-- Footer -->
     <footer class="footer" id="contact">
@@ -1340,6 +2443,7 @@
                     <p><a href="/services.php">Services</a></p>
                     <p><a href="/about.php">About Us</a></p>
                     <p><a href="/contact.php">Contact</a></p>
+                    <p><a href="/news.php">News</a></p>
                 </div>
                 
                 <div class="footer-section">
@@ -1366,6 +2470,40 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Mobile menu toggle
+        const mobileMenuToggle = document.getElementById('mobileMenuToggle');
+        const mobileNav = document.getElementById('mobileNav');
+        const mobileNavClose = document.getElementById('mobileNavClose');
+        const mobileNavBackdrop = document.getElementById('mobileNavBackdrop');
+        
+        function openMobileNav() {
+            mobileNav.classList.add('active');
+            mobileNavBackdrop.classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+        
+        function closeMobileNav() {
+            mobileNav.classList.remove('active');
+            mobileNavBackdrop.classList.remove('active');
+            document.body.style.overflow = 'auto';
+        }
+        
+        if (mobileMenuToggle && mobileNav && mobileNavBackdrop) {
+            mobileMenuToggle.addEventListener('click', openMobileNav);
+            
+            if (mobileNavClose) {
+                mobileNavClose.addEventListener('click', closeMobileNav);
+            }
+            
+            // Close mobile menu when clicking on backdrop
+            mobileNavBackdrop.addEventListener('click', closeMobileNav);
+            
+            // Close mobile menu when clicking on a link
+            document.querySelectorAll('.mobile-nav-links a').forEach(link => {
+                link.addEventListener('click', closeMobileNav);
+            });
+        }
+
         // Smooth scrolling for navigation links
         document.querySelectorAll('a[href^="#"]').forEach(anchor => {
             anchor.addEventListener('click', function (e) {
@@ -1447,6 +2585,97 @@
                     link.classList.add('active');
                 }
             });
+        });
+
+        // Page Loader
+        window.addEventListener('load', function() {
+            const pageLoader = document.getElementById('pageLoader');
+            setTimeout(function() {
+                pageLoader.classList.add('fade-out');
+                setTimeout(function() {
+                    pageLoader.style.display = 'none';
+                }, 500);
+            }, 1500); // Show loader for 1.5 seconds
+        });
+
+
+        // Hero Image Slider
+        document.addEventListener('DOMContentLoaded', function() {
+            const slides = document.querySelectorAll('.hero-slide');
+            let currentSlide = 0;
+            
+            function showSlide(index) {
+                // Remove active class from all slides
+                slides.forEach(slide => slide.classList.remove('active'));
+                
+                // Add active class to current slide
+                slides[index].classList.add('active');
+            }
+            
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            // Start the slider
+            if (slides.length > 0) {
+                showSlide(0);
+                
+                // Auto-advance slides every 4 seconds
+                setInterval(nextSlide, 4000);
+            }
+        });
+
+        // Gallery Slider
+        let gallerySlideIndex = 1;
+        let galleryInterval;
+        
+        function showGallerySlide(n) {
+            const slides = document.querySelectorAll('.gallery-slide');
+            const dots = document.querySelectorAll('.dot');
+            
+            if (n > slides.length) { gallerySlideIndex = 1; }
+            if (n < 1) { gallerySlideIndex = slides.length; }
+            
+            slides.forEach(slide => slide.classList.remove('active'));
+            dots.forEach(dot => dot.classList.remove('active'));
+            
+            slides[gallerySlideIndex - 1].classList.add('active');
+            dots[gallerySlideIndex - 1].classList.add('active');
+        }
+        
+        function changeSlide(n) {
+            showGallerySlide(gallerySlideIndex += n);
+        }
+        
+        function currentSlide(n) {
+            showGallerySlide(gallerySlideIndex = n);
+        }
+        
+        function startGalleryAutoSlide() {
+            galleryInterval = setInterval(() => {
+                changeSlide(1);
+            }, 5000); // Change slide every 5 seconds
+        }
+        
+        function stopGalleryAutoSlide() {
+            if (galleryInterval) {
+                clearInterval(galleryInterval);
+                galleryInterval = null;
+            }
+        }
+        
+        // Initialize first gallery slide and auto-slide
+        document.addEventListener('DOMContentLoaded', function() {
+            showGallerySlide(1);
+            startGalleryAutoSlide();
+            
+            // Pause auto-slide on hover, resume on mouse leave
+            const gallerySlider = document.querySelector('.gallery-slider');
+            if (gallerySlider) {
+                gallerySlider.addEventListener('mouseenter', stopGalleryAutoSlide);
+                gallerySlider.addEventListener('mouseleave', startGalleryAutoSlide);
+            }
         });
 
     </script>
