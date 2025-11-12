@@ -23,6 +23,8 @@ if ($type !== 'all') {
         $whereConditions[] = "dc.collected_amount > 0";
     } elseif ($type === 'loan') {
         $whereConditions[] = "lp.amount_paid > 0";
+    } elseif ($type === 'savings') {
+        $whereConditions[] = "st.amount > 0";
     }
 }
 
@@ -73,11 +75,33 @@ $transactions = $pdo->prepare("
     LEFT JOIN users u2 ON a.user_id = u2.id
     WHERE {$whereClause}
     
+    UNION ALL
+    
+    SELECT 
+        'savings' as transaction_type,
+        CONCAT('SAV-', st.id) as reference,
+        DATE(st.created_at) as transaction_date,
+        TIME(st.created_at) as transaction_time,
+        st.amount as amount,
+        CONCAT(u.first_name, ' ', u.last_name) as client_name,
+        c.client_code,
+        a.agent_code,
+        CONCAT(u2.first_name, ' ', u2.last_name) as agent_name
+    FROM savings_transactions st
+    JOIN savings_accounts sa ON st.savings_account_id = sa.id
+    JOIN clients c ON sa.client_id = c.id
+    JOIN users u ON c.user_id = u.id
+    LEFT JOIN agents a ON c.agent_id = a.id
+    LEFT JOIN users u2 ON a.user_id = u2.id
+    WHERE st.transaction_type = 'deposit' AND DATE(st.created_at) BETWEEN ? AND ?
+    
     ORDER BY transaction_date DESC, transaction_time DESC
     LIMIT 100
 ");
 
-$transactions->execute($params);
+// Add savings date parameters
+$savingsParams = array_merge($params, [$fromDate, $toDate]);
+$transactions->execute($savingsParams);
 $transactionData = $transactions->fetchAll();
 
 // Get clients for filter
@@ -137,6 +161,7 @@ include __DIR__ . '/../../includes/header.php';
                             <option value="all" <?php echo $type === 'all' ? 'selected' : ''; ?>>All Types</option>
                             <option value="susu" <?php echo $type === 'susu' ? 'selected' : ''; ?>>Susu Collections</option>
                             <option value="loan" <?php echo $type === 'loan' ? 'selected' : ''; ?>>Loan Payments</option>
+                            <option value="savings" <?php echo $type === 'savings' ? 'selected' : ''; ?>>Savings Deposits</option>
                         </select>
                     </div>
                     <div class="col-md-3">
@@ -197,8 +222,22 @@ include __DIR__ . '/../../includes/header.php';
                         <?php foreach ($transactionData as $transaction): ?>
                             <tr>
                                 <td>
-                                    <span class="badge bg-<?php echo $transaction['transaction_type'] === 'susu' ? 'primary' : 'success'; ?>">
-                                        <i class="fas fa-<?php echo $transaction['transaction_type'] === 'susu' ? 'piggy-bank' : 'money-bill-wave'; ?> me-1"></i>
+                                    <span class="badge bg-<?php 
+                                        switch($transaction['transaction_type']) {
+                                            case 'susu': echo 'primary'; break;
+                                            case 'loan': echo 'success'; break;
+                                            case 'savings': echo 'info'; break;
+                                            default: echo 'secondary';
+                                        }
+                                    ?>">
+                                        <i class="fas fa-<?php 
+                                            switch($transaction['transaction_type']) {
+                                                case 'susu': echo 'piggy-bank'; break;
+                                                case 'loan': echo 'money-bill-wave'; break;
+                                                case 'savings': echo 'coins'; break;
+                                                default: echo 'exchange-alt';
+                                            }
+                                        ?> me-1"></i>
                                         <?php echo ucfirst($transaction['transaction_type']); ?>
                                     </span>
                                 </td>

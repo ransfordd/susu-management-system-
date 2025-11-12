@@ -40,13 +40,6 @@ class UserTransactionController {
             $toDate = date('Y-m-d');
         }
         
-        // Debug: Log the filter parameters (only when client is selected)
-        if ($clientId !== null) {
-            error_log("Transaction Filter Debug - Client ID: " . $clientId . 
-                     ", From Date: " . $fromDate . 
-                     ", To Date: " . $toDate . 
-                     ", Transaction Type: " . $transactionType);
-        }
         
         // For Susu transactions, ensure date filter is within the same month to prevent cycle display issues
         if ($transactionType === 'susu_collection' || $transactionType === 'susu') {
@@ -283,6 +276,38 @@ class UserTransactionController {
         // Add the WHERE clause to the query
         $manualQuery = str_replace("WHERE 1=1", "WHERE " . implode(" AND ", $manualWhereConditions), $manualQuery);
         
+        // Savings transactions (deposits)
+        $savingsQuery = "
+            SELECT 
+                DATE(st.created_at) as transaction_date,
+                TIME(st.created_at) as transaction_time,
+                st.created_at,
+                sa.client_id as client_id,
+                CONCAT(u.first_name, ' ', u.last_name) as client_name,
+                CONCAT(ag_u.first_name, ' ', ag_u.last_name) as agent_name,
+                st.amount as amount,
+                'savings_deposit' as transaction_type,
+                CONCAT('Savings ', COALESCE(st.purpose, 'deposit')) as description,
+                NULL as reference_number,
+                NULL as collection_id,
+                NULL as payment_id,
+                NULL as manual_id
+            FROM savings_transactions st
+            JOIN savings_accounts sa ON st.savings_account_id = sa.id
+            JOIN clients cl ON sa.client_id = cl.id
+            JOIN users u ON cl.user_id = u.id
+            LEFT JOIN agents ag ON cl.agent_id = ag.id
+            LEFT JOIN users ag_u ON ag.user_id = ag_u.id
+            WHERE st.transaction_type = 'deposit'
+        ";
+
+        $savingsWhereConditions = ["st.transaction_type = 'deposit'"];
+        $savingsParams = [];
+        if ($clientId) { $savingsWhereConditions[] = "sa.client_id = ?"; $savingsParams[] = $clientId; }
+        if ($fromDate && $toDate) { $savingsWhereConditions[] = "DATE(st.created_at) BETWEEN ? AND ?"; $savingsParams[] = $fromDate; $savingsParams[] = $toDate; }
+        if ($transactionType !== 'all' && $transactionType !== 'savings_deposit') { $savingsWhereConditions[] = "1=0"; }
+        $savingsQuery = str_replace("WHERE st.transaction_type = 'deposit'", "WHERE " . implode(' AND ', $savingsWhereConditions), $savingsQuery);
+
         // Combine results with proper limits
         $allTransactions = [];
         $limitPerType = $clientId ? 100 : 50; // If client is selected, get more records per type
@@ -293,13 +318,6 @@ class UserTransactionController {
             $susuResults = $stmt->fetchAll();
             
             // Debug: Log if we're getting wrong client data
-            if ($clientId && !empty($susuResults)) {
-                foreach ($susuResults as $result) {
-                    if (!isset($result['client_name']) || strpos($result['client_name'], 'Gilbert') === false) {
-                        error_log("SUSU: Found non-Gilbert transaction: " . json_encode($result));
-                    }
-                }
-            }
             
             $allTransactions = array_merge($allTransactions, $susuResults);
         }
@@ -310,13 +328,6 @@ class UserTransactionController {
             $loanResults = $stmt->fetchAll();
             
             // Debug: Log if we're getting wrong client data
-            if ($clientId && !empty($loanResults)) {
-                foreach ($loanResults as $result) {
-                    if (!isset($result['client_name']) || strpos($result['client_name'], 'Gilbert') === false) {
-                        error_log("LOAN: Found non-Gilbert transaction: " . json_encode($result));
-                    }
-                }
-            }
             
             $allTransactions = array_merge($allTransactions, $loanResults);
         }
@@ -327,15 +338,15 @@ class UserTransactionController {
             $manualResults = $stmt->fetchAll();
             
             // Debug: Log if we're getting wrong client data
-            if ($clientId && !empty($manualResults)) {
-                foreach ($manualResults as $result) {
-                    if (!isset($result['client_name']) || strpos($result['client_name'], 'Gilbert') === false) {
-                        error_log("MANUAL: Found non-Gilbert transaction: " . json_encode($result));
-                    }
-                }
-            }
             
             $allTransactions = array_merge($allTransactions, $manualResults);
+        }
+
+        if ($transactionType === 'all' || $transactionType === 'savings_deposit') {
+            $stmt = $pdo->prepare($savingsQuery . " ORDER BY transaction_date DESC, transaction_time DESC LIMIT " . $limitPerType);
+            $stmt->execute($savingsParams);
+            $savingsResults = $stmt->fetchAll();
+            $allTransactions = array_merge($allTransactions, $savingsResults);
         }
         
         // Final client filter - ensure we only return transactions for the selected client
@@ -374,7 +385,7 @@ class UserTransactionController {
             $totals['total_amount'] += $amount;
             
             // Categorize by transaction type
-            if (in_array($transactionType, ['susu_collection', 'loan_payment', 'manual_deposit'])) {
+            if (in_array($transactionType, ['susu_collection', 'loan_payment', 'manual_deposit', 'savings_deposit'])) {
                 $totals['deposit_amount'] += $amount;
             } elseif (in_array($transactionType, ['manual_withdrawal'])) {
                 $totals['withdrawal_amount'] += $amount;

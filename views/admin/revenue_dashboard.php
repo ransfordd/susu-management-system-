@@ -2,35 +2,53 @@
 include __DIR__ . '/../../includes/header.php';
 ?>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2><i class="fas fa-chart-line text-primary me-2"></i>Revenue Dashboard</h2>
-            <p class="text-muted mb-0">Comprehensive revenue analysis and reporting</p>
+<div class="financial-report-header">
+    <div class="row align-items-center">
+        <div class="col-md-8">
+            <div class="page-title-section">
+                <h2 class="page-title">
+                    <i class="fas fa-chart-line text-primary me-2"></i>
+                    Revenue Dashboard
+                </h2>
+                <p class="page-subtitle">Comprehensive revenue analysis and reporting</p>
+            </div>
         </div>
-        <a href="/admin_dashboard.php" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-1"></i>Back to Dashboard
-        </a>
+        <div class="col-md-4 text-end">
+            <div class="header-actions">
+                <a href="/admin_dashboard.php" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
+        </div>
     </div>
+</div>
+
+<div class="container-fluid">
 
     <!-- Filter Section -->
-    <div class="card mb-4">
-        <div class="card-header">
-            <h5 class="mb-0"><i class="fas fa-filter me-2"></i>Revenue Filters</h5>
+    <div class="modern-card mb-4">
+        <div class="card-header-modern">
+            <div class="header-content">
+                <div class="header-icon"><i class="fas fa-filter"></i></div>
+                <div class="header-text">
+                    <h5 class="header-title mb-0">Revenue Filters</h5>
+                    <p class="header-subtitle">Choose a date range and transaction type</p>
+                </div>
+            </div>
         </div>
-        <div class="card-body">
+        <div class="card-body-modern">
             <form method="GET" class="row g-3">
                 <div class="col-md-3">
                     <label class="form-label">From Date</label>
-                    <input type="date" name="from_date" class="form-control" value="<?php echo htmlspecialchars($fromDate); ?>">
+                    <input type="date" name="from_date" class="form-control modern-input" value="<?php echo htmlspecialchars($fromDate); ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">To Date</label>
-                    <input type="date" name="to_date" class="form-control" value="<?php echo htmlspecialchars($toDate); ?>">
+                    <input type="date" name="to_date" class="form-control modern-input" value="<?php echo htmlspecialchars($toDate); ?>">
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">Transaction Type</label>
-                    <select name="transaction_type" class="form-select">
+                    <select name="transaction_type" class="form-select modern-input">
                         <option value="all" <?php echo $transactionType === 'all' ? 'selected' : ''; ?>>All Types</option>
                         <option value="susu_collection" <?php echo $transactionType === 'susu_collection' ? 'selected' : ''; ?>>Susu Collections</option>
                         <option value="loan_payment" <?php echo $transactionType === 'loan_payment' ? 'selected' : ''; ?>>Loan Payments</option>
@@ -39,13 +57,9 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
                 <div class="col-md-3">
                     <label class="form-label">&nbsp;</label>
-                    <div>
-                        <button type="submit" class="btn btn-primary">
-                            <i class="fas fa-search me-1"></i>Filter Revenue
-                        </button>
-                        <a href="/admin_revenue.php" class="btn btn-outline-secondary ms-2">
-                            <i class="fas fa-refresh me-1"></i>Reset
-                        </a>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn modern-btn btn-primary"><i class="fas fa-search"></i> Filter Revenue</button>
+                        <a href="/admin_revenue.php" class="btn modern-btn btn-light"><i class="fas fa-rotate"></i> Reset</a>
                     </div>
                 </div>
             </form>
@@ -53,9 +67,9 @@ include __DIR__ . '/../../includes/header.php';
     </div>
 
     <!-- Revenue Summary Cards -->
-    <div class="row mb-4">
-        <div class="col-md-3">
-            <div class="card bg-primary text-white">
+    <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 row-cols-xl-5 g-3 mb-4">
+        <div class="col">
+            <div class="stat-card stat-primary text-white h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -70,8 +84,8 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-success text-white">
+        <div class="col">
+            <div class="stat-card stat-success text-white h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -86,8 +100,8 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-info text-white">
+        <div class="col">
+            <div class="stat-card stat-info text-white h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -102,8 +116,8 @@ include __DIR__ . '/../../includes/header.php';
                 </div>
             </div>
         </div>
-        <div class="col-md-3">
-            <div class="card bg-warning text-white">
+        <div class="col">
+            <div class="stat-card stat-warning text-white h-100">
                 <div class="card-body">
                     <div class="d-flex justify-content-between">
                         <div>
@@ -114,7 +128,23 @@ include __DIR__ . '/../../includes/header.php';
                             <i class="fas fa-plus-circle fa-2x opacity-75"></i>
                         </div>
                     </div>
-                    <small class="opacity-75"><?php echo number_format($revenueData['manual']['transaction_count']); ?> transactions</small>
+                    <small class="opacity-75"><?php echo number_format($revenueData['manual']['deposit_count'] ?? 0); ?> deposits</small>
+                </div>
+            </div>
+        </div>
+        <div class="col">
+            <div class="stat-card stat-primary text-white h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h5 class="card-title">Manual Withdrawals</h5>
+                            <h3 class="mb-0">GHS <?php echo number_format($revenueData['manual']['withdrawal_amount'], 2); ?></h3>
+                        </div>
+                        <div class="align-self-center">
+                            <i class="fas fa-minus-circle fa-2x opacity-75"></i>
+                        </div>
+                    </div>
+                    <small class="opacity-75"><?php echo number_format($revenueData['manual']['withdrawal_count'] ?? 0); ?> withdrawals</small>
                 </div>
             </div>
         </div>
@@ -123,13 +153,19 @@ include __DIR__ . '/../../includes/header.php';
     <!-- Transaction Type Breakdown -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Transaction Type Breakdown</h5>
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <div class="header-content">
+                        <div class="header-icon"><i class="fas fa-chart-pie"></i></div>
+                        <div class="header-text">
+                            <h5 class="header-title">Transaction Type Breakdown</h5>
+                            <p class="header-subtitle">Aggregate metrics grouped by transaction type</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body-modern">
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="modern-table">
                             <thead>
                                 <tr>
                                     <th>Transaction Type</th>
@@ -189,13 +225,19 @@ include __DIR__ . '/../../includes/header.php';
     <!-- Agent Revenue Breakdown -->
     <div class="row mb-4">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-users me-2"></i>Agent Revenue Performance</h5>
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <div class="header-content">
+                        <div class="header-icon"><i class="fas fa-users"></i></div>
+                        <div class="header-text">
+                            <h5 class="header-title">Agent Revenue Performance</h5>
+                            <p class="header-subtitle">Revenue totals and counts by agent</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body-modern">
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="modern-table">
                             <thead>
                                 <tr>
                                     <th>Agent Code</th>
@@ -244,13 +286,19 @@ include __DIR__ . '/../../includes/header.php';
     <!-- Monthly Trends -->
     <div class="row">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header">
-                    <h5 class="mb-0"><i class="fas fa-chart-bar me-2"></i>Monthly Revenue Trends</h5>
+            <div class="modern-card">
+                <div class="card-header-modern">
+                    <div class="header-content">
+                        <div class="header-icon"><i class="fas fa-chart-bar"></i></div>
+                        <div class="header-text">
+                            <h5 class="header-title">Monthly Revenue Trends</h5>
+                            <p class="header-subtitle">Last 12 months combined inflows</p>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
+                <div class="card-body-modern">
                     <div class="table-responsive">
-                        <table class="table table-striped">
+                        <table class="modern-table">
                             <thead>
                                 <tr>
                                     <th>Month</th>
@@ -282,32 +330,71 @@ include __DIR__ . '/../../includes/header.php';
 </div>
 
 <style>
-.card {
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-    border: 1px solid rgba(0, 0, 0, 0.125);
+/* Financial Report Page Styles (reused for revenue) */
+.financial-report-header {
+    background: linear-gradient(135deg, #17a2b8 0%, #138496 100%);
+    color: white;
+    padding: 2rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+.page-title { font-size: 2rem; font-weight: 700; margin-bottom: .5rem; display:flex; align-items:center; }
+.page-subtitle { font-size: 1.1rem; opacity: .9; margin-bottom: 0; color: white !important; }
+.header-actions { display:flex; gap:1rem; align-items:center; }
+
+/* Modern containers */
+.modern-card { background: #fff; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); overflow: hidden; border: none; }
+.card-header-modern { background: linear-gradient(135deg,#f8f9fa 0%, #e9ecef 100%); padding: 1.5rem; border-bottom: 1px solid #e9ecef; }
+.header-content { display:flex; align-items:center; gap:1rem; }
+.header-icon { font-size: 1.5rem; color:#17a2b8; background: rgba(23,162,184,.1); padding:.75rem; border-radius:10px; width:50px; height:50px; display:flex; align-items:center; justify-content:center; }
+.header-text { flex:1; }
+.header-title { font-size: 1.2rem; font-weight: 600; margin-bottom: .25rem; color:#2c3e50; }
+.header-subtitle { font-size:.9rem; color:#6c757d; margin:0; }
+.card-body-modern { padding:2rem; }
+.modern-input { border:2px solid #e9ecef; border-radius:10px; padding:.75rem 1rem; transition:all .3s ease; font-size:.95rem; }
+.modern-input:focus { border-color:#17a2b8; box-shadow:0 0 0 .2rem rgba(23,162,184,.25); outline:none; }
+.modern-btn { background: linear-gradient(135deg, #17a2b8 0%, #138496 100%); border:none; border-radius:10px; padding:.75rem 1.5rem; font-weight:600; transition:all .3s ease; display:flex; align-items:center; gap:.5rem; color:white; text-decoration:none; }
+.modern-btn.btn-light { background:#f8f9fa; color:#2c3e50; }
+.modern-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(23,162,184,.3); color:white; text-decoration:none; }
+
+/* Stat Cards */
+.stat-card { background:white; border-radius:15px; padding:1.5rem; box-shadow:0 4px 20px rgba(0,0,0,.1); transition: all .3s ease; border:none; display:flex; align-items:center; gap:1rem; }
+.stat-card:hover { transform: translateY(-2px); box-shadow:0 8px 30px rgba(0,0,0,.15); }
+.stat-card { height:100%; min-height: 140px; }
+.stat-card .card-body{ display:flex; flex-direction:column; width:100%; }
+.stat-card .card-body .d-flex{ margin-bottom:.5rem; }
+.stat-primary .card-body .card-title { color:#e9ecef; }
+.stat-success .card-body .card-title { color:#e9ffe9; }
+.stat-info .card-body .card-title { color:#e6fbff; }
+.stat-warning .card-body .card-title { color:#fff8e6; }
+.stat-primary { background: linear-gradient(135deg, #007bff, #0056b3); }
+.stat-success { background: linear-gradient(135deg, #28a745, #1e7e34); }
+.stat-info { background: linear-gradient(135deg, #17a2b8, #138496); }
+.stat-warning { background: linear-gradient(135deg, #ffc107, #e0a800); color:#212529; }
+.stat-card .card-body { color:white; }
+
+/* Tables and basics */
+.progress { background-color:#e9ecef; }
+.table th { background-color:#f8f9fa; border-top:none; }
+.modern-table { width:100%; border-collapse:collapse; background:white; border-radius:10px; overflow:hidden; }
+.modern-table thead { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); }
+.modern-table th { padding:1rem; font-weight:600; color:#495057; border-bottom:2px solid #e9ecef; text-align:left; }
+.modern-table td { padding:1rem; border-bottom:1px solid #f8f9fa; vertical-align:middle; }
+.modern-table tbody tr:hover { background:#f8f9fa; }
+.modern-table tbody tr:last-child td { border-bottom:none; }
+.badge { font-size:.75em; }
+.text-muted { color:#6c757d !important; }
+
+/* Responsive */
+@media (max-width: 768px){
+  .financial-report-header{ padding:1.5rem; text-align:center; }
+  .page-title{ font-size:1.5rem; justify-content:center; }
+  .card-body-modern{ padding:1.5rem; }
 }
 
-.card-header {
-    background-color: #f8f9fa;
-    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
-}
-
-.progress {
-    background-color: #e9ecef;
-}
-
-.table th {
-    background-color: #f8f9fa;
-    border-top: none;
-}
-
-.badge {
-    font-size: 0.75em;
-}
-
-.text-muted {
-    color: #6c757d !important;
-}
+/* Animation */
+@keyframes fadeInUp { from{opacity:0; transform:translateY(20px);} to{opacity:1; transform:translateY(0);} }
+.modern-card, .stat-card { animation: fadeInUp .6s ease-out; }
 </style>
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>

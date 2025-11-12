@@ -24,12 +24,11 @@ include __DIR__ . '/../../includes/header.php';
             </div>
         </div>
         <div class="col-md-4 text-end">
-            <nav aria-label="breadcrumb">
-                <ol class="breadcrumb">
-                    <li class="breadcrumb-item"><a href="/index.php">Dashboard</a></li>
-                    <li class="breadcrumb-item active">Reports</li>
-                </ol>
-            </nav>
+            <div class="header-actions">
+                <a href="/index.php" class="btn btn-light">
+                    <i class="fas fa-arrow-left"></i> Back to Dashboard
+                </a>
+            </div>
         </div>
     </div>
 </div>
@@ -52,8 +51,7 @@ include __DIR__ . '/../../includes/header.php';
                     </div>
                 </div>
                 <div class="card-body-modern">
-                    <form method="GET" class="row g-3">
-                        <input type="hidden" name="action" value="financial">
+                    <form id="reportForm" method="GET" action="/admin_reports.php" class="row g-3">
                         <div class="col-md-2">
                             <div class="form-group">
                                 <label class="form-label">
@@ -110,16 +108,31 @@ include __DIR__ . '/../../includes/header.php';
                             <div class="form-group">
                                 <label class="form-label">&nbsp;</label>
                                 <div class="d-grid gap-2">
-                                    <button type="submit" class="btn btn-primary modern-btn">
+                                    <button type="submit" formaction="/admin_reports.php?action=financial" class="btn btn-primary modern-btn">
                                         <i class="fas fa-chart-line"></i> Generate Report
                                     </button>
-                                    <button type="submit" name="export" value="csv" class="btn btn-success modern-btn">
+                                    <button type="button" id="exportCsvBtn" class="btn btn-success modern-btn">
                                         <i class="fas fa-download"></i> Export CSV
                                     </button>
                                 </div>
                             </div>
                         </div>
                     </form>
+                    <script>
+                    (function(){
+                        const form = document.getElementById('reportForm');
+                        const btn = document.getElementById('exportCsvBtn');
+                        if (form && btn) {
+                            btn.addEventListener('click', function(){
+                                const params = new URLSearchParams(new FormData(form));
+                                // default to financial if no report_type provided
+                                if (!params.get('report_type')) params.set('report_type', 'financial');
+                                const url = '/admin_reports.php?action=export&format=csv&' + params.toString();
+                                window.location.href = url;
+                            });
+                        }
+                    })();
+                    </script>
                 </div>
             </div>
 

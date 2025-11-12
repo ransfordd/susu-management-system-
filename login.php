@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/config/auth.php';
+require_once __DIR__ . '/includes/runtime.php';
 require_once __DIR__ . '/includes/functions.php';
 
 use function Auth\csrfToken;
@@ -7,6 +8,7 @@ use function Auth\startSessionIfNeeded;
 use function Auth\isAuthenticated;
 
 startSessionIfNeeded();
+applyRuntimeSettings();
 
 // If user is already logged in, redirect to dashboard
 if (isAuthenticated()) {
@@ -32,7 +34,7 @@ if (isset($_GET['debug'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - The Determiners Susu System</title>
+    <title>Login - <?php echo getAppName(); ?></title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
@@ -62,6 +64,46 @@ if (isset($_GET['debug'])) {
 
 				<!-- Login Form -->
 				<div class="login-form-container">
+					<?php if (isset($_GET['timeout'])): ?>
+						<div class="alert alert-warning" style="background: #fff3cd; border: 1px solid #ffeaa7; color: #856404; padding: 12px; border-radius: 6px; margin-bottom: 20px;">
+							<i class="fas fa-clock"></i> Your session has expired due to inactivity. Please log in again.
+						</div>
+					<?php endif; ?>
+					
+					<?php if (isset($_GET['error'])): ?>
+						<?php if ($_GET['error'] === 'invalid_credentials'): ?>
+							<div class="error-message">
+								<div class="error-icon">
+									<i class="fas fa-exclamation-triangle"></i>
+								</div>
+								<div class="error-content">
+									<h4>Invalid Credentials</h4>
+									<p>Please check your username and password and try again.</p>
+								</div>
+							</div>
+						<?php elseif ($_GET['error'] === 'account_locked'): ?>
+							<div class="error-message error-locked">
+								<div class="error-icon">
+									<i class="fas fa-lock"></i>
+								</div>
+								<div class="error-content">
+									<h4>Account Temporarily Locked</h4>
+									<p>Too many failed attempts. Please try again in 30 minutes.</p>
+								</div>
+							</div>
+						<?php elseif ($_GET['error'] === 'missing_credentials'): ?>
+							<div class="error-message error-warning">
+								<div class="error-icon">
+									<i class="fas fa-info-circle"></i>
+								</div>
+								<div class="error-content">
+									<h4>Missing Information</h4>
+									<p>Please enter both username and password.</p>
+								</div>
+							</div>
+						<?php endif; ?>
+					<?php endif; ?>
+					
 					<form method="post" action="/do_login.php" class="login-form">
 						<input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars($token ?? ''); ?>" />
 						
@@ -540,6 +582,99 @@ html, body {
 @keyframes spin {
 	from { transform: rotate(0deg); }
 	to { transform: rotate(360deg); }
+}
+
+/* Ultra Modern Error Messages */
+.error-message {
+	display: flex;
+	align-items: center;
+	gap: 16px;
+	padding: 20px 24px;
+	margin-bottom: 24px;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.95);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(239, 68, 68, 0.2);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(239, 68, 68, 0.1);
+	animation: slideInDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+	position: relative;
+	overflow: hidden;
+}
+
+.error-message::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 4px;
+	height: 100%;
+	background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%);
+}
+
+.error-message.error-locked {
+	border-color: rgba(220, 38, 38, 0.3);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(220, 38, 38, 0.15);
+}
+
+.error-message.error-locked::before {
+	background: linear-gradient(180deg, #dc2626 0%, #b91c1c 100%);
+}
+
+.error-message.error-warning {
+	border-color: rgba(245, 158, 11, 0.2);
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08), 0 2px 8px rgba(245, 158, 11, 0.1);
+}
+
+.error-message.error-warning::before {
+	background: linear-gradient(180deg, #f59e0b 0%, #d97706 100%);
+}
+
+.error-icon {
+	flex-shrink: 0;
+	width: 20px;
+	height: 20px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	color: #ef4444;
+	font-size: 16px;
+	font-weight: 600;
+}
+
+.error-message.error-locked .error-icon {
+	color: #dc2626;
+}
+
+.error-message.error-warning .error-icon {
+	color: #f59e0b;
+}
+
+.error-content h4 {
+	margin: 0 0 6px 0;
+	font-size: 15px;
+	font-weight: 600;
+	color: #1f2937;
+	line-height: 1.2;
+	letter-spacing: -0.01em;
+}
+
+.error-content p {
+	margin: 0;
+	font-size: 14px;
+	color: #6b7280;
+	line-height: 1.4;
+	font-weight: 400;
+}
+
+@keyframes slideInDown {
+	from {
+		opacity: 0;
+		transform: translateY(-20px) scale(0.95);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0) scale(1);
+	}
 }
 </style>
 

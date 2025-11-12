@@ -121,27 +121,58 @@ try {
     // Replace total collected with unified net figure
     $totalCollected = getAllTimeCollectionsNet($pdo, $clientId);
     
-    // Get recent activity (last 5 transactions)
+    // Get recent activity (last 5 transactions from all types)
     $activityStmt = $pdo->prepare('
-        (SELECT "susu_collection" as type, dc.collected_amount as amount, dc.collection_date as date, dc.notes as description, "Collection" as title
-         FROM daily_collections dc
-         JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
-         WHERE sc.client_id = ? AND dc.collection_status = "collected"
-         ORDER BY dc.collection_date DESC LIMIT 3)
-        UNION ALL
-        (SELECT "loan_payment" as type, lp.amount_paid as amount, lp.payment_date as date, lp.notes as description, "Loan Payment" as title
-         FROM loan_payments lp
-         JOIN loans l ON lp.loan_id = l.id
-         WHERE l.client_id = ?
-         ORDER BY lp.payment_date DESC LIMIT 3)
-        UNION ALL
-        (SELECT "withdrawal" as type, mt.amount, mt.created_at as date, mt.description, "Withdrawal" as title
-         FROM manual_transactions mt
-         WHERE mt.client_id = ? AND mt.transaction_type IN ("withdrawal", "emergency_withdrawal")
-         ORDER BY mt.created_at DESC LIMIT 3)
+        SELECT * FROM (
+            SELECT "susu_collection" as type, dc.collected_amount as amount, 
+                   COALESCE(dc.collection_time, CONCAT(dc.collection_date, " 12:00:00")) as date, 
+                   COALESCE(dc.notes, "Susu Collection") as description, 
+                   "Collection" as title
+            FROM daily_collections dc
+            JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
+            WHERE sc.client_id = ? AND dc.collection_status = "collected"
+            
+            UNION ALL
+            
+            SELECT "loan_payment" as type, lp.amount_paid as amount, 
+                   COALESCE(lp.payment_time, CONCAT(lp.payment_date, " 12:00:00")) as date, 
+                   COALESCE(lp.notes, "Loan Payment") as description, 
+                   "Loan Payment" as title
+            FROM loan_payments lp
+            JOIN loans l ON lp.loan_id = l.id
+            WHERE l.client_id = ? AND lp.payment_status IN ("completed", "paid")
+            
+            UNION ALL
+            
+            SELECT "withdrawal" as type, mt.amount as amount, 
+                   mt.created_at as date, 
+                   COALESCE(mt.description, "Manual Transaction") as description, 
+                   "Withdrawal" as title
+            FROM manual_transactions mt
+            WHERE mt.client_id = ? AND mt.transaction_type IN ("withdrawal", "emergency_withdrawal")
+            
+            UNION ALL
+            
+            SELECT "deposit" as type, mt.amount as amount, 
+                   mt.created_at as date, 
+                   COALESCE(mt.description, "Manual Deposit") as description, 
+                   "Deposit" as title
+            FROM manual_transactions mt
+            WHERE mt.client_id = ? AND mt.transaction_type = "deposit"
+            
+            UNION ALL
+            
+            SELECT "savings_deposit" as type, st.amount as amount, 
+                   st.created_at as date, 
+                   COALESCE(st.description, "Savings Deposit") as description, 
+                   "Savings" as title
+            FROM savings_transactions st
+            JOIN savings_accounts sa ON st.savings_account_id = sa.id
+            WHERE sa.client_id = ? AND st.transaction_type = "deposit"
+        ) as all_activities
         ORDER BY date DESC LIMIT 5
     ');
-    $activityStmt->execute([$clientId, $clientId, $clientId]);
+    $activityStmt->execute([$clientId, $clientId, $clientId, $clientId, $clientId]);
     $recentActivity = $activityStmt->fetchAll();
     
 } catch (Exception $e) {
@@ -462,6 +493,8 @@ require_once __DIR__ . '/../shared/susu_tracker.php';
 											'susu_collection' => 'piggy-bank',
 											'loan_payment' => 'file-invoice-dollar',
 											'withdrawal' => 'money-bill-wave',
+											'deposit' => 'hand-holding-usd',
+											'savings_deposit' => 'coins',
 											default => 'circle'
 										};
 									?>"></i>
@@ -469,11 +502,11 @@ require_once __DIR__ . '/../shared/susu_tracker.php';
 								<div class="activity-details">
 									<h6 class="activity-title"><?php echo htmlspecialchars($activity['title']); ?></h6>
 									<p class="activity-description"><?php echo htmlspecialchars($activity['description'] ?: 'No description'); ?></p>
-									<small class="activity-time"><?php echo date('M j, Y H:i', strtotime($activity['date'])); ?></small>
+									<small class="activity-time"><?php echo date('M j, Y', strtotime($activity['date'])); ?></small>
 								</div>
 								<div class="activity-amount">
-									<span class="amount <?php echo $activity['type'] === 'withdrawal' ? 'text-danger' : 'text-success'; ?>">
-										<?php echo $activity['type'] === 'withdrawal' ? '-' : '+'; ?>GHS <?php echo number_format($activity['amount'], 2); ?>
+									<span class="amount <?php echo in_array($activity['type'], ['withdrawal']) ? 'text-danger' : 'text-success'; ?>">
+										<?php echo in_array($activity['type'], ['withdrawal']) ? '-' : '+'; ?>GHS <?php echo number_format($activity['amount'], 2); ?>
 									</span>
 								</div>
 							</div>

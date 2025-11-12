@@ -28,6 +28,9 @@ try {
         case 'daily':
             $controller->dailyReport();
             break;
+        case 'export':
+            $controller->export();
+            break;
         default:
             $controller->consolidatedReport();
             break;

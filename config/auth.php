@@ -27,6 +27,42 @@ function startSessionIfNeeded(): void {
 		if (!isset($_SESSION)) {
 			$_SESSION = [];
 		}
+		
+		// Check session timeout
+		checkSessionTimeout();
+	}
+}
+
+function checkSessionTimeout(): void {
+	// Get session timeout setting from database
+	$timeoutMinutes = getSessionTimeout();
+	
+	if (isset($_SESSION['last_activity'])) {
+		$timeSinceLastActivity = time() - $_SESSION['last_activity'];
+		$timeoutSeconds = $timeoutMinutes * 60;
+		
+		if ($timeSinceLastActivity > $timeoutSeconds) {
+			// Session has expired
+			session_destroy();
+			header('Location: /login.php?timeout=1');
+			exit;
+		}
+	}
+	
+	// Update last activity time
+	$_SESSION['last_activity'] = time();
+}
+
+function getSessionTimeout(): int {
+	try {
+		require_once __DIR__ . '/database.php';
+		$pdo = \Database::getConnection();
+		$stmt = $pdo->prepare('SELECT setting_value FROM system_settings WHERE setting_key = ?');
+		$stmt->execute(['session_timeout']);
+		$result = $stmt->fetch();
+		return $result ? (int)$result['setting_value'] : 30; // Default 30 minutes
+	} catch (Exception $e) {
+		return 30; // Default fallback
 	}
 }
 

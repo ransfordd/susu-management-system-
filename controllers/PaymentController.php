@@ -82,24 +82,28 @@ class PaymentController {
                 $collectionDate = $input['collection_date'] ?? date('Y-m-d');
                 
                 if ($susuAmount > 0) {
-                    // Find incomplete Susu cycle for this client (active or completed but not yet started new cycle)
+                    // Find current month cycle for this client (active or completed)
                     $cycleStmt = $pdo->prepare('
-                        SELECT sc.id, sc.daily_amount, sc.status, COALESCE(sc.cycle_length, 31) as cycle_length,
+                        SELECT sc.id, sc.daily_amount, sc.status, sc.start_date, sc.end_date,
+                               COALESCE(sc.cycle_length, DAY(LAST_DAY(sc.start_date))) as cycle_length,
                                sc.is_flexible, c.deposit_type,
                                COUNT(dc.id) as collected_days
                         FROM susu_cycles sc 
                         JOIN clients c ON sc.client_id = c.id
                         LEFT JOIN daily_collections dc ON sc.id = dc.susu_cycle_id AND dc.collection_status = "collected"
                         WHERE sc.client_id = :client_id 
-                        AND (sc.status = "active" OR (sc.status = "completed" AND DATE(sc.completion_date) = CURRENT_DATE()))
+                        AND (sc.status IN ("active", "completed"))
                         GROUP BY sc.id, sc.daily_amount, sc.status, sc.cycle_length, sc.is_flexible, c.deposit_type
-                        HAVING collected_days < COALESCE(sc.cycle_length, 31)
                         ORDER BY sc.created_at DESC LIMIT 1
                     ');
                     $cycleStmt->execute([':client_id' => $clientId]);
                     $cycle = $cycleStmt->fetch();
 
                     if ($cycle) {
+                        // Month boundary calculations
+                        $monthDays = (int)date('t', strtotime($cycle['start_date']));
+                        $isCompleted = ((int)$cycle['collected_days']) >= $monthDays;
+
                         // Check both cycle and client deposit type for flexibility
                         $cycleIsFlexible = (bool)($cycle['is_flexible'] ?? false);
                         $clientDepositType = $cycle['deposit_type'] ?? 'fixed_amount';
@@ -123,9 +127,48 @@ class PaymentController {
                         
                         // Find the earliest available days (gaps first, then next sequential days)
                         $availableDays = [];
-                        for ($day = 1; $day <= $cycleLength; $day++) {
+                        for ($day = 1; $day <= $monthDays; $day++) {
                             if (!in_array($day, $existingDays)) {
                                 $availableDays[] = $day;
+                            }
+                        }
+                        // Determine backdated target day (if provided and within cycle month)
+                        $backdatedDay = null;
+                        $colTs = strtotime($collectionDate);
+                        if ($colTs !== false && $collectionDate >= $cycle['start_date'] && $collectionDate <= $cycle['end_date']) {
+                            $backdatedDay = (int)date('j', $colTs);
+                        }
+
+                        // If cycle already completed, route to savings unless a valid unfilled backdated day exists
+                        if ($isCompleted) {
+                            $canFillBackdate = ($backdatedDay && !in_array($backdatedDay, $existingDays));
+                            if (!$canFillBackdate) {
+                                // Auto-route to savings
+                                require_once __DIR__ . '/../includes/SavingsAccount.php';
+                                // End current transaction before SavingsAccount opens its own
+                                if ($pdo->inTransaction()) { $pdo->commit(); }
+                                $savings = new \SavingsAccount($pdo);
+                                $savings->addFunds($clientId, $susuAmount, 'susu_collection', 'auto_reroute', 'Cycle completed - auto-reroute', $_SESSION['user']['id'], null, 'auto_reroute');
+
+                                // Notify client and agent (in-app)
+                                $clientUserStmt = $pdo->prepare('SELECT user_id FROM clients WHERE id = :client_id');
+                                $clientUserStmt->execute([':client_id' => $clientId]);
+                                $clientUser = $clientUserStmt->fetch();
+                                if ($clientUser) {
+                                    NotificationController::createPaymentConfirmationNotification(
+                                        $clientUser['user_id'], 
+                                        $susuAmount, 
+                                        'Savings deposit (auto-reroute)'
+                                    );
+                                }
+
+                                $results[] = "Cycle completed; payment auto-routed to Savings: GHS " . number_format($susuAmount, 2);
+                                // No active transaction at this point (committed above if any)
+                                echo json_encode(['success' => true, 'message' => implode(', ', $results), 'receipt_number' => $receiptNumber]);
+                                return;
+                            } else {
+                                // Treat as filling the missing backdated day
+                                $availableDays = [$backdatedDay];
                             }
                         }
                         
@@ -160,7 +203,7 @@ class PaymentController {
 
                             if ($isFlexible) {
                                 // Flexible amount: Record as single day with the exact amount
-                                $dayNumber = $availableDays[0]; // Use first available day
+                                $dayNumber = $availableDays[0]; // either backdated gap or first available
                                 $amountForThisDay = $susuAmount; // Use the exact amount collected
                                 
                                 // Generate unique receipt number
@@ -261,6 +304,27 @@ class PaymentController {
                             $results[] = "Susu collection recorded: GHS " . number_format($susuAmount, 2) . " (insufficient amount for full day)";
                         }
                         
+                        // Re-check completion after recording (31/30/28/29 days based on month)
+                        $postCountStmt = $pdo->prepare('SELECT COUNT(*) FROM daily_collections WHERE susu_cycle_id = :cid AND collection_status = "collected"');
+                        $postCountStmt->execute([':cid' => $cycle['id']]);
+                        $newCollected = (int)$postCountStmt->fetchColumn();
+                        if ($newCollected >= $monthDays && $cycle['status'] !== 'completed') {
+                            $markStmt = $pdo->prepare('UPDATE susu_cycles SET status = "completed", completion_date = NOW() WHERE id = :cid');
+                            $markStmt->execute([':cid' => $cycle['id']]);
+
+                            // Notify client and agent of completion (in-app)
+                            $clientUserStmt = $pdo->prepare('SELECT user_id FROM clients WHERE id = :client_id');
+                            $clientUserStmt->execute([':client_id' => $clientId]);
+                            $clientUser = $clientUserStmt->fetch();
+                            if ($clientUser) {
+                                NotificationController::createPaymentConfirmationNotification(
+                                    $clientUser['user_id'], 
+                                    0, 
+                                    'Cycle completed'
+                                );
+                            }
+                        }
+                        
                         // Create notification for client
                         $clientUserStmt = $pdo->prepare('SELECT user_id FROM clients WHERE id = :client_id');
                         $clientUserStmt->execute([':client_id' => $clientId]);
@@ -270,6 +334,46 @@ class PaymentController {
                                 $clientUser['user_id'], 
                                 $susuAmount, 
                                 'Susu collection'
+                            );
+                        }
+                        
+                        // Create notification for agent
+                        $agentUserStmt = $pdo->prepare('
+                            SELECT a.user_id as agent_user_id, CONCAT(u.first_name, " ", u.last_name) as client_name
+                            FROM clients c
+                            LEFT JOIN agents a ON c.agent_id = a.id
+                            JOIN users u ON c.user_id = u.id
+                            WHERE c.id = :client_id
+                        ');
+                        $agentUserStmt->execute([':client_id' => $clientId]);
+                        $agentInfo = $agentUserStmt->fetch();
+                        if ($agentInfo && $agentInfo['agent_user_id']) {
+                            NotificationController::createNotification(
+                                $agentInfo['agent_user_id'],
+                                'client_payment_recorded',
+                                'Client Payment Recorded',
+                                "Susu collection of GHS " . number_format($susuAmount, 2) . " has been recorded for client " . $agentInfo['client_name'] . ". Reference: " . $receiptNumber,
+                                $clientId,
+                                'client'
+                            );
+                        }
+                        
+                        // Create notification for admins and managers
+                        $adminManagerStmt = $pdo->prepare('
+                            SELECT id FROM users 
+                            WHERE role IN ("business_admin", "manager")
+                        ');
+                        $adminManagerStmt->execute();
+                        $adminManagers = $adminManagerStmt->fetchAll();
+                        
+                        foreach ($adminManagers as $adminManager) {
+                            NotificationController::createNotification(
+                                $adminManager['id'],
+                                'system_payment_recorded',
+                                'Payment Recorded',
+                                "Susu collection of GHS " . number_format($susuAmount, 2) . " has been recorded for client " . $agentInfo['client_name'] . " by " . $_SESSION['user']['username'] . ". Reference: " . $receiptNumber,
+                                $clientId,
+                                'system'
                             );
                         }
                         
@@ -290,69 +394,55 @@ class PaymentController {
                             $clientName
                         );
                     } else {
-                        // Create a new Susu cycle for this client with standardized dates
-                        $currentMonth = date('Y-m');
-                        $standardStart = $currentMonth . '-01';
-                        $standardEnd = date('Y-m-t', strtotime($currentMonth . '-01'));
-                        
-                        $createCycleStmt = $pdo->prepare('
-                            INSERT INTO susu_cycles 
-                            (client_id, daily_amount, day_number, status, start_date, end_date, created_at) 
-                            VALUES (:client_id, :daily_amount, 1, "active", :start_date, :end_date, NOW())
-                        ');
-                        $createCycleStmt->execute([
-                            ':client_id' => $clientId,
-                            ':daily_amount' => $susuAmount,
-                            ':start_date' => $standardStart,
-                            ':end_date' => $standardEnd
-                        ]);
-                        
-                        $newCycleId = $pdo->lastInsertId();
-                        
-                        // Generate receipt number if not provided
-                        if (empty($receiptNumber)) {
-                            $receiptNumber = 'SUSU-' . date('YmdHis') . '-' . str_pad($clientId, 3, '0', STR_PAD_LEFT);
+                        // No current cycle found. Only allow auto-creation on the first day of the month; otherwise save to savings
+                        $isFirstOfMonth = ((int)date('j', strtotime($collectionDate))) === 1;
+                        if ($isFirstOfMonth) {
+                            $currentMonth = date('Y-m', strtotime($collectionDate));
+                            $standardStart = $currentMonth . '-01';
+                            $standardEnd = date('Y-m-t', strtotime($currentMonth . '-01'));
+                            
+                            $createCycleStmt = $pdo->prepare('
+                                INSERT INTO susu_cycles 
+                                (client_id, daily_amount, day_number, status, start_date, end_date, created_at) 
+                                VALUES (:client_id, :daily_amount, 1, "active", :start_date, :end_date, NOW())
+                            ');
+                            $createCycleStmt->execute([
+                                ':client_id' => $clientId,
+                                ':daily_amount' => $susuAmount,
+                                ':start_date' => $standardStart,
+                                ':end_date' => $standardEnd
+                            ]);
+                            
+                            $newCycleId = $pdo->lastInsertId();
+                            
+                            if (empty($receiptNumber)) {
+                                $receiptNumber = 'SUSU-' . date('YmdHis') . '-' . str_pad($clientId, 3, '0', STR_PAD_LEFT);
+                            }
+                            $collectionStmt = $pdo->prepare('
+                                INSERT INTO daily_collections 
+                                (susu_cycle_id, collection_date, day_number, expected_amount, collected_amount, 
+                                 collection_status, collection_time, collected_by, receipt_number, notes) 
+                                VALUES (:cycle_id, :date, :day_number, :expected_amount, :amount, "collected", NOW(), :agent_id, :receipt, :notes)
+                            ');
+                            $collectionStmt->execute([
+                                ':cycle_id' => $newCycleId,
+                                ':date' => $collectionDate,
+                                ':day_number' => 1,
+                                ':expected_amount' => $susuAmount,
+                                ':amount' => $susuAmount,
+                                ':agent_id' => $agentId,
+                                ':receipt' => $receiptNumber,
+                                ':notes' => $notes
+                            ]);
+                            $results[] = "Susu collection recorded (new cycle created): GHS " . number_format($susuAmount, 2);
+                        } else {
+                            // Route to savings when no active cycle exists mid-month
+                            require_once __DIR__ . '/../includes/SavingsAccount.php';
+                            if ($pdo->inTransaction()) { $pdo->commit(); }
+                            $savings = new \SavingsAccount($pdo);
+                            $savings->addFunds($clientId, $susuAmount, 'susu_collection', 'auto_reroute_no_cycle', 'No active cycle mid-month - saved to savings', $_SESSION['user']['id'], null, 'auto_reroute');
+                            $results[] = "No active cycle; payment saved to Savings: GHS " . number_format($susuAmount, 2);
                         }
-
-                        // Record daily collection
-                        $collectionStmt = $pdo->prepare('
-                            INSERT INTO daily_collections 
-                            (susu_cycle_id, collection_date, day_number, expected_amount, collected_amount, 
-                             collection_status, collection_time, collected_by, receipt_number, notes) 
-                            VALUES (:cycle_id, :date, :day_number, :expected_amount, :amount, "collected", NOW(), :agent_id, :receipt, :notes)
-                        ');
-                        $collectionStmt->execute([
-                            ':cycle_id' => $newCycleId,
-                            ':date' => $collectionDate,
-                            ':day_number' => 1,
-                            ':expected_amount' => $susuAmount,
-                            ':amount' => $susuAmount,
-                            ':agent_id' => $agentId,
-                            ':receipt' => $receiptNumber,
-                            ':notes' => $notes
-                        ]);
-
-                        $results[] = "Susu collection recorded (new cycle created): GHS " . number_format($susuAmount, 2);
-                        
-                        // Create notification for client
-                        $clientUserStmt = $pdo->prepare('SELECT user_id FROM clients WHERE id = :client_id');
-                        $clientUserStmt->execute([':client_id' => $clientId]);
-                        $clientUser = $clientUserStmt->fetch();
-                        if ($clientUser) {
-                            NotificationController::createPaymentConfirmationNotification(
-                                $clientUser['user_id'], 
-                                $susuAmount, 
-                                'Susu collection'
-                            );
-                        }
-                        
-                        // Log activity
-                        ActivityLogger::logSusuCollection(
-                            $_SESSION['user']['id'], 
-                            $_SESSION['user']['username'], 
-                            $susuAmount, 
-                            $clientName
-                        );
                     }
                 }
             }
@@ -458,6 +548,46 @@ class PaymentController {
                             );
                         }
                         
+                        // Create notification for agent
+                        $agentUserStmt = $pdo->prepare('
+                            SELECT a.user_id as agent_user_id, CONCAT(u.first_name, " ", u.last_name) as client_name
+                            FROM clients c
+                            LEFT JOIN agents a ON c.agent_id = a.id
+                            JOIN users u ON c.user_id = u.id
+                            WHERE c.id = :client_id
+                        ');
+                        $agentUserStmt->execute([':client_id' => $clientId]);
+                        $agentInfo = $agentUserStmt->fetch();
+                        if ($agentInfo && $agentInfo['agent_user_id']) {
+                            NotificationController::createNotification(
+                                $agentInfo['agent_user_id'],
+                                'client_payment_recorded',
+                                'Client Payment Recorded',
+                                "Loan payment of GHS " . number_format($loanAmount, 2) . " has been recorded for client " . $agentInfo['client_name'] . ". Reference: " . $receiptNumber,
+                                $clientId,
+                                'client'
+                            );
+                        }
+                        
+                        // Create notification for admins and managers
+                        $adminManagerStmt = $pdo->prepare('
+                            SELECT id FROM users 
+                            WHERE role IN ("business_admin", "manager")
+                        ');
+                        $adminManagerStmt->execute();
+                        $adminManagers = $adminManagerStmt->fetchAll();
+                        
+                        foreach ($adminManagers as $adminManager) {
+                            NotificationController::createNotification(
+                                $adminManager['id'],
+                                'system_payment_recorded',
+                                'Payment Recorded',
+                                "Loan payment of GHS " . number_format($loanAmount, 2) . " has been recorded for client " . $agentInfo['client_name'] . " by " . $_SESSION['user']['username'] . ". Reference: " . $receiptNumber,
+                                $clientId,
+                                'system'
+                            );
+                        }
+                        
                         // Log activity
                         $clientNameStmt = $pdo->prepare('
                             SELECT CONCAT(u.first_name, " ", u.last_name) as client_name 
@@ -491,7 +621,7 @@ class PaymentController {
         } catch (\Exception $e) {
             error_log('PaymentController: Payment error: ' . $e->getMessage());
             error_log('PaymentController: Stack trace: ' . $e->getTraceAsString());
-            if (isset($pdo)) {
+            if (isset($pdo) && $pdo->inTransaction()) {
                 $pdo->rollBack();
             }
             http_response_code(500);

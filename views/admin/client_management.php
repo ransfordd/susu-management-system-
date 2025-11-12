@@ -327,12 +327,14 @@ include __DIR__ . '/../../includes/header.php';
 }
 
 .amount-value {
-	background: linear-gradient(135deg, #28a745, #1e7e34);
-	color: white;
+	background: #f8f9fa;
+	color: #28a745;
 	padding: 0.25rem 0.5rem;
 	border-radius: 4px;
 	font-size: 0.85rem;
 	font-weight: 600;
+	border: 1px solid #e9ecef;
+	font-family: 'Courier New', monospace;
 }
 
 /* Status Badges */

@@ -5,6 +5,7 @@ require_once __DIR__ . '/../config/auth.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../includes/functions.php';
 require_once __DIR__ . '/../includes/totp.php';
+require_once __DIR__ . '/../includes/SecurityManager.php';
 require_once __DIR__ . '/ActivityLogger.php';
 
 use Database;
@@ -14,7 +15,6 @@ use Controllers\ActivityLogger;
 
 class AuthController {
 	public function login(): void {
-		// Basic login rate limiting per session
 		\Auth\startSessionIfNeeded();
 		
 		// If user is already logged in, redirect to dashboard
@@ -23,35 +23,29 @@ class AuthController {
 			exit;
 		}
 		
-		// Debug session info
-		$settings = require __DIR__ . '/../config/settings.php';
-		$key = $settings['csrf_token_key'];
-		$sessionToken = $_SESSION[$key] ?? '';
+        // Check CSRF token
+        $csrf = $_POST['csrf_token'] ?? '';
+        if (!verifyCsrf($csrf)) {
+            // Always bounce back to fresh login page so a new CSRF can be generated
+            header('Location: /login.php?error=missing_credentials');
+            exit;
+        }
 		
-		// If no CSRF token in session, generate one
-		if (empty($sessionToken)) {
-			$_SESSION[$key] = bin2hex(random_bytes(32));
-			$sessionToken = $_SESSION[$key];
-		}
-		
-		$_SESSION['login_attempts'] = $_SESSION['login_attempts'] ?? 0;
-		if ($_SESSION['login_attempts'] >= 10) {
-			http_response_code(429);
-			echo 'Too many attempts. Please wait and try again.';
-			return;
-		}
-		$csrf = $_POST['csrf_token'] ?? '';
-		
-		if (!verifyCsrf($csrf)) {
-			http_response_code(400);
-			echo 'Invalid CSRF token. Provided: ' . htmlspecialchars($csrf) . ', Expected: ' . htmlspecialchars($sessionToken) . ', Session ID: ' . session_id();
-			return;
-		}
 		$usernameOrEmail = trim($_POST['username'] ?? '');
 		$password = $_POST['password'] ?? '';
+		$totpCode = $_POST['totp_code'] ?? '';
+		
 		if ($usernameOrEmail === '' || $password === '') {
-			echo 'Missing credentials';
-			return;
+			header('Location: /login.php?error=missing_credentials');
+			exit;
+		}
+		
+		// Check if user/IP is locked out
+		$ipAddress = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
+		if (\SecurityManager::isLockedOut($usernameOrEmail, 'user') || \SecurityManager::isLockedOut($ipAddress, 'ip')) {
+			// Redirect to login page with lockout message
+			header('Location: /login.php?error=account_locked');
+			exit;
 		}
 		try {
 			$pdo = \Database::getConnection();
@@ -70,12 +64,25 @@ class AuthController {
 			return;
 		}
 		if (!$user || !password_verify($password, $user['password_hash'])) {
-			echo 'Invalid credentials';
-			$_SESSION['login_attempts']++;
-			return;
+			// Record failed attempt
+			\SecurityManager::recordFailedAttempt($usernameOrEmail, 'user', $user['id'] ?? null);
+			\SecurityManager::recordFailedAttempt($ipAddress, 'ip');
+			
+			// Redirect back to login page with error message
+			header('Location: /login.php?error=invalid_credentials');
+			exit;
 		}
 
-		// Auto-detect role; no form selection required.
+		// Check if 2FA is required
+		if (\SecurityManager::is2FARequired()) {
+			// For now, we'll skip 2FA implementation but log that it's required
+			// TODO: Implement proper 2FA flow
+			error_log("2FA is required but not yet implemented for user: " . $user['username']);
+		}
+
+		// Record successful login
+		\SecurityManager::recordSuccessfulLogin($user['id'], $user['username']);
+
 		// Set session
 		$_SESSION['user'] = [
 			'id' => (int)$user['id'],
@@ -85,18 +92,12 @@ class AuthController {
 			'name' => $user['first_name'] . ' ' . $user['last_name'],
 			'profile_picture' => $user['profile_picture'],
 		];
-		$_SESSION['login_attempts'] = 0;
 		
 		// Log login activity
 		ActivityLogger::logLogin($user['id'], $user['username']);
+		
 		// Role-based redirect
-		if ($user['role'] === 'business_admin') {
-			header('Location: /index.php');
-		} elseif ($user['role'] === 'agent') {
-			header('Location: /index.php');
-		} else {
-			header('Location: /index.php');
-		}
+		header('Location: /index.php');
 		exit;
 	}
 

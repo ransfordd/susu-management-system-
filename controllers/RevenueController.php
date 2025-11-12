@@ -33,6 +33,10 @@ class RevenueController {
             $fromDate = date('Y-m-01');
             $toDate = date('Y-m-d');
         }
+        // Ensure fromDate <= toDate; if not, swap
+        if (strtotime($fromDate) > strtotime($toDate)) {
+            [$fromDate, $toDate] = [$toDate, $fromDate];
+        }
         
         // Get revenue data
         $revenueData = $this->getRevenueData($pdo, $fromDate, $toDate, $transactionType);
@@ -120,7 +124,9 @@ class RevenueController {
             SELECT 
                 COALESCE(SUM(CASE WHEN mt.transaction_type = 'deposit' THEN mt.amount ELSE 0 END), 0) as deposit_amount,
                 COALESCE(SUM(CASE WHEN mt.transaction_type = 'withdrawal' THEN mt.amount ELSE 0 END), 0) as withdrawal_amount,
-                COUNT(*) as transaction_count
+                COUNT(*) as transaction_count,
+                COUNT(CASE WHEN mt.transaction_type = 'deposit' THEN 1 END) as deposit_count,
+                COUNT(CASE WHEN mt.transaction_type = 'withdrawal' THEN 1 END) as withdrawal_count
             FROM manual_transactions mt
             WHERE mt.created_at BETWEEN ? AND ?
         ";
@@ -144,27 +150,35 @@ class RevenueController {
     }
     
     private function getMonthlyTrends($pdo, $fromDate, $toDate) {
+        // Aggregate per month across both sources, then group to ensure one row per month
         $stmt = $pdo->prepare("
-            SELECT 
-                DATE_FORMAT(dc.collection_date, '%Y-%m') as month,
-                SUM(dc.collected_amount) as susu_revenue,
-                COUNT(*) as susu_count
-            FROM daily_collections dc
-            WHERE dc.collection_status = 'collected'
-            AND dc.collection_date BETWEEN ? AND ?
-            GROUP BY DATE_FORMAT(dc.collection_date, '%Y-%m')
-            
-            UNION ALL
-            
-            SELECT 
-                DATE_FORMAT(lp.payment_date, '%Y-%m') as month,
-                SUM(lp.amount_paid) as loan_revenue,
-                COUNT(*) as loan_count
-            FROM loan_payments lp
-            WHERE lp.payment_status = 'completed'
-            AND lp.payment_date BETWEEN ? AND ?
-            GROUP BY DATE_FORMAT(lp.payment_date, '%Y-%m')
-            
+            SELECT month,
+                   SUM(susu_revenue) as susu_revenue,
+                   SUM(loan_revenue) as loan_revenue,
+                   SUM(susu_count) as susu_count,
+                   SUM(loan_count) as loan_count
+            FROM (
+                SELECT DATE_FORMAT(dc.collection_date, '%Y-%m') as month,
+                       SUM(dc.collected_amount) as susu_revenue,
+                       0 as loan_revenue,
+                       COUNT(*) as susu_count,
+                       0 as loan_count
+                FROM daily_collections dc
+                WHERE dc.collection_status = 'collected'
+                  AND dc.collection_date BETWEEN ? AND ?
+                GROUP BY DATE_FORMAT(dc.collection_date, '%Y-%m')
+                UNION ALL
+                SELECT DATE_FORMAT(lp.payment_date, '%Y-%m') as month,
+                       0 as susu_revenue,
+                       SUM(lp.amount_paid) as loan_revenue,
+                       0 as susu_count,
+                       COUNT(*) as loan_count
+                FROM loan_payments lp
+                WHERE lp.payment_status = 'completed'
+                  AND lp.payment_date BETWEEN ? AND ?
+                GROUP BY DATE_FORMAT(lp.payment_date, '%Y-%m')
+            ) t
+            GROUP BY month
             ORDER BY month DESC
             LIMIT 12
         ");

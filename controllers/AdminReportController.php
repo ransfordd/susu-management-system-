@@ -288,6 +288,7 @@ class AdminReportController {
         $reportType = $_GET['report_type'] ?? 'financial';
         $fromDate = $_GET['from_date'] ?? date('Y-m-01');
         $toDate = $_GET['to_date'] ?? date('Y-m-d');
+        $agentId = $_GET['agent_id'] ?? null;
         
         $pdo = \Database::getConnection();
         
@@ -332,6 +333,40 @@ class AdminReportController {
                 
                 foreach ($withdrawals as $row) {
                     fputcsv($output, [$row['date'], $row['type'], $row['total'], $row['count']]);
+                }
+            } elseif ($reportType === 'agent_performance') {
+                // Agent performance CSV
+                fputcsv($output, ['Agent', 'Agent Code', 'Collections', 'Total Collected', 'Cycles Completed']);
+
+                $agentFilter = $agentId ? "AND a.id = ?" : "";
+                $params = [$fromDate, $toDate, $fromDate, $toDate];
+                if ($agentId) { $params[] = $agentId; }
+
+                $stmt = $pdo->prepare("
+                    SELECT a.id, a.agent_code, u.first_name, u.last_name,
+                           COUNT(dc.id) as collections_count,
+                           COALESCE(SUM(dc.collected_amount), 0) as total_collected,
+                           COUNT(DISTINCT sc.id) as cycles_completed
+                    FROM agents a
+                    JOIN users u ON a.user_id = u.id
+                    LEFT JOIN daily_collections dc ON a.id = dc.collected_by 
+                        AND dc.collection_date BETWEEN ? AND ?
+                    LEFT JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id 
+                        AND sc.completion_date BETWEEN ? AND ?
+                    WHERE a.status = 'active' $agentFilter
+                    GROUP BY a.id
+                    ORDER BY total_collected DESC
+                ");
+                $stmt->execute($params);
+                foreach ($stmt->fetchAll() as $row) {
+                    $agentName = trim(($row['first_name'] ?? '') . ' ' . ($row['last_name'] ?? ''));
+                    fputcsv($output, [
+                        $agentName,
+                        $row['agent_code'],
+                        $row['collections_count'],
+                        number_format((float)$row['total_collected'], 2, '.', ''),
+                        $row['cycles_completed']
+                    ]);
                 }
             }
             

@@ -1,5 +1,7 @@
 <?php
 require_once __DIR__ . '/config/auth.php';
+require_once __DIR__ . '/includes/runtime.php';
+require_once __DIR__ . '/includes/maintenance_gate.php';
 require_once __DIR__ . '/controllers/AuthController.php';
 require_once __DIR__ . '/controllers/DashboardController.php';
 
@@ -8,6 +10,8 @@ use Controllers\DashboardController;
 use function Auth\startSessionIfNeeded;
 
 startSessionIfNeeded();
+applyRuntimeSettings();
+enforceMaintenanceIfEnabled();
 
 $action = $_GET['action'] ?? '';
 

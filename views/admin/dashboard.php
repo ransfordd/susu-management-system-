@@ -41,27 +41,85 @@ $pendingPayoutTransfers = (int)$pdo->query('
     AND (sc.payout_transferred = 0 OR sc.payout_transferred IS NULL)
 ')->fetch()['count'];
 
-// Daily completed cycles
+// Total completed cycles (all time) - using CycleCalculator for accuracy
+require_once __DIR__ . '/../../includes/CycleCalculator.php';
+$cycleCalculator = new CycleCalculator();
+$totalCompletedCycles = 0;
+
+// Get all clients and count their completed cycles
+$allClients = $pdo->query("SELECT id FROM clients WHERE status = 'active'")->fetchAll();
+foreach ($allClients as $client) {
+    $totalCompletedCycles += $cycleCalculator->getCompletedCyclesCount($client['id']);
+}
+
+// Cycles completed this month (early completions)
+$currentMonth = date('Y-m');
+$cyclesCompletedThisMonth = 0;
+foreach ($allClients as $client) {
+    $clientCycles = $cycleCalculator->calculateClientCycles($client['id']);
+    foreach ($clientCycles as $cycle) {
+        if ($cycle['is_complete'] && 
+            isset($cycle['completion_date']) && 
+            date('Y-m', strtotime($cycle['completion_date'])) === $currentMonth) {
+            $cyclesCompletedThisMonth++;
+        }
+    }
+}
+
+// Daily completed cycles (for today only)
 $dailyCompletedCycles = (int)$pdo->query("SELECT COUNT(*) c FROM susu_cycles WHERE status='completed' AND DATE(completion_date)=CURRENT_DATE()")->fetch()['c'];
 
-// Recent transactions (union last 20)
-$recent = $pdo->query("(
-  SELECT 'susu' AS type, receipt_number AS ref, collection_time AS ts, collected_amount AS amount, 
-         CONCAT(c.first_name, ' ', c.last_name) as client_name
-  FROM daily_collections dc
-  JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
-  JOIN clients cl ON sc.client_id = cl.id
-  JOIN users c ON cl.user_id = c.id
-  WHERE receipt_number IS NOT NULL ORDER BY collection_time DESC LIMIT 15
-) UNION ALL (
-  SELECT 'loan' AS type, receipt_number AS ref, CONCAT(payment_date,' 00:00:00') AS ts, amount_paid AS amount,
-         CONCAT(c.first_name, ' ', c.last_name) as client_name
-  FROM loan_payments lp
-  JOIN loans l ON lp.loan_id = l.id
-  JOIN clients cl ON l.client_id = cl.id
-  JOIN users c ON cl.user_id = c.id
-  WHERE receipt_number IS NOT NULL ORDER BY payment_date DESC LIMIT 15
-) ORDER BY ts DESC LIMIT 20")->fetchAll();
+// Recent transactions (last 20 from all types)
+$recent = $pdo->query("
+  SELECT * FROM (
+    SELECT 'susu' AS type, receipt_number AS ref, 
+           COALESCE(collection_time, CONCAT(collection_date, ' 12:00:00')) AS ts, 
+           collected_amount AS amount, 
+           CONCAT(c.first_name, ' ', c.last_name) as client_name
+    FROM daily_collections dc
+    JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
+    JOIN clients cl ON sc.client_id = cl.id
+    JOIN users c ON cl.user_id = c.id
+    WHERE dc.collection_status = 'collected' AND receipt_number IS NOT NULL
+    
+    UNION ALL
+    
+    SELECT 'loan' AS type, receipt_number AS ref, 
+           COALESCE(payment_time, CONCAT(payment_date, ' 12:00:00')) AS ts, 
+           amount_paid AS amount,
+           CONCAT(c.first_name, ' ', c.last_name) as client_name
+    FROM loan_payments lp
+    JOIN loans l ON lp.loan_id = l.id
+    JOIN clients cl ON l.client_id = cl.id
+    JOIN users c ON cl.user_id = c.id
+    WHERE lp.payment_status IN ('completed', 'paid') AND receipt_number IS NOT NULL
+    
+    UNION ALL
+    
+    SELECT 'savings' AS type, CONCAT('SAV-', st.id) AS ref,
+           st.created_at AS ts,
+           st.amount AS amount,
+           CONCAT(c.first_name, ' ', c.last_name) as client_name
+    FROM savings_transactions st
+    JOIN savings_accounts sa ON st.savings_account_id = sa.id
+    JOIN clients cl ON sa.client_id = cl.id
+    JOIN users c ON cl.user_id = c.id
+    WHERE st.transaction_type = 'deposit'
+    
+    UNION ALL
+    
+    SELECT 'manual' AS type, mt.reference AS ref,
+           mt.created_at AS ts,
+           mt.amount AS amount,
+           CONCAT(c.first_name, ' ', c.last_name) as client_name
+    FROM manual_transactions mt
+    JOIN clients cl ON mt.client_id = cl.id
+    JOIN users c ON cl.user_id = c.id
+    WHERE mt.reference IS NOT NULL
+  ) as all_transactions
+  ORDER BY ts DESC 
+  LIMIT 20
+")->fetchAll();
 
 // Recent loan applications
 $recentApplications = $pdo->query("
@@ -360,11 +418,24 @@ include __DIR__ . '/../../includes/header.php';
 				<i class="fas fa-check-double"></i>
 			</div>
 			<div class="stat-content">
-				<h3 class="stat-number"><?php echo number_format($dailyCompletedCycles); ?></h3>
+				<h3 class="stat-number"><?php echo number_format($totalCompletedCycles); ?></h3>
 				<p class="stat-label">Completed Cycles</p>
-				<small class="stat-sublabel">Today's completions</small>
+				<small class="stat-sublabel">All time</small>
 			</div>
 		</div>
+	</div>
+	
+	<div class="col-lg-3 col-md-6 mb-3">
+		<a href="/views/admin/cycle_tracker.php" class="stat-card stat-card-success" style="text-decoration: none; color: inherit;">
+			<div class="stat-icon">
+				<i class="fas fa-calendar-check"></i>
+			</div>
+			<div class="stat-content">
+				<h3 class="stat-number"><?php echo number_format($cyclesCompletedThisMonth); ?></h3>
+				<p class="stat-label">This Month</p>
+				<small class="stat-sublabel">Early completions</small>
+			</div>
+		</a>
 	</div>
 </div>
 
@@ -672,7 +743,7 @@ include __DIR__ . '/../../includes/header.php';
 								<th>Type</th>
 								<th>Client</th>
 								<th>Receipt</th>
-								<th>Time</th>
+								<th>Date</th>
 								<th>Amount</th>
 							</tr>
 						</thead>
@@ -680,14 +751,30 @@ include __DIR__ . '/../../includes/header.php';
 							<?php foreach ($recent as $r): ?>
 							<tr>
 								<td>
-									<span class="badge bg-<?php echo $r['type'] === 'susu' ? 'primary' : 'success'; ?>">
-										<i class="fas fa-<?php echo $r['type'] === 'susu' ? 'piggy-bank' : 'money-bill-wave'; ?> me-1"></i>
+									<span class="badge bg-<?php 
+										switch($r['type']) {
+											case 'susu': echo 'primary'; break;
+											case 'loan': echo 'success'; break;
+											case 'savings': echo 'info'; break;
+											case 'manual': echo 'warning'; break;
+											default: echo 'secondary';
+										}
+									?>">
+										<i class="fas fa-<?php 
+											switch($r['type']) {
+												case 'susu': echo 'piggy-bank'; break;
+												case 'loan': echo 'money-bill-wave'; break;
+												case 'savings': echo 'coins'; break;
+												case 'manual': echo 'hand-holding-usd'; break;
+												default: echo 'exchange-alt';
+											}
+										?> me-1"></i>
 										<?php echo e(ucfirst($r['type'])); ?>
 									</span>
 								</td>
 								<td><?php echo e($r['client_name'] ?? 'N/A'); ?></td>
 								<td><code><?php echo e($r['ref']); ?></code></td>
-								<td><?php echo e(date('M j, H:i', strtotime($r['ts']))); ?></td>
+								<td><?php echo e(date('M j, Y', strtotime($r['ts']))); ?></td>
 								<td><strong>GHS <?php echo e(number_format($r['amount'],2)); ?></strong></td>
 							</tr>
 							<?php endforeach; ?>
@@ -1521,6 +1608,7 @@ code {
 </style>
 
 <?php include __DIR__ . '/../../includes/footer.php'; ?>
+
 
 
 

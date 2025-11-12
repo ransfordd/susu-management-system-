@@ -1,10 +1,12 @@
+<?php
+require_once __DIR__ . '/includes/functions.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>The Determiners</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title><?php echo getBusinessName(); ?></title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
@@ -1892,11 +1894,11 @@
             <div class="top-bar-left">
                 <div class="top-bar-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana</span>
+                    <span><?php echo getBusinessAddress() ?: '232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana'; ?></span>
                 </div>
                 <div class="top-bar-item">
                     <i class="fas fa-envelope"></i>
-                    <span>thedeterminers@site.com</span>
+                    <span><?php echo getBusinessEmail() ?: 'thedeterminers@site.com'; ?></span>
                 </div>
             </div>
             <div class="top-bar-right">
@@ -1918,7 +1920,7 @@
                 <a href="/" class="logo">
                     <i class="fas fa-coins"></i>
                     <div>
-                        <div>The Determiners</div>
+                        <div><?php echo getBusinessName(); ?></div>
                         <div class="logo-subtitle">Digital Banking System</div>
                     </div>
                 </a>
@@ -2433,7 +2435,7 @@
         <div class="footer-container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>The Determiners</h4>
+                    <h4><?php echo getBusinessName(); ?></h4>
                     <p>Your trusted partner in financial growth. We're committed to helping you achieve your financial goals through innovative Susu and loan solutions.</p>
                 </div>
                 
@@ -2456,14 +2458,14 @@
                 
                 <div class="footer-section">
                     <h4>Contact Info</h4>
-                    <p><i class="fas fa-phone"></i> <a href="tel:+233123456789">+233 123 456 789</a></p>
-                    <p><i class="fas fa-envelope"></i> <a href="mailto:info@thedeterminers.com">info@thedeterminers.com</a></p>
-                    <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
+                    <p><i class="fas fa-phone"></i> <a href="tel:+233123456789"><?php echo getBusinessPhone() ?: '+233 123 456 789'; ?></a></p>
+                    <p><i class="fas fa-envelope"></i> <a href="mailto:info@thedeterminers.com"><?php echo getBusinessEmail() ?: 'info@thedeterminers.com'; ?></a></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <?php echo getBusinessAddress() ?: 'Accra, Ghana'; ?></p>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2025 The Determiners. All rights reserved.</p>
+                <p>&copy; 2025 <?php echo getBusinessName(); ?>. All rights reserved.</p>
             </div>
         </div>
     </footer>

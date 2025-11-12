@@ -34,7 +34,7 @@ class CycleCalculator {
      * @return array Array of cycle data with completion status
      */
     public function calculateClientCycles(int $clientId): array {
-        // Get all collections for this client, ordered chronologically
+        // Get all collections for this client, ordered by cycle date
         $stmt = $this->pdo->prepare('
             SELECT 
                 dc.collection_date,
@@ -42,12 +42,14 @@ class CycleCalculator {
                 dc.day_number,
                 dc.collection_status,
                 sc.daily_amount,
-                sc.id as cycle_id
+                sc.id as cycle_id,
+                sc.start_date,
+                sc.end_date
             FROM daily_collections dc
             JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
             WHERE sc.client_id = ? 
             AND dc.collection_status = "collected"
-            ORDER BY dc.collection_date ASC
+            ORDER BY sc.start_date ASC, dc.collection_date ASC
         ');
         $stmt->execute([$clientId]);
         $collections = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -56,15 +58,54 @@ class CycleCalculator {
             return [];
         }
         
-        // Get the earliest and latest collection dates
-        $firstDate = new DateTime($collections[0]['collection_date']);
-        $lastDate = new DateTime($collections[count($collections) - 1]['collection_date']);
+        // Group collections by cycle (not by collection date)
+        $cycles = [];
+        $currentCycle = null;
         
-        // Generate calendar months from first collection to last collection
-        $months = $this->generateMonths($firstDate, $lastDate);
+        foreach ($collections as $collection) {
+            $cycleId = $collection['cycle_id'];
+            $cycleStart = $collection['start_date'];
+            $cycleEnd = $collection['end_date'];
+            
+            // If this is a new cycle, create a new cycle entry
+            if ($currentCycle === null || $currentCycle['cycle_id'] !== $cycleId) {
+                if ($currentCycle !== null) {
+                    $cycles[] = $currentCycle;
+                }
+                
+                $currentCycle = [
+                    'cycle_id' => $cycleId,
+                    'start_date' => $cycleStart,
+                    'end_date' => $cycleEnd,
+                    'month' => date('Y-m', strtotime($cycleStart)),
+                    'year' => date('Y', strtotime($cycleStart)),
+                    'month_name' => date('F Y', strtotime($cycleStart)),
+                    'days_required' => (int)date('t', strtotime($cycleStart)), // Days in month
+                    'days_collected' => 0,
+                    'is_complete' => false,
+                    'collections' => [],
+                    'total_amount' => 0.0
+                ];
+            }
+            
+            // Add collection to current cycle
+            $currentCycle['collections'][] = $collection;
+            $currentCycle['days_collected']++;
+            $currentCycle['total_amount'] += $collection['collected_amount'];
+        }
         
-        // Allocate collections to calendar months
-        $cycles = $this->allocateCollectionsToMonths($months, $collections);
+        // Add the last cycle
+        if ($currentCycle !== null) {
+            $cycles[] = $currentCycle;
+        }
+        
+        // Calculate completion status for each cycle
+        foreach ($cycles as &$cycle) {
+            $cycle['is_complete'] = ($cycle['days_collected'] >= $cycle['days_required']);
+            if ($cycle['is_complete']) {
+                $cycle['completion_date'] = $cycle['end_date'];
+            }
+        }
         
         return $cycles;
     }
@@ -245,11 +286,8 @@ class CycleCalculator {
         // Get the last (most recent) cycle
         $currentCycle = end($cycles);
         
-        // If the last cycle is complete, there's no current active cycle
-        if ($currentCycle['is_complete']) {
-            return null;
-        }
-        
+        // A completed cycle is still the "current" cycle until the next month begins
+        // Only return null if there are no cycles at all
         return $currentCycle;
     }
     

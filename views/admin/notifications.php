@@ -104,6 +104,10 @@ include __DIR__ . '/../../includes/header.php';
                                             $iconClass = 'fas fa-exclamation-triangle text-warning';
                                             $badgeClass = 'bg-warning';
                                             break;
+                                        case 'settings_updated':
+                                            $iconClass = 'fas fa-cogs text-info';
+                                            $badgeClass = 'bg-info';
+                                            break;
                                     }
                                     ?>
                                     <i class="<?php echo $iconClass; ?> me-3"></i>

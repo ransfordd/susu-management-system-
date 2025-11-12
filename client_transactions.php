@@ -88,9 +88,12 @@ try {
              FROM manual_transactions mt
              WHERE mt.client_id = ? AND mt.transaction_type = 'deposit')
             UNION ALL
-            (SELECT 'savings_deposit' as type, mt.amount, mt.created_at as date, mt.description, 'Savings Deposit' as title, mt.reference
-             FROM manual_transactions mt
-             WHERE mt.client_id = ? AND mt.transaction_type = 'savings_deposit')
+            (SELECT 'savings_deposit' as type, st.amount, st.created_at as date,
+                    CONCAT('Savings ', COALESCE(st.purpose, 'deposit')) as description,
+                    'Savings Deposit' as title, NULL as reference
+             FROM savings_transactions st
+             JOIN savings_accounts sa ON st.savings_account_id = sa.id
+             WHERE sa.client_id = ? AND st.transaction_type = 'deposit')
         ) as all_tx
         WHERE 1=1 {$whereClause}
         ORDER BY date DESC
@@ -107,7 +110,8 @@ try {
             SUM(CASE WHEN type = "susu_collection" THEN amount ELSE 0 END) as total_collections,
             SUM(CASE WHEN type = "loan_payment" THEN amount ELSE 0 END) as total_loan_payments,
             SUM(CASE WHEN type = "withdrawal" THEN amount ELSE 0 END) as total_withdrawals,
-            SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposits
+            SUM(CASE WHEN type = "deposit" THEN amount ELSE 0 END) as total_deposits,
+            SUM(CASE WHEN type = "savings_deposit" THEN amount ELSE 0 END) as total_savings_deposits
         FROM (
             SELECT "susu_collection" as type, dc.collected_amount as amount
             FROM daily_collections dc
@@ -126,9 +130,14 @@ try {
             SELECT "deposit" as type, mt.amount
             FROM manual_transactions mt
             WHERE mt.client_id = ? AND mt.transaction_type = "deposit"
+            UNION ALL
+            SELECT "savings_deposit" as type, st.amount
+            FROM savings_transactions st
+            JOIN savings_accounts sa ON st.savings_account_id = sa.id
+            WHERE sa.client_id = ? AND st.transaction_type = "deposit"
         ) as all_transactions
     ');
-    $summaryStmt->execute([$clientId, $clientId, $clientId, $clientId]);
+    $summaryStmt->execute([$clientId, $clientId, $clientId, $clientId, $clientId]);
     $summary = $summaryStmt->fetch();
     
     // Normalize using shared helpers for consistency across pages

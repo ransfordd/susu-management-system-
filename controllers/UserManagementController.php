@@ -69,6 +69,13 @@ class UserManagementController {
                 throw new \Exception('All required fields must be filled');
             }
             
+            // Validate password strength
+            require_once __DIR__ . '/../includes/SecurityManager.php';
+            $passwordErrors = \SecurityManager::validatePassword($password);
+            if (!empty($passwordErrors)) {
+                throw new \Exception('Password validation failed: ' . implode('. ', $passwordErrors));
+            }
+            
             // Check if username or email already exists
             $exists = $pdo->prepare('SELECT id FROM users WHERE username = :u OR email = :e');
             $exists->execute([':u' => $username, ':e' => $email]);

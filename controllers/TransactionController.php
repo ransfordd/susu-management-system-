@@ -28,6 +28,8 @@ class TransactionController {
                 $whereConditions[] = "transaction_type = 'susu_collection'";
             } elseif ($type === 'loan') {
                 $whereConditions[] = "transaction_type IN ('loan_payment', 'loan_disbursement')";
+            } elseif ($type === 'savings') {
+                $whereConditions[] = "transaction_type = 'savings_deposit'";
             }
         }
         
@@ -53,7 +55,10 @@ class TransactionController {
                 amount,
                 receipt_number,
                 client_name,
-                agent_code,
+                client_code,
+                client_email,
+                client_phone,
+                agent_name,
                 notes
             FROM (
                 SELECT 
@@ -64,13 +69,17 @@ class TransactionController {
                     dc.collected_amount as amount,
                     dc.receipt_number,
                     CONCAT(u.first_name, ' ', u.last_name) as client_name,
-                    COALESCE(a.agent_code, 'N/A') as agent_code,
+                    c.client_code,
+                    u.email as client_email,
+                    u.phone as client_phone,
+                    COALESCE(CONCAT(ag_u.first_name, ' ', ag_u.last_name), 'System Admin') as agent_name,
                     COALESCE(dc.notes, '') as notes
                 FROM daily_collections dc
                 JOIN susu_cycles sc ON dc.susu_cycle_id = sc.id
                 JOIN clients c ON sc.client_id = c.id
                 JOIN users u ON c.user_id = u.id
                 LEFT JOIN agents a ON dc.collected_by = a.id
+                LEFT JOIN users ag_u ON a.user_id = ag_u.id
                 WHERE dc.collected_amount > 0
                 
                 UNION ALL
@@ -83,13 +92,17 @@ class TransactionController {
                     lp.amount_paid as amount,
                     lp.receipt_number,
                     CONCAT(u.first_name, ' ', u.last_name) as client_name,
-                    COALESCE(a.agent_code, 'N/A') as agent_code,
+                    c.client_code,
+                    u.email as client_email,
+                    u.phone as client_phone,
+                    COALESCE(CONCAT(ag_u.first_name, ' ', ag_u.last_name), 'System Admin') as agent_name,
                     COALESCE(lp.notes, '') as notes
                 FROM loan_payments lp
                 JOIN loans l ON lp.loan_id = l.id
                 JOIN clients c ON l.client_id = c.id
                 JOIN users u ON c.user_id = u.id
                 LEFT JOIN agents a ON lp.collected_by = a.id
+                LEFT JOIN users ag_u ON a.user_id = ag_u.id
                 WHERE lp.amount_paid > 0
                 
                 UNION ALL
@@ -102,13 +115,40 @@ class TransactionController {
                     l.principal_amount as amount,
                     CONCAT('LOAN-', l.id) as receipt_number,
                     CONCAT(u.first_name, ' ', u.last_name) as client_name,
-                    COALESCE(a.agent_code, 'N/A') as agent_code,
+                    c.client_code,
+                    u.email as client_email,
+                    u.phone as client_phone,
+                    COALESCE(CONCAT(ag_u.first_name, ' ', ag_u.last_name), 'System Admin') as agent_name,
                     'Loan Disbursement' as notes
                 FROM loans l
                 JOIN clients c ON l.client_id = c.id
                 JOIN users u ON c.user_id = u.id
                 LEFT JOIN agents a ON l.disbursed_by = a.id
+                LEFT JOIN users ag_u ON a.user_id = ag_u.id
                 WHERE l.loan_status = 'active'
+                
+                UNION ALL
+                
+                SELECT 
+                    'savings_deposit' as transaction_type,
+                    st.id as transaction_id,
+                    DATE(st.created_at) as transaction_date,
+                    COALESCE(TIME(st.created_at), '00:00:00') as transaction_time,
+                    st.amount as amount,
+                    CONCAT('SAV-', st.id) as receipt_number,
+                    CONCAT(u.first_name, ' ', u.last_name) as client_name,
+                    c.client_code,
+                    u.email as client_email,
+                    u.phone as client_phone,
+                    COALESCE(CONCAT(ag_u.first_name, ' ', ag_u.last_name), 'System Admin') as agent_name,
+                    COALESCE(st.description, 'Savings Deposit') as notes
+                FROM savings_transactions st
+                JOIN savings_accounts sa ON st.savings_account_id = sa.id
+                JOIN clients c ON sa.client_id = c.id
+                JOIN users u ON c.user_id = u.id
+                LEFT JOIN agents a ON c.agent_id = a.id
+                LEFT JOIN users ag_u ON a.user_id = ag_u.id
+                WHERE st.transaction_type = 'deposit'
             ) t
             $whereClause
             ORDER BY transaction_date DESC, transaction_time DESC
@@ -149,7 +189,7 @@ class TransactionController {
             $stmt = $pdo->prepare("
                 SELECT 'loan_payment' as type, lp.*,
                        CONCAT(u.first_name, ' ', u.last_name) as client_name,
-                       COALESCE(a.agent_code, 'N/A') as agent_code,
+                       COALESCE(CONCAT(ag_u.first_name, ' ', ag_u.last_name), 'System Admin') as agent_name,
                        lp.receipt_number as ref,
                        lp.payment_date as date,
                        lp.amount_paid as amount

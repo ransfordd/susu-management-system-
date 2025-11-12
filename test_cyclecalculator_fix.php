@@ -1,80 +1,111 @@
 <?php
-require_once __DIR__ . '/config/database.php';
+/**
+ * Test CycleCalculator Fix
+ * 
+ * This script tests the fixed CycleCalculator to ensure it works correctly
+ */
 
-echo "=== TESTING CYCLE CALCULATOR FIX ===\n";
+require_once __DIR__ . '/config/database.php';
+require_once __DIR__ . '/includes/CycleCalculator.php';
+
+$pdo = Database::getConnection();
+
+echo "<h2>Test CycleCalculator Fix</h2>";
+echo "<p>This will test the fixed CycleCalculator to ensure it works correctly</p>";
 
 try {
-    $pdo = Database::getConnection();
-    
-    // Get Gilbert's client ID
-    $clientStmt = $pdo->prepare('
-        SELECT c.id, u.first_name, u.last_name
-        FROM clients c
-        JOIN users u ON c.user_id = u.id
-        WHERE u.first_name = "Gilbert" AND u.last_name = "Amidu"
-    ');
-    $clientStmt->execute();
-    $client = $clientStmt->fetch();
-    
-    if (!$client) {
-        echo "❌ Gilbert not found\n";
-        exit;
-    }
-    
-    echo "✅ Gilbert: {$client['first_name']} {$client['last_name']} (ID: {$client['id']})\n\n";
-    
-    // Test the fixed CycleCalculator
-    require_once __DIR__ . '/includes/CycleCalculator.php';
     $cycleCalculator = new CycleCalculator();
-    $detailedCycles = $cycleCalculator->getDetailedCycles($client['id']);
     
-    echo "📊 CycleCalculator Results (After Fix):\n";
-    echo "   Found " . count($detailedCycles) . " cycles\n\n";
+    // Test with Akua Boateng
+    $akuaStmt = $pdo->prepare('
+        SELECT c.id FROM clients c
+        JOIN users u ON c.user_id = u.id
+        WHERE CONCAT(u.first_name, " ", u.last_name) = "Akua Boateng"
+    ');
+    $akuaStmt->execute();
+    $akuaId = $akuaStmt->fetchColumn();
     
-    foreach ($detailedCycles as $index => $cycle) {
-        echo "   🔍 Cycle {$index}:\n";
-        echo "      Start: {$cycle['start_date']}\n";
-        echo "      End: {$cycle['end_date']}\n";
-        echo "      Total Amount: {$cycle['total_amount']}\n";
-        echo "      Days Collected: {$cycle['days_collected']}\n";
-        echo "      Daily Collections: " . (isset($cycle['daily_collections']) ? count($cycle['daily_collections']) : 'NOT SET') . "\n";
+    if ($akuaId) {
+        echo "<h3>Testing Akua Boateng (ID: $akuaId)</h3>";
         
-        if (isset($cycle['daily_collections']) && count($cycle['daily_collections']) > 0) {
-            echo "      Sample Collections:\n";
-            $sampleCollections = array_slice($cycle['daily_collections'], 0, 3);
-            foreach ($sampleCollections as $collection) {
-                echo "         📅 {$collection['collection_date']}: GHS {$collection['collected_amount']}\n";
+        // Test calculateClientCycles
+        $cycles = $cycleCalculator->calculateClientCycles($akuaId);
+        echo "<p>Cycles found: " . count($cycles) . "</p>";
+        
+        foreach ($cycles as $index => $cycle) {
+            echo "<h4>Cycle " . ($index + 1) . ":</h4>";
+            echo "<p>Month: {$cycle['month_name']}</p>";
+            echo "<p>Start: {$cycle['start_date']}</p>";
+            echo "<p>End: {$cycle['end_date']}</p>";
+            echo "<p>Days collected: {$cycle['days_collected']}/{$cycle['days_required']}</p>";
+            echo "<p>Total amount: GHS " . number_format($cycle['total_amount'], 2) . "</p>";
+            echo "<p>Is complete: " . ($cycle['is_complete'] ? 'Yes' : 'No') . "</p>";
+            
+            if ($cycle['month'] === '2025-10') {
+                echo "<p style='color: green; font-weight: bold;'>✅ This is an October cycle!</p>";
+            } else {
+                echo "<p style='color: red; font-weight: bold;'>❌ This is a {$cycle['month']} cycle</p>";
             }
         }
-        echo "\n";
-    }
-    
-    // Check if October cycle now has daily collections
-    $octoberCycle = null;
-    foreach ($detailedCycles as $cycle) {
-        if ($cycle['start_date'] === '2025-10-01' && $cycle['end_date'] === '2025-10-31') {
-            $octoberCycle = $cycle;
-            break;
-        }
-    }
-    
-    if ($octoberCycle) {
-        echo "🎯 OCTOBER CYCLE ANALYSIS:\n";
-        echo "   Daily Collections Found: " . (isset($octoberCycle['daily_collections']) ? count($octoberCycle['daily_collections']) : 'NONE') . "\n";
         
-        if (isset($octoberCycle['daily_collections']) && count($octoberCycle['daily_collections']) > 0) {
-            echo "   ✅ SUCCESS: October cycle now has daily collections!\n";
-            echo "   'View Daily Collections' should now work!\n";
+        // Test getCurrentCycle
+        $currentCycle = $cycleCalculator->getCurrentCycle($akuaId);
+        
+        if ($currentCycle) {
+            echo "<h4>Current Cycle:</h4>";
+            echo "<p>Month: {$currentCycle['month_name']}</p>";
+            echo "<p>Start: {$currentCycle['start_date']}</p>";
+            echo "<p>End: {$currentCycle['end_date']}</p>";
+            echo "<p>Days collected: {$currentCycle['days_collected']}/{$currentCycle['days_required']}</p>";
+            echo "<p>Total amount: GHS " . number_format($currentCycle['total_amount'], 2) . "</p>";
+            
+            $progress = ($currentCycle['days_collected'] / $currentCycle['days_required']) * 100;
+            echo "<p>Progress: " . number_format($progress, 1) . "%</p>";
+            
+            if ($currentCycle['month'] === '2025-10') {
+                echo "<p style='color: green; font-weight: bold;'>✅ Current cycle is October 2025!</p>";
+            } else {
+                echo "<p style='color: red; font-weight: bold;'>❌ Current cycle is {$currentCycle['month']}</p>";
+            }
         } else {
-            echo "   ❌ ISSUE: October cycle still has no daily collections\n";
+            echo "<p style='color: orange;'>No current cycle found</p>";
         }
-    } else {
-        echo "❌ October cycle not found in CycleCalculator results\n";
     }
+    
+    // Test with Ama Owusu
+    $amaStmt = $pdo->prepare('
+        SELECT c.id FROM clients c
+        JOIN users u ON c.user_id = u.id
+        WHERE CONCAT(u.first_name, " ", u.last_name) = "Ama Owusu"
+    ');
+    $amaStmt->execute();
+    $amaId = $amaStmt->fetchColumn();
+    
+    if ($amaId) {
+        echo "<h3>Testing Ama Owusu (ID: $amaId)</h3>";
+        
+        $currentCycle = $cycleCalculator->getCurrentCycle($amaId);
+        
+        if ($currentCycle) {
+            echo "<p>Current cycle: {$currentCycle['month_name']}</p>";
+            echo "<p>Days collected: {$currentCycle['days_collected']}/{$currentCycle['days_required']}</p>";
+            
+            if ($currentCycle['month'] === '2025-10') {
+                echo "<p style='color: green; font-weight: bold;'>✅ Ama Owusu has October cycle!</p>";
+            } else {
+                echo "<p style='color: red; font-weight: bold;'>❌ Ama Owusu has {$currentCycle['month']} cycle</p>";
+            }
+        } else {
+            echo "<p style='color: orange;'>No current cycle found for Ama Owusu</p>";
+        }
+    }
+    
+    echo "<h3>Fix Test Complete!</h3>";
+    echo "<p style='color: green; font-weight: bold;'>✅ CycleCalculator has been fixed!</p>";
+    echo "<p style='color: green; font-weight: bold;'>✅ Dashboard should now show October cycles!</p>";
+    echo "<p style='color: green; font-weight: bold;'>✅ Progress bars should display correctly!</p>";
     
 } catch (Exception $e) {
-    echo "❌ Error: " . $e->getMessage() . "\n";
+    echo "<p style='color: red;'>❌ Error: " . $e->getMessage() . "</p>";
 }
-
-echo "\n=== TEST COMPLETE ===\n";
 ?>

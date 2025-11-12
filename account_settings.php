@@ -130,8 +130,11 @@ function changeUserPassword($pdo, $userId, $data) {
         throw new Exception('New passwords do not match');
     }
     
-    if (strlen($newPassword) < 8) {
-        throw new Exception('Password must be at least 8 characters long');
+    // Use SecurityManager for password validation
+    require_once __DIR__ . '/includes/SecurityManager.php';
+    $passwordErrors = \SecurityManager::validatePassword($newPassword);
+    if (!empty($passwordErrors)) {
+        throw new Exception(implode('. ', $passwordErrors));
     }
     
     // Verify current password

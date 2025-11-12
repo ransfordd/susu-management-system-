@@ -17,9 +17,13 @@ class AdminProductController {
 	public function create(): void {
         requireRole(['business_admin', 'manager']);
 		if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-			$id = \LoanProduct::create($_POST);
-			header('Location: /admin_products.php');
-			return;
+			try {
+				$id = \LoanProduct::create($_POST);
+				header('Location: /admin_products.php');
+				return;
+			} catch (\Exception $e) {
+				$error = $e->getMessage();
+			}
 		}
 		include __DIR__ . '/../views/admin/products_create.php';
 	}

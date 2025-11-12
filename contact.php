@@ -1,9 +1,12 @@
+<?php
+require_once __DIR__ . '/includes/functions.php';
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contact Us - The Determiners</title>
+    <title>Contact Us - <?php echo getBusinessName(); ?></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -2719,7 +2722,7 @@
         <div class="loader-content">
             <div class="loader-logo">
                 <i class="fas fa-coins"></i>
-                <div class="logo-text">The Determiners</div>
+                <div class="logo-text"><?php echo getBusinessName(); ?></div>
             </div>
             <div class="loader-spinner"></div>
             <div class="loader-text">Loading your financial future...</div>
@@ -2732,11 +2735,11 @@
             <div class="top-bar-left">
                 <div class="top-bar-item">
                     <i class="fas fa-map-marker-alt"></i>
-                    <span>232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana</span>
+                    <span><?php echo getBusinessAddress() ?: '232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana'; ?></span>
                 </div>
                 <div class="top-bar-item">
                     <i class="fas fa-envelope"></i>
-                    <span>info@thedeterminers.com</span>
+                    <span><?php echo getBusinessInfoEmail() ?: 'info@thedeterminers.com'; ?></span>
                 </div>
             </div>
             <div class="top-bar-right">
@@ -2759,7 +2762,7 @@
                     <i class="fas fa-coins"></i>
                     <i class="fas fa-coins"></i>
                     <div>
-                        <div>The Determiners</div>
+                        <div><?php echo getBusinessName(); ?></div>
                         <div class="logo-subtitle">DIGITAL BANKING SYSTEM</div>
                     </div>
                 </a>
@@ -2910,9 +2913,9 @@
                             </div>
                             <div class="contact-details">
                                 <h4>Phone Numbers</h4>
-                                <p><a href="tel:+233302123456">+233 302 123 456</a></p>
-                                <p><a href="tel:+233302123457">+233 302 123 457</a></p>
-                                <p><a href="tel:+233302123458">+233 302 123 458</a></p>
+                                <p><a href="tel:<?php echo getBusinessPhone(); ?>"><?php echo getBusinessPhone(); ?></a></p>
+                                <p><a href="tel:<?php echo getBusinessSupportPhone(); ?>"><?php echo getBusinessSupportPhone(); ?></a></p>
+                                <p><a href="tel:<?php echo getBusinessEmergencyPhone(); ?>"><?php echo getBusinessEmergencyPhone(); ?></a></p>
                             </div>
                         </div>
                         
@@ -2922,9 +2925,9 @@
                             </div>
                             <div class="contact-details">
                                 <h4>Email Addresses</h4>
-                                <p><a href="mailto:info@thedeterminers.com">info@thedeterminers.com</a></p>
-                                <p><a href="mailto:support@thedeterminers.com">support@thedeterminers.com</a></p>
-                                <p><a href="mailto:loans@thedeterminers.com">loans@thedeterminers.com</a></p>
+                                <p><a href="mailto:<?php echo getBusinessEmail(); ?>"><?php echo getBusinessEmail(); ?></a></p>
+                                <p><a href="mailto:<?php echo getBusinessSupportEmail(); ?>"><?php echo getBusinessSupportEmail(); ?></a></p>
+                                <p><a href="mailto:<?php echo getBusinessLoansEmail(); ?>"><?php echo getBusinessLoansEmail(); ?></a></p>
                             </div>
                         </div>
                         
@@ -3035,7 +3038,7 @@
                         <div style="text-align: center;">
                             <i class="fas fa-map-marker-alt" style="font-size: 3rem; margin-bottom: 1rem;"></i>
                             <h3>Our Location</h3>
-                            <p>232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana</p>
+                            <p><?php echo getBusinessAddress() ?: '232 Nii Kwashiefio Avenue, Abofu - Achimota, Ghana'; ?></p>
                             <p style="margin-top: 1rem;">
                                 <a href="https://maps.google.com" target="_blank" style="color: white; text-decoration: underline;">
                                     <i class="fas fa-external-link-alt"></i>
@@ -3075,7 +3078,7 @@
                         <h4>Phone Number</h4>
                         <p>Call us for immediate assistance</p>
                         <div class="contact-details">
-                            <p>+233 302 123 456</p>
+                            <p><?php echo getBusinessPhone() ?: '+233 302 123 456'; ?></p>
                         </div>
                     </div>
                     
@@ -3086,7 +3089,7 @@
                         <h4>Email Address</h4>
                         <p>Send us a message anytime</p>
                         <div class="contact-details">
-                            <p>thedeterminers@site.com</p>
+                            <p><?php echo getBusinessEmail() ?: 'thedeterminers@site.com'; ?></p>
                         </div>
                     </div>
                     
@@ -3109,10 +3112,11 @@
                             <span class="branch-status">Main Office</span>
                         </div>
                         <div class="branch-details">
-                            <p><i class="fas fa-map-marker-alt"></i> 232 Nii Kwashiefio Avenue, Abofu - Achimota</p>
-                            <p><i class="fas fa-phone"></i> +233 302 123 456</p>
-                            <p><i class="fas fa-clock"></i> Mon-Fri: 8:00 AM - 6:00 PM</p>
-                            <p><i class="fas fa-clock"></i> Sat: 9:00 AM - 2:00 PM</p>
+                            <p><i class="fas fa-map-marker-alt"></i> <?php echo getBusinessAddress() ?: '232 Nii Kwashiefio Avenue, Abofu - Achimota'; ?></p>
+                            <p><i class="fas fa-phone"></i> <?php echo getBusinessPhone() ?: '+233 302 123 456'; ?></p>
+                            <?php $hours = getBusinessHours(); ?>
+                            <p><i class="fas fa-clock"></i> <?php echo $hours['weekdays']; ?></p>
+                            <p><i class="fas fa-clock"></i> <?php echo $hours['saturday']; ?></p>
                         </div>
                     </div>
                 </div>
@@ -3378,7 +3382,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>The Determiners</h4>
+                    <h4><?php echo getBusinessName(); ?></h4>
                     <p>Your trusted partner in financial growth and community development. We're committed to making financial services accessible to all Ghanaians.</p>
                 </div>
                 
@@ -3401,14 +3405,14 @@
                 
                 <div class="footer-section">
                     <h4>Contact Info</h4>
-                    <p><i class="fas fa-phone"></i> +233 302 123 456</p>
-                    <p><i class="fas fa-envelope"></i> info@thedeterminers.com</p>
-                    <p><i class="fas fa-map-marker-alt"></i> Accra, Ghana</p>
+                    <p><i class="fas fa-phone"></i> <?php echo getBusinessPhone() ?: '+233 302 123 456'; ?></p>
+                    <p><i class="fas fa-envelope"></i> <?php echo getBusinessEmail() ?: 'thedeterminers@site.com'; ?></p>
+                    <p><i class="fas fa-map-marker-alt"></i> <?php echo getBusinessAddress() ?: 'Accra, Ghana'; ?></p>
                 </div>
             </div>
             
             <div class="footer-bottom">
-                <p>&copy; 2024 The Determiners. All rights reserved.</p>
+                <p>&copy; 2024 <?php echo getBusinessName(); ?>. All rights reserved.</p>
             </div>
         </div>
     </footer>
@@ -3547,7 +3551,7 @@
                 'loan': 'To apply for a loan, you need to: 1) Complete our online application form, 2) Upload required documents (Ghana Card, proof of income, guarantor info), 3) Wait for verification (2-4 hours), 4) Receive approval and funds within 24 hours. Would you like to start your application?',
                 'documents': 'For loan applications, you need: Ghana Card (National ID), Proof of Income (3 months), Guarantor Information, Proof of Address (utility bill). For business loans, also include: Business Registration Certificate, Financial Statements (6 months), Business Plan. All documents should be clear and recent.',
                 'rates': 'Our interest rates are competitive and vary by loan type: Personal Loans: 15-25% per annum, Business Loans: 12-20% per annum, Susu Savings: 8-12% per annum. Rates depend on loan amount, term, and creditworthiness. Contact us for personalized rates.',
-                'track': 'You can track your application by: 1) Logging into your account dashboard, 2) Checking your email for status updates, 3) Calling our customer service at +233 302 123 456, 4) Visiting our branch office. We provide real-time updates throughout the process.',
+                'track': 'You can track your application by: 1) Logging into your account dashboard, 2) Checking your email for status updates, 3) Calling our customer service at <?php echo getBusinessSupportPhone(); ?>, 4) Visiting our branch office. We provide real-time updates throughout the process.',
                 'default': 'I can help you with information about loans, document requirements, interest rates, application tracking, account opening, and branch locations. Please ask me a specific question or use one of the quick question buttons above.'
             };
             
